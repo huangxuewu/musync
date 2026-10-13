@@ -16,6 +16,8 @@ public sealed partial class SpotifyPlaybackTests
     private sealed class PresentationBackend : IAudioBackend
     {
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource? SourcePreparation;
+        public Task PrepareSourceAsync(string source, CancellationToken token) => SourcePreparation?.Task.WaitAsync(token) ?? Task.CompletedTask;
         public double Position { get; private set; }
         public double Duration => 180;
         public bool IsFinished => false;

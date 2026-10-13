@@ -306,8 +306,16 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         }
     }
     public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);
-    public string PreparationDetail => RadioLoading ? Text["RadioBuffering"] : string.Format(Text["SpeakerPreparationProgress"],
-        _player.IsPreparing ? _player.ReadyOutputs : 0, _player.IsPreparing ? _player.PreparingOutputs : _preparationTotal);
+    public string PreparationDetail
+    {
+        get
+        {
+            var total = _player.IsPreparing ? _player.PreparingOutputs : 0;
+            if (RadioLoading || YouTubeMode && _player.IsPreparing && total == 0) return Text["RadioBuffering"];
+            return string.Format(Text["SpeakerPreparationProgress"], _player.IsPreparing ? _player.ReadyOutputs : 0,
+                total > 0 ? total : _preparationTotal);
+        }
+    }
     public ICommand CancelPreparation { get; }
     private async Task CancelPreparationAsync()
     {

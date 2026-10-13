@@ -13,6 +13,27 @@ namespace Musync.Tests;
 
 public sealed partial class SpotifyPlaybackTests
 {
+    [AvaloniaTheory]
+    [InlineData("en")]
+    [InlineData("zh-Hans")]
+    [InlineData("ja")]
+    public async Task SourcePreparationShowsTheSelectedReceiverCountBeforeTheirHandshakesStart(string language)
+    {
+        await using var fixture = new PresentationFixture(language);
+        fixture.Backend.SourcePreparation = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var window = new MainWindow { DataContext = fixture.Model, Width = 1120, Height = 720 };
+        window.Show(); var start = fixture.Model.PlayTrackAsync(fixture.First, 12);
+        try
+        {
+            await PollPlayback(fixture.Model); using var frame = window.CaptureRenderedFrame();
+            Assert.Equal(string.Format(fixture.Model.Text["SpeakerPreparationProgress"], 0, 1), window.FindControl<TextBlock>("PreparationCount")!.Text);
+            Assert.False(fixture.Backend.Started.Task.IsCompleted); Assert.False(fixture.Model.IsPlaying); Assert.Equal(12, fixture.Model.Position);
+            SaveReviewFrame(frame, $"source-preparation-{language}-1120.png");
+            fixture.Model.CancelPreparation.Execute(null); await start.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.False(fixture.Model.HasToast); Assert.False(fixture.Model.IsPlaying);
+        }
+        finally { fixture.Backend.SourcePreparation.TrySetResult(); await start; window.Close(); }
+    }
     private sealed class PreparingOutput(SpeakerDevice device) : IAudioOutput
     {
         public SpeakerDevice Device => device;

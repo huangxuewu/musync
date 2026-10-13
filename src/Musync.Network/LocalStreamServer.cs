@@ -73,7 +73,7 @@ public sealed class LocalStreamServer : IAsyncDisposable
             builder.Logging.ClearProviders();
             builder.WebHost.ConfigureKestrel(options => options.Listen(IPAddress.Any, 0));
             var app = builder.Build();
-            app.MapGet("/f/{key}/audio.mp3", (string key, HttpContext context) =>
+            app.MapMethods("/f/{key}/audio.mp3", [HttpMethods.Get, HttpMethods.Head], (string key, HttpContext context) =>
             {
                 context.Response.Headers.AccessControlAllowOrigin = "*";
                 context.Response.Headers.CacheControl = "no-store";

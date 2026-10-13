@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Musync.Tests;
 
-public sealed class FileCastOutputTests
+public sealed partial class FileCastOutputTests
 {
     private sealed class Session : ICastSession
     {
