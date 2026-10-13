@@ -21,6 +21,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private volatile bool _sourceFailed;
     private volatile bool _sourceEnded;
     private volatile bool _preparing;
+    private volatile bool _activating;
     private int _preparingOutputs;
     private int _stopVersion;
     private sealed record ControlFailure(IAudioOutput Output, string Message);
@@ -39,6 +40,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     }
     private ControlUpdateSession? _controlUpdateSession;
     public bool IsPreparing => _preparing;
+    public bool IsActivating => _activating;
     public int ReadyOutputs => _preparedOutputs.Count;
     public bool IsOutputPrepared(string id) => _preparedOutputs.ContainsKey(id);
     public int PreparingOutputs => Volatile.Read(ref _preparingOutputs);
@@ -161,9 +163,10 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             }
             // Prepare every receiver before supplying the first music frame.
             // Slow handshakes must not consume the beginning of a track.
-            _hub.Clear(); _captureClock.Restart();
-            if (paused) _captureClock.Stop();
-            backend.Pause(paused); _hub.SetPaused(paused);
+            _hub.Clear(); _captureClock.Reset();
+            // Source initialization may expose duration and the seek position,
+            // but must not consume music while playback confirmation is pending.
+            backend.Pause(true); _hub.SetPaused(true);
             _sourceTask = Task.Run(async () =>
             {
                 try
@@ -181,6 +184,10 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             });
             if (!paused) await ReleasePreparedOutputs(token);
             token.ThrowIfCancellationRequested();
+            if (!paused)
+            {
+                _hub.SetPaused(false); backend.Pause(false); _captureClock.Start();
+            }
             IsPlaying = !paused;
         }
         catch { await StopInternal(); throw; }
@@ -188,21 +195,26 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     }
     private async Task ReleasePreparedOutputs(CancellationToken token)
     {
-        var results = await Task.WhenAll(_outputs.Values.Select(async output =>
+        _activating = true;
+        try
         {
-            try { await output.BeginPlaybackAsync(token); return (output, Error: (string?)null); }
-            catch (Exception ex) { return (output, Error: ex.Message); }
-        }));
-        token.ThrowIfCancellationRequested();
-        foreach (var result in results.Where(r => r.Error is not null))
-        {
-            RecordError(result.output.Device, result.Error!);
-            _outputs.TryRemove(result.output.Device.Id, out _);
-            _preparedOutputs.TryRemove(result.output.Device.Id, out _);
-            await DisposeOutput(result.output);
+            var results = await Task.WhenAll(_outputs.Values.Select(async output =>
+            {
+                try { await output.BeginPlaybackAsync(token); return (output, Error: (string?)null); }
+                catch (Exception ex) { return (output, Error: ex.Message); }
+            }));
+            token.ThrowIfCancellationRequested();
+            foreach (var result in results.Where(r => r.Error is not null))
+            {
+                RecordError(result.output.Device, result.Error!);
+                _outputs.TryRemove(result.output.Device.Id, out _);
+                _preparedOutputs.TryRemove(result.output.Device.Id, out _);
+                await DisposeOutput(result.output);
+            }
+            _hub.SetOutputs(_outputs.Values.Where(o => o.ReceivesPcm).Select(o => o.Buffer));
+            if (_outputs.IsEmpty) throw new IOException(Error ?? "NoOutputs");
         }
-        _hub.SetOutputs(_outputs.Values.Where(o => o.ReceivesPcm).Select(o => o.Buffer));
-        if (_outputs.IsEmpty) throw new IOException(Error ?? "NoOutputs");
+        finally { _activating = false; }
     }
     private async Task DrainTail(CancellationToken token)
     {

@@ -161,6 +161,8 @@
   "SpotifyRateLimited": "Spotify 请求过于频繁，请稍候再试。",
   "SpotifyRequestFailed": "Spotify 无法完成此请求，请检查网络连接后重试。",
   "PreparingSpeakers": "正在准备音箱…",
+  "StartingPlayback": "正在启动播放…",
+  "StartingPlaybackDetail": "音箱已就绪，正在完成启动。",
   "SpeakerPreparationProgress": "{0} / {1} 已就绪",
   "CancelPreparation": "取消播放准备",
   "CollapsePlaylists": "收起播放列表",

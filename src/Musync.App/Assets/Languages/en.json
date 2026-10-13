@@ -161,6 +161,8 @@
   "SpotifyRateLimited": "Spotify is receiving too many requests. Wait a moment and try again.",
   "SpotifyRequestFailed": "Spotify could not complete this request. Check your connection and try again.",
   "PreparingSpeakers": "Preparing speakers…",
+  "StartingPlayback": "Starting playback…",
+  "StartingPlaybackDetail": "Speakers are ready. Completing startup.",
   "SpeakerPreparationProgress": "{0} of {1} ready",
   "CancelPreparation": "Cancel playback preparation",
   "CollapsePlaylists": "Collapse playlists",

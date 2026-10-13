@@ -161,6 +161,8 @@
   "SpotifyRateLimited": "Spotify へのリクエストが多すぎます。少し待ってから再試行してください。",
   "SpotifyRequestFailed": "Spotify がリクエストを完了できませんでした。接続を確認して再試行してください。",
   "PreparingSpeakers": "スピーカーを準備中…",
+  "StartingPlayback": "再生を開始中…",
+  "StartingPlaybackDetail": "スピーカーは準備完了です。再生を開始しています。",
   "SpeakerPreparationProgress": "{0} / {1} 台が準備完了",
   "CancelPreparation": "再生準備をキャンセル",
   "CollapsePlaylists": "プレイリストを折りたたむ",

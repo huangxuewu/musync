@@ -71,6 +71,8 @@ Open Links using the bottom-right link icon, create a link, select its devices, 
 
 Each speaker shows whether it is available, connecting, waiting for synchronized start, playing or paused. Receiver errors remain visible in that speaker's row. The link overview's Rescan icon searches again and retries failed routes at the current track position using the existing preparation barrier; its waiting wave respects reduced motion. Volume and delay preferences remain saved.
 
+The unreleased source holds local decoding, PCM publication and the capture clock until receiver activation finishes, including on initial playback. Source duration and its starting position can initialize during the wait. The waiting indicator distinguishes preparing speakers from starting playback in the full and mini players; cancellation and per-speaker delay settings retain their existing behavior. Deferred speaker starts still use those delay settings. This gate is not an absolute-time playback command to each receiver, and actual speaker alignment still needs calibration.
+
 In the unreleased source, the bottom-right link icon also retains an amber attention indicator while a device in the active routed link has a problem. Its tooltip and accessible name report the affected-device count. Opening the overview reveals the first affected speaker and its controls; the indicator clears when the device recovers. Unrelated devices and Spotify playback do not contribute to this indicator.
 
 The unreleased source keeps Chromecast status errors attached to the loaded music. When a stream reloads, delayed status errors from its previous playback are ignored, while failures of the new playback remain visible even if they arrive before the load reply.
