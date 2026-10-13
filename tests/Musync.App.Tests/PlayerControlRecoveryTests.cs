@@ -97,7 +97,7 @@ public sealed partial class SpotifyPlaybackTests
         await model.PlayTrackAsync(fixture.First); await FailControl(model, output!);
         model.Source = model.Sources.Single(s => s.Id == "spotify");
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-        while (model.IsPlaying) await Task.Delay(10, deadline.Token);
+        while (model.IsPlaying || model.Busy) await Task.Delay(10, deadline.Token);
         model.SpotifyDevice = new("synthetic-spotify-output", "Synthetic Spotify device");
         await model.PlayTrackAsync(null);
         Assert.True(model.SpotifyMode); Assert.True(model.IsPlaying);

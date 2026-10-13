@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- A translucent frosted panel separates the poster title and synchronized lyrics from the colorful geometry behind them; background colors remain visible through a bounded blur while text stays sharp.
+- Music-source changes wait for the previous Play/Pause and Stop to finish before allowing new playback. Late responses cannot restore an old source's track, progress or error state.
+- Switching away from Spotify cancels an obsolete device lookup; changing sources during receiver preparation cancels that preparation without starting audio.
+- A waiting wave replaces the music-source icon during a transition, with localized status in the mini player. Motion stops when hidden, minimized or reduced motion is enabled.
+- Play and seek controls reflect the pending transition, and shutdown cancels and settles it.
+- A playback poll finishing slow disconnected-receiver cleanup cannot restore an old source's progress or error toast after a source change or shutdown.
+- Healthy outputs retain progress and lyric updates while a disconnected receiver is being cleaned up, without overlapping receiver checks. Successful local playback retries immediately clear obsolete speaker status.
+
 ## 1.0.0 — 2026-10-13
 
 First Windows x64 release.

@@ -87,7 +87,7 @@ public partial class MainWindow : Window
         SeekSlider.MotionEnabled = MiniSeekSlider.MotionEnabled = enabled;
         HeroSurface.MotionEnabled = HeroArtwork.MotionEnabled = HeroSpotifyArtwork.MotionEnabled = enabled;
         PlayerArtwork.MotionEnabled = MiniPlayerArtwork.MotionEnabled = enabled;
-        FullPreparationWave.MotionEnabled = MiniPreparationWave.MotionEnabled = NetworkScanWave.MotionEnabled = enabled;
+        FullPreparationWave.MotionEnabled = MiniPreparationWave.MotionEnabled = NetworkScanWave.MotionEnabled = MusicSourceWave.MotionEnabled = enabled;
         if (!enabled) UpdatePlaylistDisclosure(animate: false);
         UpdatePreparationMotion();
         UpdatePosterRotation();
@@ -192,7 +192,7 @@ public partial class MainWindow : Window
     }
     private void LinkLayoutChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen))
+        if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsSwitchingSource))
             UpdatePreparationMotion();
         if (e.PropertyName == nameof(MainViewModel.IsPreparingPlayback))
         {
@@ -282,6 +282,7 @@ public partial class MainWindow : Window
         MiniPreparationWave.Active = active && IsMiniPlayer;
         NetworkScanWave.Active = visible && !IsMiniPlayer && SpeakerPopover.IsOpen
             && _linkModel is { IsScanning: true, IsLinkEditing: true };
+        MusicSourceWave.Active = visible && !IsMiniPlayer && _linkModel?.IsSwitchingSource == true;
     }
     private void UpdateSpeakerPanelSize()
     {

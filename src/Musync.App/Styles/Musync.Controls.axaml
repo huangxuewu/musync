@@ -294,7 +294,7 @@
         <ControlTemplate>
           <Grid>
             <Border Name="SourceIconTarget" Background="Transparent">
-              <icons:LucideIcon Kind="music-2" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False"/>
+              <icons:LucideIcon Kind="music-2" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False" IsVisible="{Binding !IsSwitchingSource}"/>
             </Border>
             <Popup Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}"
                    PlacementTarget="SourceIconTarget" Placement="TopEdgeAlignedRight" VerticalOffset="-10"

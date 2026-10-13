@@ -49,20 +49,21 @@ public sealed partial class SpotifyPlaybackTests
         public MusicTrack First { get; }
         public PresentationBackend Backend { get; } = new();
         public PresentationFixture(string language = "en", int palette = 0, Func<SpeakerDevice, IAudioOutput>? outputFactory = null,
-            Func<CancellationToken, Task<IReadOnlyList<SpeakerDevice>>>? discoverNetwork = null)
+            Func<CancellationToken, Task<IReadOnlyList<SpeakerDevice>>>? discoverNetwork = null, Handler? spotifyHandler = null,
+            string? title = null, string? lrc = null)
         {
             Directory.CreateDirectory(DirectoryPath);
             var path = Path.Combine(DirectoryPath, "Original test.mp3"); File.WriteAllText(path, "mock audio");
-            File.WriteAllText(Path.ChangeExtension(path, ".lrc"), "[00:01]First original test line\n[00:10]此刻一起听见音乐\n[00:20]Next original test line");
+            File.WriteAllText(Path.ChangeExtension(path, ".lrc"), lrc ?? "[00:01]First original test line\n[00:10]此刻一起听见音乐\n[00:20]Next original test line");
             var id = Enumerable.Range(0, 100).Select(i => "local:poster" + i).First(id => PaletteFor(id) == palette);
-            First = new(id, "Original test song", "Synthetic test artist", path, DurationSeconds: 180);
+            First = new(id, title ?? "Original test song", title is null ? "Synthetic test artist" : "Musync · 本地歌词演示", path, DurationSeconds: 180);
             var preferences = new SpeakerPreferences { Selected = true };
             var link = new SpeakerLink { Id = "test-link", Name = "Test link", Speakers = new()
                 { ["test-output"] = new() { Name = "Test output", Preferences = preferences } } };
             Settings = new() { Language = language, LinksInitialized = true, ActiveLinkId = link.Id, Links = [link], Library = [First] };
             var backend = Backend;
             Model = new(backend, new PlaybackCoordinator(backend, outputFactory ?? backend.CreateOutput),
-                Client(new Handler((_, _) => Task.FromResult(Response(HttpStatusCode.NoContent)))),
+                Client(spotifyHandler ?? new Handler((_, _) => Task.FromResult(Response(HttpStatusCode.NoContent)))),
                 new SettingsStore(Path.Combine(DirectoryPath, "settings.json")), Settings, DirectoryPath, discoverNetwork);
             Model.Speakers.Add(new(backend.GetDevices()[0], preferences, Model.Text, (_, _) => { }));
         }

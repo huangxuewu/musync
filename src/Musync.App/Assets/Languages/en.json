@@ -47,6 +47,7 @@
   "ScanDone": "Speaker list updated.",
   "ScanNetworkFailed": "Network speaker scan failed. Previous devices kept; try again.",
   "Starting": "Connecting selected speakers…",
+  "SwitchingSource": "Switching music source…",
   "Idle": "Ready when you are.",
   "CalibrationInfo": "Listen for the clicks. Add delay to speakers that sound early; repeat until they align.",
   "DelayInfo": "Positive delay holds audio back. Chromecast buffering adds latency; calibrate with your actual devices.",

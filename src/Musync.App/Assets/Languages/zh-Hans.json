@@ -47,6 +47,7 @@
   "ScanDone": "扬声器列表已更新。",
   "ScanNetworkFailed": "网络音箱搜索失败，已保留原有设备。请重试。",
   "Starting": "正在连接所选扬声器…",
+  "SwitchingSource": "正在切换音乐来源…",
   "Idle": "随时准备播放。",
   "CalibrationInfo": "聆听节拍声。给提前发声的扬声器增加延迟，重复调整直到同步。",
   "DelayInfo": "正延迟会推迟音频。Chromecast 缓冲会增加延迟，请使用实际设备校准。",

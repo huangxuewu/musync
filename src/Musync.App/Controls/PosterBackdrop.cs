@@ -6,8 +6,8 @@ using Avalonia.Media;
 
 namespace Musync.App.Controls;
 
-// Geometry is intentionally confined to the artwork side. Lyrics keep a quiet,
-// high-contrast ground while the background remains a separate poster layer.
+// Bold geometry runs behind both the subject and the frosted lyric panel.
+// The background remains independent from the sharp text and portrait layers.
 public sealed class PosterBackdrop : Control
 {
     public static readonly StyledProperty<int> PaletteProperty = AvaloniaProperty.Register<PosterBackdrop, int>(nameof(Palette));
@@ -49,9 +49,9 @@ public sealed class PosterBackdrop : Control
         var colors = Colors[((palette % 3) + 3) % 3];
         var w = bounds.Width; var h = bounds.Height;
         context.DrawRectangle(colors.Ground, null, bounds);
-        Polygon(context, colors.Wedge, new(.78 * w, 0), new(w, 0), new(w, h), new(.62 * w, h));
+        Polygon(context, colors.Wedge, new(.72 * w, 0), new(w, 0), new(w, h), new(.46 * w, h));
         context.DrawEllipse(colors.Circle, null, new Point(.86 * w, .34 * h), .38 * h, .38 * h);
-        Polygon(context, colors.Stripe, new(.66 * w, .83 * h), new(w, .25 * h), new(w, .35 * h), new(.69 * w, h));
+        Polygon(context, colors.Stripe, new(.42 * w, .83 * h), new(w, .25 * h), new(w, .35 * h), new(.46 * w, h));
         Polygon(context, colors.Ground, new(.80 * w, 0), new(.84 * w, 0), new(w, .28 * h), new(w, .35 * h));
     }
     private static void Polygon(DrawingContext context, IBrush brush, params Point[] points)

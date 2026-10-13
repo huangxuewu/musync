@@ -197,26 +197,23 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         get => _source;
         set
         {
-            if (value is null || value.Id == _source?.Id) return;
+            if (_disposed || value is null || value.Id == _source?.Id) return;
             _source = value;
+            var version = ++_sourceVersion;
+            _sourceLookup?.Cancel();
+            IsSwitchingSource = true;
+            _player.CancelPreparation();
+            _session = false; IsPlaying = false; Position = 0;
+            Status = Text["SwitchingSource"];
             ResetSpotifyVolume();
             _spotifyStateVersion++; IsSeeking = false; ResetProgressTransition();
             InvalidateSearch(); _artworkRequest?.Cancel(); SpotifyArtwork = null;
             if (value.Id == "local") { _current = _library.FirstOrDefault(); Duration = _current?.DurationSeconds ?? 0; }
             if (value.Id == "spotify") { _current = null; Duration = 0; }
+            if (value.Id == "capture") Duration = 0;
             Raise(); RefreshTracks(); Raise(nameof(SpotifyMode)); Raise(nameof(IsLocal)); Raise(nameof(RoutingAvailable)); RefreshCurrent();
             Raise(nameof(PlaybackTargetLabel)); Raise(nameof(CanPlayLink));
-            _ = RunSafely(async () =>
-            {
-                await StopAsync();
-                if (value.Id != Source?.Id || value.Id != "spotify") return;
-                if (!_spotify.Connected) SettingsOpen = true;
-                else
-                {
-                    await RefreshSpotifyDevicesAsync();
-                    await RefreshSpotifyPlaybackAsync();
-                }
-            });
+            _sourceTransition = SwitchSourceAsync(version);
         }
     }
     public bool SpotifyMode => Source?.Id == "spotify";
@@ -252,11 +249,22 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         private set
         {
             if (Set(ref _status, value) && value != Text["Idle"] && value != Text["Playing"] && value != Text["Paused"]
-                && value != Text["Starting"] && value != Text["Scanning"])
+                && value != Text["Starting"] && value != Text["Scanning"] && value != Text["SwitchingSource"])
                 ShowToast(value);
         }
     }
-    public bool Busy { get => _busy; private set { if (Set(ref _busy, value)) { Raise(nameof(CanPlayLink)); Raise(nameof(CanConfigureLink)); Raise(nameof(CanEditLink)); Raise(nameof(CanSaveLink)); Raise(nameof(CanManagePlaylists)); foreach (var playlist in Playlists) playlist.RefreshAvailability(); } } }
+    public bool Busy
+    {
+        get => _busy || IsSwitchingSource;
+        private set
+        {
+            var previous = Busy;
+            if (_busy == value) return;
+            _busy = value;
+            if (previous != Busy) Raise();
+            RefreshBusyProperties();
+        }
+    }
     public bool IsScanning { get => _scanning; private set => Set(ref _scanning, value); }
     public bool SettingsOpen
     {
@@ -278,7 +286,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public string ListTitle { get => _listTitle; private set => Set(ref _listTitle, value); }
     public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); } } }
     public string PlayIcon => IsPlaying ? "pause" : "play";
-    public string PlayLabel => Text[IsPreparingPlayback ? "PreparingSpeakers" : IsPlaying ? "Pause" : "Play"];
+    public string PlayLabel => Text[IsSwitchingSource ? "SwitchingSource" : IsPreparingPlayback ? "PreparingSpeakers" : IsPlaying ? "Pause" : "Play"];
     public bool IsPreparingPlayback
     {
         get => _preparingPlayback;
@@ -288,7 +296,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             Raise(nameof(PlayLabel)); Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); Raise(nameof(PreparationDetail));
         }
     }
-    public bool PlayEnabled => !IsPreparingPlayback;
+    public bool PlayEnabled => !Busy && !IsPreparingPlayback;
     public string PreparationDetail => string.Format(Text["SpeakerPreparationProgress"],
         _player.IsPreparing ? _player.ReadyOutputs : 0, _player.IsPreparing ? _player.PreparingOutputs : _preparationTotal);
     public ICommand CancelPreparation { get; }
@@ -323,7 +331,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public double Duration { get => _duration; private set { if (Set(ref _duration, value)) { Raise(nameof(DurationText)); Raise(nameof(Seekable)); } } }
     public string PositionText => TimeSpan.FromSeconds(Math.Max(0, Position)).ToString(@"m\:ss");
     public string DurationText => Duration > 0 ? TimeSpan.FromSeconds(Duration).ToString(@"m\:ss") : Source?.Id == "capture" ? "LIVE" : "0:00";
-    public bool Seekable => _session && !IsPreparingPlayback && Source?.Id != "capture" && Duration > 0;
+    public bool Seekable => _session && !Busy && !IsPreparingPlayback && Source?.Id != "capture" && Duration > 0;
     public bool IsSeeking { get; set; }
     public string SelectedCount => $"{Speakers.Count(s => s.Selected && s.Available)} {Text["Selected"]}";
     public string AvailableCount => $"{Speakers.Count} {Text["OutputCount"]}";
@@ -481,7 +489,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Sources.Clear();
         Sources.Add(new("local", Text["Local"])); Sources.Add(new("capture", Text["Capture"])); Sources.Add(new("spotify", "Spotify"));
         _source = Sources.First(c => c.Id == id); Raise(nameof(Source));
-        foreach (var name in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(PlayLabel), nameof(PreparationDetail), nameof(LikeCurrentLabel), nameof(SelectedCount), nameof(AvailableCount), nameof(SpotifyStatus), nameof(LinkSelectionSummary) }) Raise(name);
+        foreach (var name in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(PlayLabel), nameof(MusicSourceHint), nameof(PreparationDetail), nameof(LikeCurrentLabel), nameof(SelectedCount), nameof(AvailableCount), nameof(SpotifyStatus), nameof(LinkSelectionSummary) }) Raise(name);
         RefreshSearchState();
         RefreshTracks();
         Raise(nameof(RoutingAvailable));
@@ -490,7 +498,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         RefreshLyricWindow(force: true);
         Raise(nameof(PlaylistSectionLabel)); Raise(nameof(PlaylistDialogTitle)); PlaylistError = "";
         foreach (var playlist in Playlists) playlist.RefreshText();
-        if (!_session) Status = Text["Idle"];
+        if (!_session) Status = Text[IsSwitchingSource ? "SwitchingSource" : "Idle"];
     }
     private void RefreshTracks()
     {
@@ -708,25 +716,31 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     public async Task PlayTrackAsync(MusicTrack? track, double resumePosition = 0, bool startPaused = false)
     {
-        if (Busy) return;
+        if (_disposed || Busy) return;
+        var sourceVersion = _sourceVersion;
         if (!SpotifyMode && !HasActiveLink)
         {
             if (!IsLinkEditing) BeginLinkEdit(null); else LinkPanelOpen = true;
             Status = Text["CreateLinkFirst"]; return;
         }
-        await _playGate.WaitAsync();
+        await _playGate.WaitAsync(_lifetime.Token);
         try
         {
+            if (!OwnsSource(sourceVersion) || IsSwitchingSource) return;
             Busy = true; _startingPlayback = true; _preparationCancelled = false; Status = Text["Starting"];
             if (SpotifyMode)
             {
                 _spotifyStateVersion++;
                 if (!_spotify.Connected) { SettingsOpen = true; Status = Text["NotConnected"]; return; }
                 await _player.StopAsync();
+                if (!OwnsSource(sourceVersion)) return;
                 if (SpotifyDevice is null) await RefreshSpotifyDevicesAsync();
+                if (!OwnsSource(sourceVersion)) return;
                 if (SpotifyDevice is null) throw new InvalidOperationException(Text["NoSpotifyDevices"]);
                 // An empty URI resumes Spotify's own queue. A current-track response or cover is not a prerequisite.
+                _activeSource = "spotify";
                 await _spotify.PlayOnDeviceAsync(track?.SpotifyUri, SpotifyDevice!.Id, _lifetime.Token);
+                if (!OwnsSource(sourceVersion)) return;
                 _current = track?.SpotifyUri is not null ? track : null;
                 Duration = _current?.DurationSeconds ?? 0;
             }
@@ -741,16 +755,19 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 _preparationTotal = selected.Count; IsPreparingPlayback = true; RefreshCurrent();
                 var source = capture ? _settings.CaptureDeviceId ?? _backend.DefaultDeviceId ?? throw new InvalidOperationException(Text["SourceEndpoint"]) : track!.FilePath!;
                 await _player.StartAsync(source, capture, selected, MasterVolume, resumePosition, startPaused);
+                if (!OwnsSource(sourceVersion)) return;
                 Duration = _player.Duration;
             }
             ResetProgressTransition();
             _session = true; _activeSource = Source?.Id; IsPlaying = SpotifyMode || _player.IsPlaying; Position = resumePosition;
             if (SpotifyMode) AnchorSpotifyProgress(Position);
             _spotifyNextPoll = DateTime.UtcNow.AddSeconds(2);
+            if (!SpotifyMode) RefreshSpeakerPlaybackStatus();
             ShowPlaybackStatus();
             RefreshCurrent();
             if (SpotifyMode && _current is { } spotifyTrack) _ = RunSafely(() => LoadArtwork(spotifyTrack));
         }
+        catch (Exception) when (!OwnsSource(sourceVersion)) { /* The new source owns the visible state. */ }
         catch (OperationCanceledException) when (_preparationCancelled)
         {
             _session = false; IsPlaying = false; Status = Text["Idle"]; RefreshCurrent();
@@ -765,11 +782,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private async Task TogglePlayback()
     {
-        if (Busy) return;
+        if (_disposed || Busy) return;
+        var sourceVersion = _sourceVersion;
         if (!_session) { await PlayTrackAsync(_current); return; }
-        await _playGate.WaitAsync();
+        await _playGate.WaitAsync(_lifetime.Token);
         try
         {
+            if (!OwnsSource(sourceVersion) || IsSwitchingSource) return;
             Busy = true;
             var wasPlaying = IsPlaying;
             if (SpotifyMode)
@@ -779,9 +798,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 else
                 {
                     if (SpotifyDevice is null) await RefreshSpotifyDevicesAsync();
+                    if (!OwnsSource(sourceVersion)) return;
                     if (SpotifyDevice is null) throw new InvalidOperationException(Text["NoSpotifyDevices"]);
+                    _activeSource = "spotify";
                     await _spotify.PlayOnDeviceAsync(null, SpotifyDevice.Id, _lifetime.Token);
                 }
+                if (!OwnsSource(sourceVersion)) return;
                 AdvanceSpotifyProgress();
                 IsPlaying = !wasPlaying; AnchorSpotifyProgress(Position);
                 _spotifyNextPoll = DateTime.UtcNow.AddSeconds(1);
@@ -790,10 +812,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 if (!wasPlaying) { _preparationCancelled = false; _preparationTotal = _player.Outputs.Count; Status = Text["Starting"]; IsPreparingPlayback = true; }
                 await _player.PauseAsync(wasPlaying);
+                if (!OwnsSource(sourceVersion)) return;
                 IsPlaying = _player.IsPlaying;
             }
             ShowPlaybackStatus();
         }
+        catch (Exception) when (!OwnsSource(sourceVersion)) { }
         catch (OperationCanceledException) when (_preparationCancelled)
         { _session = false; IsPlaying = false; Status = Text["Idle"]; RefreshCurrent(); }
         catch
@@ -808,17 +832,19 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         }
         finally { IsPreparingPlayback = false; Busy = false; _playGate.Release(); }
     }
-    private async Task StopAsync()
+    private async Task StopAsync(bool resetStatus = true)
     {
         _spotifyStateVersion++;
         if (_activeSource == "spotify" && _spotify.Connected) await _spotify.PauseAsync(_lifetime.Token);
         await _player.StopAsync(); _session = false; IsPlaying = false; Position = 0; Raise(nameof(Seekable));
-        ClearReportedPlayerError(); Status = Text["Idle"];
+        ClearReportedPlayerError();
+        if (resetStatus) Status = Text["Idle"];
         _activeSource = null;
         foreach (var speaker in Speakers) speaker.UpdateStatus(false, null);
     }
     private async Task NextAsync(int direction)
     {
+        if (_disposed || Busy) return;
         if (SpotifyMode)
         {
             if (!_spotify.Connected) { SettingsOpen = true; return; }
@@ -921,15 +947,18 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         await RefreshSpotifyDevicesAsync(); Status = Text["Connected"];
         if (SpotifyMode) await RefreshSpotifyPlaybackAsync();
     }
-    private async Task RefreshSpotifyDevicesAsync()
+    private async Task RefreshSpotifyDevicesAsync(bool reportStatus = true, CancellationToken? token = null)
     {
         if (!_spotify.Connected) { Status = Text["NotConnected"]; return; }
         var previous = SpotifyDevice?.Id;
-        var devices = (await _spotify.DevicesAsync(_lifetime.Token)).Where(d => !d.Restricted).ToArray();
+        var sourceVersion = _sourceVersion;
+        var devices = (await _spotify.DevicesAsync(token ?? _lifetime.Token)).Where(d => !d.Restricted).ToArray();
+        if (!OwnsSource(sourceVersion)) return;
         SpotifyDevices.Clear(); foreach (var device in devices) SpotifyDevices.Add(new(device.Id, device.Name));
         SpotifyDevice = SpotifyDevices.FirstOrDefault(d => d.Id == previous)
             ?? SpotifyDevices.FirstOrDefault(d => devices.Any(s => s.Id == d.Id && s.Active)) ?? SpotifyDevices.FirstOrDefault();
-        Raise(nameof(SpotifyDevice)); Status = devices.Length == 0 ? Text["NoSpotifyDevices"] : Text["Connected"];
+        Raise(nameof(SpotifyDevice));
+        if (reportStatus) Status = devices.Length == 0 ? Text["NoSpotifyDevices"] : Text["Connected"];
     }
     private async Task LoadArtwork(MusicTrack track)
     {
@@ -956,14 +985,24 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task CalibrateAsync()
     {
         Source = Sources.First(s => s.Id == "local");
-        await Task.Delay(100);
+        await _sourceTransition;
+        if (_disposed || !IsLocal) return;
         var path = DemoMusic.Calibration(_dataDirectory);
         await PlayTrackAsync(new("calibration", Text["Calibration"], "Musync", path, DurationSeconds: 16));
         Status = Text["CalibrationInfo"];
     }
     private async Task TickAsync()
     {
-        if (_disposed || _ending || _tickRunning) return;
+        if (_disposed || _ending) return;
+        if (_tickRunning)
+        {
+            // A failed receiver may take seconds to close. Healthy outputs
+            // continue playing, so keep their clock and lyrics current without
+            // starting a second overlapping receiver check.
+            if (!Busy && _session && !SpotifyMode && !IsSeeking && _player.Outputs.Count > 0)
+                RefreshLocalProgress();
+            return;
+        }
         if (IsPreparingPlayback) { Raise(nameof(PreparationDetail)); return; }
         if (SpotifyMode)
         {
@@ -973,23 +1012,25 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
         if (Busy || !_session || IsSeeking) return;
+        var sourceVersion = _sourceVersion;
         _tickRunning = true;
         try { await UpdatePlaybackAsync(); }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { ShowError(ex); }
+        catch (Exception ex) { if (OwnsSource(sourceVersion) && !Busy) ShowError(ex); }
         finally { _tickRunning = false; }
     }
     private async Task UpdatePlaybackAsync()
     {
         if (!SpotifyMode)
         {
+            var sourceVersion = _sourceVersion;
             await _player.CheckOutputsAsync();
-            Position = _player.Position; Duration = _player.Duration;
-            foreach (var speaker in Speakers)
-            {
-                _player.Outputs.TryGetValue(speaker.Id, out var output);
-                speaker.UpdateStatus(IsPlaying && output is not null, output?.Error ?? _player.OutputErrors.GetValueOrDefault(speaker.Id));
-            }
+            // Receiver cleanup may await network timeouts. Its old poll must
+            // not restore progress or errors after a source/link transition,
+            // or publish a toast after the view model has been disposed.
+            if (!OwnsSource(sourceVersion) || SpotifyMode || Busy || !_session) return;
+            RefreshLocalProgress();
+            RefreshSpeakerPlaybackStatus();
             RefreshPlayerError();
             if (!_player.IsPlaying && _player.Error is not null) IsPlaying = false;
             if (_player.Outputs.Count == 0)
@@ -1004,6 +1045,18 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 catch (Exception ex) { ShowError(ex); }
                 finally { _ending = false; }
             }
+        }
+    }
+    private void RefreshLocalProgress()
+    {
+        Position = _player.Position; Duration = _player.Duration;
+    }
+    private void RefreshSpeakerPlaybackStatus()
+    {
+        foreach (var speaker in Speakers)
+        {
+            _player.Outputs.TryGetValue(speaker.Id, out var output);
+            speaker.UpdateStatus(IsPlaying && output is not null, output?.Error ?? _player.OutputErrors.GetValueOrDefault(speaker.Id));
         }
     }
     private void SaveSoon()
@@ -1050,6 +1103,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         foreach (var row in Tracks) row.Dispose();
         _listArtwork.ReleaseMemory();
         ResetSpotifyVolume();
+        await _sourceTransition;
         await _store.SaveAsync(_settings);
         foreach (var speaker in Speakers) speaker.Detach();
         foreach (var speaker in LinkedSpeakers.Where(s => !Speakers.Contains(s))) speaker.Detach();

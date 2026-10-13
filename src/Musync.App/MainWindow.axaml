@@ -143,15 +143,20 @@
             <StackPanel Spacing="24">
               <Grid x:Name="HeroScene" ColumnDefinitions="1.618*,*" MinHeight="330" ClipToBounds="False" IsVisible="{Binding ShowHero}">
                   <icons:PosterBackdrop x:Name="HeroSurface" Grid.ColumnSpan="2" ZIndex="10" Palette="{Binding PosterPalette}" Margin="0,24,0,0" IsHitTestVisible="False"/>
-                  <StackPanel Grid.Column="0" ZIndex="30" VerticalAlignment="Center" Margin="26,50,18,24" Spacing="10">
-                    <TextBlock Text="{Binding Title}" FontSize="38" FontWeight="Bold" LineHeight="43" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" Foreground="#251A35"/>
-                    <TextBlock Text="{Binding HeroNote}" TextTrimming="CharacterEllipsis" Foreground="#58374A" FontSize="12"/>
-                    <Grid x:Name="HeroLyrics" RowDefinitions="28,42,28" Margin="0,14,0,0">
-                      <TextBlock x:Name="PreviousLyric" Text="{Binding LyricPrevious}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricPrevious}"/>
-                      <TextBlock x:Name="CurrentLyric" Grid.Row="1" Text="{Binding LyricCurrent}" FontSize="22" FontWeight="SemiBold" Foreground="#251A35" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricCurrent}"/>
-                      <TextBlock x:Name="NextLyric" Grid.Row="2" Text="{Binding LyricNext}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricNext}"/>
+                  <Border x:Name="HeroGlassPanel" Grid.Column="0" ZIndex="30" VerticalAlignment="Center" Margin="22,42,-46,18" CornerRadius="16" BoxShadow="0 8 24 0 #12251A35">
+                    <Grid>
+                      <icons:FrostedPosterGlass x:Name="HeroGlass" Backdrop="{Binding #HeroSurface}" IsHitTestVisible="False"/>
+                      <StackPanel Margin="24" Spacing="10">
+                        <TextBlock Text="{Binding Title}" FontSize="38" FontWeight="Bold" LineHeight="43" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" Foreground="#251A35"/>
+                        <TextBlock Text="{Binding HeroNote}" TextTrimming="CharacterEllipsis" Foreground="#58374A" FontSize="12"/>
+                        <Grid x:Name="HeroLyrics" RowDefinitions="28,42,28" Margin="0,14,0,0">
+                          <TextBlock x:Name="PreviousLyric" Text="{Binding LyricPrevious}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricPrevious}"/>
+                          <TextBlock x:Name="CurrentLyric" Grid.Row="1" Text="{Binding LyricCurrent}" FontSize="22" FontWeight="SemiBold" Foreground="#251A35" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricCurrent}"/>
+                          <TextBlock x:Name="NextLyric" Grid.Row="2" Text="{Binding LyricNext}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricNext}"/>
+                        </Grid>
+                      </StackPanel>
                     </Grid>
-                  </StackPanel>
+                  </Border>
                   <icons:CrossfadeImage x:Name="HeroArtwork" Grid.Column="1" ZIndex="20" Source="{Binding PosterArtwork}" IsVisible="{Binding ShowArtist}" MaxWidth="330" Height="330" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,0,8,0" IsHitTestVisible="False"/>
                   <Border Grid.Column="1" ZIndex="20" IsVisible="{Binding SpotifyMode}" Background="#F3EBF1" MaxWidth="245" Height="245" HorizontalAlignment="Stretch" VerticalAlignment="Center" CornerRadius="12" ClipToBounds="True" Margin="0,34,16,24" IsHitTestVisible="False">
                     <Grid>
@@ -274,7 +279,10 @@
           <Grid Grid.Column="4" ColumnDefinitions="36,36,36" ColumnSpacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
               <ComboBox x:Name="MusicSourceSelector" Classes="playerUtility" ItemsSource="{Binding Sources}" SelectedItem="{Binding Source, Mode=TwoWay}"
                         Theme="{StaticResource MusyncSourceSelector}"
-                        AutomationProperties.Name="{Binding Text[MusicSource]}" ToolTip.Tip="{Binding Text[MusicSource]}"/>
+                        AutomationProperties.Name="{Binding MusicSourceHint}" ToolTip.Tip="{Binding MusicSourceHint}"/>
+              <icons:PreparationIndicator x:Name="MusicSourceWave" Width="24" Height="18"
+                        IsVisible="{Binding IsSwitchingSource}" IsHitTestVisible="False"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
               <ToggleButton x:Name="SpeakerToggle" Grid.Column="1" Classes="playerUtility" Theme="{StaticResource MusyncPlayerToggle}"
                           IsChecked="{Binding LinkPanelOpen, Mode=TwoWay}"
                           AutomationProperties.Name="{Binding Text[Links]}" ToolTip.Tip="{Binding LinkSummary}">
