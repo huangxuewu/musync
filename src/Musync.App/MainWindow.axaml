@@ -322,8 +322,14 @@
                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
               <ToggleButton x:Name="SpeakerToggle" Grid.Column="1" Classes="playerUtility" Theme="{StaticResource MusyncPlayerToggle}"
                           IsChecked="{Binding LinkPanelOpen, Mode=TwoWay}"
-                          AutomationProperties.Name="{Binding Text[Links]}" ToolTip.Tip="{Binding LinkSummary}">
-                <icons:LucideIcon Kind="link-2"/>
+                          AutomationProperties.Name="{Binding LinkControlName}" ToolTip.Tip="{Binding LinkControlHint}">
+                <Grid Width="20" Height="20">
+                  <icons:LucideIcon Kind="link-2"/>
+                  <Border x:Name="LinkIssueBadge" Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Top"
+                          Margin="0,-5,-6,0" Background="#251A35" CornerRadius="3" IsVisible="{Binding HasLinkIssue}" IsHitTestVisible="False">
+                    <icons:LucideIcon Kind="triangle-alert" Width="14" Height="14" Foreground="#FFC970"/>
+                  </Border>
+                </Grid>
               </ToggleButton>
               <Button x:Name="MiniPlayerButton" Grid.Column="2" Classes="playerUtility" Theme="{StaticResource MusyncPlayerIcon}" Click="ToggleMiniPlayer"
                       AutomationProperties.Name="{Binding Text[MiniPlayer]}" ToolTip.Tip="{Binding Text[MiniPlayer]}">
@@ -386,7 +392,7 @@
               <ItemsControl ItemsSource="{Binding VisibleLinkSpeakers}">
               <ItemsControl.ItemTemplate>
                   <DataTemplate DataType="local:SpeakerViewModel">
-                    <Border BorderBrush="{DynamicResource LinkDividerBrush}" BorderThickness="0,0,0,1" Padding="0,12">
+                    <Border Classes="linkDeviceRow" BorderBrush="{DynamicResource LinkDividerBrush}" BorderThickness="0,0,0,1" Padding="0,12">
                       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="12">
                         <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" IsVisible="{Binding SelectionVisible}" Width="36" Height="36" VerticalAlignment="Top" AutomationProperties.Name="{Binding Name}"/>
                         <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">

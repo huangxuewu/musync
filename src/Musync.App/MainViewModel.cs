@@ -117,6 +117,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         EditLink = new AsyncCommand(_ => { if (ActiveLinkProfile is not null) BeginLinkEdit(ActiveLinkProfile); return Task.CompletedTask; }, ShowError);
         SaveLink = new AsyncCommand(_ => SaveLinkAsync(), ShowError);
         CancelLink = new AsyncCommand(_ => { DiscardLinkDraft(); return Task.CompletedTask; }, ShowError);
+        LinkedSpeakers.CollectionChanged += LinkedSpeakersChanged;
         RefreshLinks();
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, async (_, _) => await TickAsync());
         _timer.Start();
@@ -427,6 +428,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         Links.Clear(); foreach (var link in _settings.Links) Links.Add(new(link.Id, link.Name));
         foreach (var property in new[] { nameof(ActiveLink), nameof(HasActiveLink), nameof(NoLinks), nameof(LinkSummary), nameof(PlaybackTargetLabel), nameof(CanPlayLink), nameof(CanEditLink) }) Raise(property);
+        RefreshLinkFeedback();
     }
     private void ApplyActiveLink()
     {
@@ -981,6 +983,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private void RefreshCurrent()
     {
+        RefreshLinkFeedback();
         RefreshTrackPlayback();
         RefreshRadioSelection();
         RefreshPresentation();
@@ -1200,6 +1203,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         _disposed = true; _timer.Stop(); _toastTimer.Stop(); ToastMessage = "";
+        DetachLinkFeedback();
         _lifetime.Cancel(); _saveDelay?.Cancel(); _routeDelay?.Cancel();
         _searchRequest?.Cancel(); _artworkRequest?.Cancel(); _lyricsRequest?.Cancel();
         _radioRequest?.Cancel();

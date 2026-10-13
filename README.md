@@ -69,6 +69,8 @@ Open Links using the bottom-right link icon, create a link, select its devices, 
 
 Each speaker shows whether it is available, connecting, waiting for synchronized start, playing or paused. Receiver errors remain visible in that speaker's row. The link overview's Rescan icon searches again and retries failed routes at the current track position using the existing preparation barrier; its waiting wave respects reduced motion. Volume and delay preferences remain saved.
 
+In the unreleased source, the bottom-right link icon also retains an amber attention indicator while a device in the active routed link has a problem. Its tooltip and accessible name report the affected-device count. Opening the overview reveals the first affected speaker and its controls; the indicator clears when the device recovers. Unrelated devices and Spotify playback do not contribute to this indicator.
+
 For finite local files sent to Chromecast, validated MP3 files use their original bytes without re-encoding. Multiple receivers share a read lease that keeps the source intact until playback stops. Other file formats retain the compatible MP3 preparation path. The local file server supports GET, HEAD and byte-range probes. The waiting indicator includes the selected receivers while the source is being prepared; actual receiver startup time and remaining latency still require hardware testing.
 
 Network receivers must be reachable from the PC on the same network. If Windows requests firewall access, allow it for the private network used by your speakers. Musync does not change firewall rules automatically.

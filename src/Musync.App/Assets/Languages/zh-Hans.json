@@ -123,6 +123,8 @@
   "NoActiveLink": "选择链接",
   "LinkEmpty": "创建链接，添加扬声器，然后将音乐播放到此链接。",
   "LinkSummary": "{0} 个扬声器 · {1} 个可用",
+  "LinkAttentionOne": "音箱链接 · {0} 台设备需要处理，打开查看。",
+  "LinkAttentionMany": "音箱链接 · {0} 台设备需要处理，打开查看。",
   "LinkNameRequired": "请输入链接名称（1–48 个字符）。",
   "LinkNameExists": "已存在同名链接。",
   "LinkDevicesRequired": "请为此链接选择至少一个扬声器。",

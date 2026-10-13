@@ -308,7 +308,7 @@ public partial class MainWindow : Window
     }
     private void UpdateSpeakerPanelSize()
     {
-        var maximum = Math.Clamp(Bounds.Height - 152, 360, 640);
+        var maximum = Math.Clamp(Bounds.Height - 152, 360, 740);
         SpeakerPanel.Width = _linkModel?.IsLinkEditing == true ? 440 : 336;
         SpeakerPanel.MaxHeight = maximum;
         var content = _linkModel is null || _linkModel.IsLinkEditing ? 640
@@ -319,7 +319,14 @@ public partial class MainWindow : Window
     {
         UpdateSpeakerPanelSize();
         UpdatePreparationMotion();
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (SpeakerPopover.IsOpen) RevealPanel(SpeakerPanel); }, Avalonia.Threading.DispatcherPriority.Loaded);
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (!SpeakerPopover.IsOpen) return;
+            RevealPanel(SpeakerPanel);
+            if (_linkModel is { HasLinkIssue: true, IsLinkEditing: false })
+                LinkDeviceList.GetVisualDescendants().OfType<Border>()
+                    .FirstOrDefault(row => row.Classes.Contains("linkDeviceRow") && row.DataContext is SpeakerViewModel { HasIssue: true })?.BringIntoView();
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
         FocusLinkPanel();
     }
     private void FocusLinkPanel()

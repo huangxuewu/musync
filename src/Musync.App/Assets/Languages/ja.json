@@ -123,6 +123,8 @@
   "NoActiveLink": "リンクを選択",
   "LinkEmpty": "リンクを作成してスピーカーを追加し、音楽を再生します。",
   "LinkSummary": "スピーカー {0} 台 · 利用可能 {1} 台",
+  "LinkAttentionOne": "スピーカーリンク · {0} 台の状態を確認してください。",
+  "LinkAttentionMany": "スピーカーリンク · {0} 台の状態を確認してください。",
   "LinkNameRequired": "リンク名を入力してください（1〜48 文字）。",
   "LinkNameExists": "同じ名前のリンクが既にあります。",
   "LinkDevicesRequired": "スピーカーを1台以上選択してください。",

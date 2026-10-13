@@ -18,6 +18,7 @@ ICONS = (
     "speaker", "volume-2", "volume-x", "bluetooth", "airplay", "cast", "monitor",
     "play", "pause", "skip-back", "skip-forward", "shuffle", "repeat", "square",
     "plus", "minus", "x", "refresh-cw", "chevron-down", "check", "copy", "maximize", "link-2", "picture-in-picture-2",
+    "triangle-alert",
 )
 ASSETS = ROOT / "src/Musync.App/Assets/Icons/Lucide"
 BASE = f"https://raw.githubusercontent.com/lucide-icons/lucide/{REVISION}"

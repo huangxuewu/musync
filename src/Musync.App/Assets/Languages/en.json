@@ -123,6 +123,8 @@
   "NoActiveLink": "Choose a link",
   "LinkEmpty": "Create a link, add your speakers, then play music to it.",
   "LinkSummary": "{0} speakers · {1} available",
+  "LinkAttentionOne": "Speaker links · {0} device needs attention. Open to review.",
+  "LinkAttentionMany": "Speaker links · {0} devices need attention. Open to review.",
   "LinkNameRequired": "Enter a link name (1–48 characters).",
   "LinkNameExists": "A link with this name already exists.",
   "LinkDevicesRequired": "Select at least one speaker for this link.",
