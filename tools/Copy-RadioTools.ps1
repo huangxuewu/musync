@@ -11,7 +11,7 @@ if ($taskFfmpeg.Count -ne 1) { throw 'Prepare the pinned radio tools before pack
 $taskBin = $taskFfmpeg[0].Directory.FullName
 $taskOutput = Join-Path $taskDestination 'RadioTools'
 New-Item -ItemType Directory -Path $taskOutput -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $taskSource 'yt-dlp.exe'),(Join-Path $taskSource 'YT-DLP-LICENSE.txt'),(Join-Path $taskSource 'YT-DLP-THIRD-PARTY.txt') -Destination $taskOutput -Force
+Copy-Item -LiteralPath (Join-Path $taskSource 'yt-dlp.exe'),(Join-Path $taskSource 'YT-DLP-LICENSE.txt'),(Join-Path $taskSource 'YT-DLP-THIRD-PARTY.txt'),(Join-Path $taskSource 'FFMPEG-GPL-3.0.txt') -Destination $taskOutput -Force
 Copy-Item -LiteralPath $taskFfmpeg[0].FullName -Destination $taskOutput -Force
 Get-ChildItem -LiteralPath $taskBin -Filter '*.dll' | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $taskOutput -Force }
 Copy-Item -LiteralPath (Join-Path (Split-Path $taskBin) 'LICENSE.txt') -Destination (Join-Path $taskOutput 'FFMPEG-LICENSE.txt') -Force
@@ -25,11 +25,14 @@ yt-dlp 2026.08.19 (unmodified separate executable):
 https://github.com/yt-dlp/yt-dlp/releases/tag/2026.08.19
 https://github.com/yt-dlp/yt-dlp/tree/2026.08.19
 
-FFmpeg n8.1.3-18-g46d899d7a0 (unmodified LGPL shared build):
+FFmpeg n8.1.3-18-g46d899d7a0 (unmodified LGPL v3 shared build):
 https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-13-13-05
 https://github.com/FFmpeg/FFmpeg/tree/46d899d7a0
 https://github.com/BtbN/FFmpeg-Builds
-Shared libraries remain replaceable. See FFMPEG-LICENSE.txt for terms.
+Shared libraries remain replaceable. See FFMPEG-LICENSE.txt and FFMPEG-GPL-3.0.txt for terms.
+The matching FFmpeg source and build recipes are also supplied as
+FFmpeg-Sources-1.0.1.zip with the Musync 1.0.1 release:
+https://github.com/huangxuewu/musync/releases/tag/v1.0.1
 
 The Node runtime and its license are in RadioTools or AirPlayBridge.
 '@ | Set-Content -LiteralPath (Join-Path $taskOutput 'SOURCES.txt') -Encoding utf8

@@ -1,12 +1,18 @@
 {
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Platform": "win-x64",
-  "Executable": "artifacts/Musync-1.0.0-win-x64/Musync.exe",
-  "Archive": "artifacts/Musync-1.0.0-win-x64.zip",
-  "Bytes": 151503876,
-  "SHA256": "e13c524e4257e2d7aa58a47e90da4b9c749a39a004f9073affccde7fdb62ead7",
+  "Executable": "artifacts/Musync-1.0.1-win-x64/Musync.exe",
+  "Archive": "artifacts/Musync-1.0.1-win-x64.zip",
+  "Bytes": 235289332,
+  "SHA256": "892baad2a7ae9afd2ade365e88fe66483051d0efdf9834c0f1c8120cf0c44abe",
   "SelfContained": true,
   "Signed": false,
   "Validation": "release-validation.json",
-  "AutomatedTestsPassed": 412
+  "AutomatedTestsPassed": 542,
+  "BinarySourceCommit": "40d6f8bd2474b30b0500be256fac773a3f985d51",
+  "FFmpegSources": {
+    "Archive": "artifacts/FFmpeg-Sources-1.0.1.zip",
+    "Bytes": 21008070,
+    "SHA256": "1219b20e2c9a4946ca27f349e4c73c9c7b1d027a0f58e4d337a41aa3a59e666d"
+  }
 }

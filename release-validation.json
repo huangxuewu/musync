@@ -1,8 +1,9 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "date": "2026-10-13",
   "platform": "Windows x64",
   "configuration": "Release",
+  "sourceCommit": "40d6f8bd2474b30b0500be256fac773a3f985d51",
   "build": {
     "warnings": 0,
     "errors": 0
@@ -11,53 +12,57 @@
     {
       "project": "Musync.Tests",
       "configuration": "Release",
-      "total": 235,
-      "passed": 235,
+      "total": 302,
+      "passed": 302,
       "failed": 0,
       "skipped": 0,
-      "evidence": "tests/Musync.Tests/TestResults/control-recovery-core-final.trx"
+      "evidence": "tests/Musync.Tests/TestResults/musync-tests.trx"
     },
     {
       "project": "Musync.App.Tests",
       "configuration": "Release",
-      "total": 167,
-      "passed": 167,
+      "total": 222,
+      "passed": 222,
       "failed": 0,
       "skipped": 0,
-      "evidence": "tests/Musync.App.Tests/TestResults/network-wait-app-confirmed.trx"
+      "evidence": "tests/Musync.App.Tests/TestResults/musync-app-tests.trx"
     },
     {
       "project": "Musync.AirPlayBridge",
       "runtime": "Node.js 24.21.0",
-      "total": 10,
-      "passed": 10,
+      "total": 18,
+      "passed": 18,
       "failed": 0,
       "skipped": 0,
-      "lastRun": "2026-10-13 initial Release validation; AirPlay helper source unchanged"
+      "evidence": ".local/release-1.0.1/build-and-tests.log"
     }
   ],
-  "automatedTotal": 412,
+  "automatedTotal": 542,
   "portableStartup": {
-    "Version": "1.0.0.0",
-    "ProductVersion": "1.0.0",
+    "Version": "1.0.1.0",
+    "ProductVersion": "1.0.1",
     "PortableMainWindow": "Musync",
     "Responding": true,
     "IsolatedFreshProfile": true,
     "GlobalDotnetRootRequired": false,
     "StartupExceptionLog": false,
-    "PlaybackStarted": false
+    "PlaybackRequested": false,
+    "CacheLimitMb": 500,
+    "ExecutableTested": "ZIP-extracted Musync.exe",
+    "NormalCloseExitCode": 0
   },
   "package": {
     "selfContained": true,
     "signed": false,
     "dotnetRuntime": "10.0.12",
     "nodeRuntime": "24.21.0",
+    "ytDlpVersion": "2026.08.19",
+    "ffmpegVersion": "n8.1.3-18-g46d899d7a0",
     "licenseInventoryIncluded": true,
     "localProfilesAndTokensIncluded": false
   },
   "uiReview": {
-    "method": "Avalonia Skia headless rendering of portrait/typography, scan failure, link preparation and recovered full/mini playback states",
-    "framesReviewed": 20,
+    "method": "Full Avalonia Skia headless UI regression suite, including navigation/transport pixel checks",
     "languages": [
       "en",
       "zh-Hans",
@@ -68,117 +73,43 @@
       1120
     ],
     "coverage": [
-      "Both approved portrait subjects",
-      "Chinese default and minimum layouts",
-      "Chinese settings",
-      "Japanese minimum layout",
-      "Scan failure toast clear of link popup in all three languages at 1120x720",
-      "Disabled link selection during speaker preparation in all three languages at 1120x720",
-      "Recovered playback with no stale error toast in all three languages, full and mini player",
-      "Localized waiting state in the link editor at 1120x720; superseded scan toast removed"
-    ]
+      "Frosted poster and settings panels",
+      "Sidebar and playlist actions",
+      "Track playback/preparation/paused feedback and reduced motion",
+      "Collection search and empty states",
+      "Recognition cache capacity and ownership",
+      "Radio station persistence and speaker preparation",
+      "Source transitions, receiver recovery and control lifecycle"
+    ],
+    "nativeWindowStartupAndCloseVerified": true,
+    "nativeGpuVisualInspection": false
   },
   "hardwareEvidence": {
-    "Onkyo": "User confirmed continuous local-music playback and satisfactory coordinated startup in development testing; a fixed small offset remained manually adjustable",
+    "Onkyo": "Previously confirmed by user: continuous local music and coordinated startup, with manually adjustable residual offset",
     "releaseHardwareRetest": false,
     "homePodReleaseRetest": false,
+    "youtubeRadioHardwareRetest": false,
     "sampleAccurateSynchronizationClaimed": false
   },
   "limits": [
     "Spotify Connect plays through its selected device; Spotify audio is not rebroadcast by the local routing engine",
     "AirPlay PIN/password pairing is not implemented",
+    "YouTube radio seeking is disabled",
     "macOS is not included",
     "Release executable is unsigned"
   ],
-  "sourceSelection": {
-    "developmentOutputsExcluded": true,
-    "sensitivePatternFindings": 0
-  },
-  "networkControlsRegression": {
-    "newCases": 8,
-    "missingOrInvalidPositionRetried": true,
-    "latestRequestedDelayUsed": true,
-    "undoAvoidsSeek": true,
-    "stopCancelsPendingAdjustment": true,
-    "previousAppliedDelayPreservedOnFailure": true,
-    "realSpeakerRetest": false
-  },
   "binaryHashes": {
-    "Musync.dll": "3f5e16fe04341bcaece2c85526c69d97439ac81a6ec7c424c2d267ecbfba4ea5",
-    "Musync.Core.dll": "e7bbf7aa45c4fc52b87907287c6d4a46e1baf8610cfd912beaf4be24d35a0a32",
-    "Musync.Network.dll": "6561175a8cd1c265ac96f631019729655ba53823d0f6424ca5e7c293b3dc3c12",
-    "Musync.Platform.Windows.dll": "df0c1a965c3f1fbf36cbcf62ccfe26c1b995135d6e8e5530d2b3b7bc0c524fbe"
-  },
-  "libraryVirtualization": {
-    "firstScreenRowsFor1000Tracks": 16,
-    "regressionCases": 2,
-    "filterAfterBottomScrollVerified": true,
-    "recycledSongActionVerified": true,
-    "nativeScrollingVerified": false,
-    "headlessFirstLayoutAndRenderMs": {
-      "unvirtualized": 2970.2849,
-      "virtualized": 110.2427
-    },
-    "benchmarkScope": "Same-process synthetic 1000-track headless layout with warm-up; not native FPS or hardware playback latency"
-  },
-  "controlLifecycleRegression": {
-    "newCases": 4,
-    "stoppedReceiverErrorsIgnored": true,
-    "replacedSessionErrorsIgnored": true,
-    "stopCancellationIgnored": true,
-    "currentReceiverFailuresReported": true,
-    "realSpeakerRetest": false
-  },
-  "networkScanRecovery": {
-    "newCases": 11,
-    "airPlayAndChromecast": true,
-    "failedScanKeepsKnownDevices": true,
-    "healthyOutputsNotRestarted": true,
-    "successfulEmptyScanMarksOffline": true,
-    "retryPreservesDraftEdits": true,
-    "toastClearOfSpeakerPopup": true,
-    "languages": [
-      "en",
-      "zh-Hans",
-      "ja"
-    ],
-    "realSpeakerRetest": false
-  },
-  "linkPreparationRegression": {
-    "newCases": 3,
-    "keyboardSelectionCannotDriftFromActiveLink": true,
-    "selectorDisabledWhileBusy": true,
-    "cancellationRestoresSelection": true,
-    "languages": [
-      "en",
-      "zh-Hans",
-      "ja"
-    ],
-    "realSpeakerRetest": false
-  },
-  "controlErrorRecovery": {
-    "newCases": 9,
-    "perReceiverErrorOwnership": true,
-    "successfulRetryClearsOwnError": true,
-    "otherReceiverAndDecoderErrorsPreserved": true,
-    "stoppedSessionResponsesIgnored": true,
-    "playingAndPausedStatusRestored": true,
-    "newerNotificationsPreserved": true,
-    "spotifyDoesNotInheritLocalError": true,
-    "realSpeakerRetest": false
-  },
-  "networkScanResponsiveness": {
-    "newCases": 7,
-    "progressAndLyricsContinue": true,
-    "pauseResumeAndSeekContinue": true,
-    "spotifyRefreshContinues": true,
-    "scanCommitSerializedWithPlayback": true,
-    "scanDoesNotClearPlaybackBusyState": true,
-    "shutdownCancelsWaitingDiscovery": true,
-    "lateResultIgnored": true,
-    "supersededScanToastCleared": true,
-    "newerUnrelatedToastPreservedAtScanStart": true,
-    "waitingMotionStopsWhenHiddenMinimizedOrReducedMotionEnabled": true,
-    "realSpeakerRetest": false
+    "Musync.exe": "5eb0b7b39d518bac9af2ba91428537c0561b481b1af4d78c8d61c3db374fee21",
+    "Musync.dll": "70151c2ba5242af9dd6dfaf4ca58eb35c0fa6b9a3dcaaaf9fd2dfec98440826b",
+    "Musync.Core.dll": "378b0759d303d9655d99a111219130efb99d7284bbbc9352af268da828b9d14c",
+    "Musync.Network.dll": "21f77068c13cc78d810ba4f04a31887fd7234da86fcff5eace83a4085e6465d4",
+    "Musync.Platform.Windows.dll": "e5b297ae773de08a8c8c368748d8b5a46a2b3db45e8108e32070d56175b203fd",
+    "coreclr.dll": "128aee8c62a673d64739e585e3876b61133571cec83a46240a62581d5465639b",
+    "hostfxr.dll": "838591885c5396fb0588a3aedc2f3e841d3afc67570868b1bce615264005a44c",
+    "AirPlayBridge/node.exe": "ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32",
+    "AirPlayBridge/bridge.mjs": "d904691c04e4d01ba56dbe5d6c828335dfa98217b7a68de74b5d07cca18177f7",
+    "AirPlayBridge/receiver-sessions.mjs": "ad7d9e112ad3eed0b8a9ec14a93f0d5aaa15d97e10401c6b29363ed4b108b7f5",
+    "RadioTools/yt-dlp.exe": "66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a",
+    "RadioTools/ffmpeg.exe": "9596091638a0dd247fd51fdd4e6cc241184c709c01beb86e4e672033bd9b2f12"
   }
 }

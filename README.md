@@ -10,6 +10,8 @@ Download **Musync-1.0.1-win-x64.zip** from [GitHub Releases](https://github.com/
 
 The executable is currently unsigned. Settings, playlists and cached artwork are stored in `%LOCALAPPDATA%/Musync`; imported music stays in its original folders. The application does not start playback automatically.
 
+YouTube radio uses an unmodified [FFmpeg](https://ffmpeg.org/) LGPL v3 shared build. Its license texts are included in `RadioTools`; matching source and build recipes are available in **FFmpeg-Sources-1.0.1.zip** on the same release page. FFmpeg's shared libraries remain replaceable.
+
 ## Features
 
 - Local folder imports create playlists using folder names; nested folders become separate playlists. WAV, MP3, FLAC, AAC, M4A, WMA and AIFF decoding uses Windows codecs.
