@@ -26,7 +26,9 @@ YouTube radio uses an unmodified [FFmpeg](https://ffmpeg.org/) LGPL v3 shared bu
 
 In the unreleased UI, adjacent local lyric lines smoothly move into the center highlight and then into the previous-line role. Large jumps and paused seeks show the latest text immediately. The movement follows the Windows animation preference and settles when the poster is hidden or the mini player is open.
 
-The unreleased link panel offers 1, 10 and 100 ms adjustment steps for the delay buttons and keyboard arrows. Directly entered millisecond values are preserved, and the active link applies changes during playback. The step is shared by the open editing session; saved speaker delays persist independently. **Test sync** plays a short listening test for manual tuning. Microphone measurement and automatic acoustic calibration are not implemented.
+The unreleased link panel offers 1, 10 and 100 ms adjustment steps for the delay buttons and keyboard arrows. Directly entered millisecond values are preserved, and the active link applies changes during playback. The step is shared by the open editing session; saved speaker delays persist independently. **Test sync** plays a short listening test for manual tuning. Automatic acoustic calibration is not yet connected to the player.
+
+The unreleased source contains a measurement foundation using paired reference/target test signals and Windows microphone capture. It produces delay recommendations only when every device has a sufficiently clear, stable result. Captured audio stays in memory; only generated test signals can be written as probe files. The current application does not create this capture provider or open the microphone. Playback orchestration, the calibration UI, per-source saved profiles and physical Onkyo/HomePod validation are still pending. Codec tests allow a 2 ms measurement tolerance; they do not establish real speaker accuracy.
 
 ## Spotify setup
 

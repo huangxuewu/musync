@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <InternalsVisibleTo Include="Musync.Tests" />
     <ProjectReference Include="../Musync.Core/Musync.Core.csproj" />
     <PackageReference Include="NAudio" Version="3.1.0" />
     <PackageReference Include="NAudio.Wasapi" Version="3.1.0" />
