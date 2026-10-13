@@ -9,6 +9,7 @@
 - Play and seek controls reflect the pending transition, and shutdown cancels and settles it.
 - A playback poll finishing slow disconnected-receiver cleanup cannot restore an old source's progress or error toast after a source change or shutdown.
 - Healthy outputs retain progress and lyric updates while a disconnected receiver is being cleaned up, without overlapping receiver checks. Successful local playback retries immediately clear obsolete speaker status.
+- Confirmed Chromecast transport loss skips unreachable Stop and volume-restore requests while revoking local media. Media errors on a live connection retain normal cleanup, and file playback bounds session disposal; disposal also cancels pending Cast requests and the heartbeat after an incomplete connection.
 
 ## 1.0.0 — 2026-10-13
 

@@ -10,6 +10,52 @@ namespace Musync.Tests;
 public sealed class CastSessionTests
 {
     [Fact]
+    public async Task SessionDisposalCancelsPendingClientRequestsWithoutAReceiver()
+    {
+        // SharpCaster queues a status request even when its transport is
+        // absent. This exercises its real pending-request cancellation without
+        // opening a network connection or sending audio to a receiver.
+        var session = new CastSession();
+        var pending = session.ReadVolumeAsync();
+        try
+        {
+            await session.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(2));
+            var error = await Record.ExceptionAsync(() => pending.WaitAsync(TimeSpan.FromSeconds(1)));
+            Assert.IsAssignableFrom<OperationCanceledException>(error);
+            Assert.True(pending.IsCompleted);
+        }
+        finally
+        {
+            await session.DisconnectAsync().WaitAsync(TimeSpan.FromSeconds(2));
+            try { await pending; } catch (OperationCanceledException) { }
+        }
+    }
+
+    [Fact]
+    public void ConnectionLossIsStickyUntilANewConnectionBegins()
+    {
+        var connection = new CastConnectionFeedback();
+        connection.BeginConnect(); connection.Connected(); connection.ObserveDisconnect();
+        Assert.True(connection.ConnectionLost); Assert.Contains("connection lost", connection.Error);
+        connection.ExpectDisconnect(); connection.ObserveDisconnect();
+        Assert.True(connection.ConnectionLost);
+        connection.BeginConnect(); Assert.False(connection.ConnectionLost); Assert.Null(connection.Error);
+        connection.Connected(); Assert.False(connection.ConnectionLost);
+    }
+
+    [Fact]
+    public void ExpectedDisconnectAndMediaRejectionDoNotMarkTheTransportLost()
+    {
+        var connection = new CastConnectionFeedback();
+        connection.ObserveDisconnect(); Assert.False(connection.ConnectionLost);
+        connection.BeginConnect(); connection.Connected();
+        var media = new CastMediaFeedback(); media.BeginLoad(); media.Fail("LOAD_FAILED");
+        Assert.NotNull(media.Error); Assert.False(connection.ConnectionLost);
+        connection.ExpectDisconnect(); connection.ObserveDisconnect();
+        Assert.Null(connection.Error); Assert.False(connection.ConnectionLost);
+    }
+
+    [Fact]
     public void SerializedLoadTellsTheReceiverThatHlsSegmentsContainMp3()
     {
         const string url = "http://192.0.2.1:5000/s/test/index.m3u8";

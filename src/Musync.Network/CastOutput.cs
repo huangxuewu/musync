@@ -260,11 +260,12 @@ public sealed class CastOutput : IAudioOutput
     {
         _lifetime?.Cancel();
         await EndStream();
-        if (_mediaLoaded) try { await _session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch (Exception) { }
+        if (_mediaLoaded && !_session.ConnectionLost) try { await _session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch (Exception) { }
         _mediaLoaded = false;
-        if (_originalLevel is { } level)
+        if (_originalLevel is { } level && !_session.ConnectionLost)
             try { await _session.SetVolumeAsync(level).WaitAsync(TimeSpan.FromSeconds(3)); } catch (Exception) { }
         _originalLevel = null; _appliedLevel = null;
+        if (_session.ConnectionLost) _error ??= _session.Error;
         if (_connected) try { await _session.DisconnectAsync().WaitAsync(TimeSpan.FromSeconds(5)); } catch (Exception) { }
         _connected = false; _paused = false;
         _lifetime?.Dispose(); _lifetime = null;

@@ -9,6 +9,7 @@ namespace Musync.Network;
 internal interface ICastSession : IAsyncDisposable
 {
     string? Error { get; }
+    bool ConnectionLost => false;
     Task ConnectAsync(SpeakerDevice device);
     Task<double?> ReadVolumeAsync();
     Task LaunchAsync();
@@ -26,10 +27,10 @@ internal interface ICastSession : IAsyncDisposable
 internal sealed class CastSession : ICastSession
 {
     private readonly ChromecastClient _client = new();
-    private volatile bool _expectedDisconnect = true;
-    private volatile string? _error;
+    private readonly CastConnectionFeedback _connection = new();
     private readonly CastMediaFeedback _media = new();
-    public string? Error => _error ?? _media.Error;
+    public string? Error => _connection.Error ?? _media.Error;
+    public bool ConnectionLost => _connection.ConnectionLost;
     public CastSession()
     {
         _client.Disconnected += OnDisconnected;
@@ -44,16 +45,16 @@ internal sealed class CastSession : ICastSession
     private void OnMediaStatus(object? sender, MediaStatus status) => _media.Observe(status);
     private void OnDisconnected(object? sender, EventArgs args)
     {
-        if (!_expectedDisconnect) _error = "Chromecast connection lost.";
+        _connection.ObserveDisconnect();
     }
     public async Task ConnectAsync(SpeakerDevice device)
     {
-        _expectedDisconnect = true; _error = null;
+        _connection.BeginConnect();
         await _client.ConnectChromecast(new ChromecastReceiver
         {
             Name = device.Name, DeviceUri = new Uri("http://" + device.Host), Port = device.Port
         });
-        _expectedDisconnect = false;
+        _connection.Connected();
     }
     public async Task<double?> ReadVolumeAsync() => (await _client.ReceiverChannel.GetChromecastStatusAsync())?.Volume?.Level;
     public async Task LaunchAsync() => await _client.LaunchApplicationAsync("CC1AD845");
@@ -134,16 +135,36 @@ internal sealed class CastSession : ICastSession
         _media.ExpectStop();
         await _client.MediaChannel.StopAsync();
     }
-    public Task DisconnectAsync() { _expectedDisconnect = true; _media.ExpectStop(); return _client.DisconnectAsync(); }
+    public Task DisconnectAsync() { _connection.ExpectDisconnect(); _media.ExpectStop(); return _client.DisconnectAsync(); }
     public async ValueTask DisposeAsync()
     {
-        _expectedDisconnect = true; _media.ExpectStop();
+        _connection.ExpectDisconnect(); _media.ExpectStop();
         _client.Disconnected -= OnDisconnected;
         _client.MediaChannel.LoadFailed -= OnLoadFailed;
         _client.MediaChannel.InvalidRequest -= OnInvalidRequest;
         _client.MediaChannel.ErrorHappened -= OnMediaError;
         _client.MediaChannel.StatusChanged -= OnMediaStatus;
-        await _client.Dispose();
+        // Disconnect also cancels pending requests and stops the heartbeat.
+        // This is needed after an incomplete Connect, before an output could
+        // mark itself connected and run its normal Stop/Disconnect path.
+        await _client.DisconnectAsync();
+    }
+}
+
+// Transport loss and media rejection have different teardown requirements.
+// A receiver can reject audio while its connection still accepts Stop/volume.
+internal sealed class CastConnectionFeedback
+{
+    private volatile bool _expectedDisconnect = true;
+    private volatile string? _error;
+    public string? Error => _error;
+    public bool ConnectionLost => _error is not null;
+    public void BeginConnect() { _expectedDisconnect = true; _error = null; }
+    public void Connected() => _expectedDisconnect = false;
+    public void ExpectDisconnect() => _expectedDisconnect = true;
+    public void ObserveDisconnect()
+    {
+        if (!_expectedDisconnect) _error = "Chromecast connection lost.";
     }
 }
 

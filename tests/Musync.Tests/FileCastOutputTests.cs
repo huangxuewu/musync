@@ -12,7 +12,11 @@ public sealed class FileCastOutputTests
 {
     private sealed class Session : ICastSession
     {
-        public string? Error => null;
+        public string? Error { get; set; }
+        public bool ConnectionLost { get; set; }
+        public Task? CleanupReply;
+        public bool DropDuringStop;
+        public Task? DisposalReply;
         public string? Url;
         public double Duration, Position;
         public int Plays, Pauses, Stops, Disconnects;
@@ -24,7 +28,7 @@ public sealed class FileCastOutputTests
         public Task ConnectAsync(SpeakerDevice device) => Task.CompletedTask;
         public Task<double?> ReadVolumeAsync() => Task.FromResult<double?>(.4);
         public Task LaunchAsync() => Task.CompletedTask;
-        public Task SetVolumeAsync(double level) { Volumes.Add(level); return Task.CompletedTask; }
+        public Task SetVolumeAsync(double level) { Volumes.Add(level); return CleanupReply ?? Task.CompletedTask; }
         public Task LoadAsync(string url) => throw new InvalidOperationException("A local file must not use live HLS.");
         public Task PrepareFileAsync(string url, double duration, double position, CancellationToken token)
         { Url = url; Duration = duration; Position = position; return FailPreparation ? Task.FromException(new IOException("Rejected preload")) : Task.CompletedTask; }
@@ -33,9 +37,14 @@ public sealed class FileCastOutputTests
         public Task<double?> ReadPositionAsync() => PendingPosition?.Task
             ?? Task.FromResult(PositionResponses.Count > 0 ? PositionResponses.Dequeue() : (double?)Position);
         public Task SeekPreparedAsync(double position) { Seeks++; Position = position; return Task.CompletedTask; }
-        public Task StopMediaAsync() { Stops++; return Task.CompletedTask; }
+        public Task StopMediaAsync()
+        {
+            Stops++;
+            if (DropDuringStop) { ConnectionLost = true; Error = "Synthetic connection lost"; return Task.CompletedTask; }
+            return CleanupReply ?? Task.CompletedTask;
+        }
         public Task DisconnectAsync() { Disconnects++; return Task.CompletedTask; }
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        public ValueTask DisposeAsync() => DisposalReply is { } reply ? new(reply) : ValueTask.CompletedTask;
     }
     private sealed class Preparer : IAudioFilePreparer, IDisposable
     {
@@ -49,6 +58,64 @@ public sealed class FileCastOutputTests
     }
     private static FileCastOutput Output(LocalStreamServer server, Preparer preparer, Session session, double position = 0)
         => new(new("cast", "Cast", SpeakerTransport.Chromecast, "127.0.0.1", 8009), new("song.flac", false, position), server, preparer, session);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfirmedConnectionLossRevokesTheFileWithoutDeadControlRequests(bool duringStop)
+    {
+        await using var server = new LocalStreamServer(); using var preparer = new Preparer(); var session = new Session();
+        await using var output = Output(server, preparer, session);
+        await output.StartAsync(default); await output.BeginPlaybackAsync(default);
+        var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        session.ConnectionLost = !duringStop; session.Error = duringStop ? null : "Synthetic connection lost";
+        session.DropDuringStop = duringStop; session.CleanupReply = pending.Task;
+        var levels = session.Volumes.Count;
+        var stop = output.StopAsync();
+        try
+        {
+            await stop.WaitAsync(TimeSpan.FromSeconds(1));
+            Assert.Equal(duringStop ? 1 : 0, session.Stops); Assert.Equal(levels, session.Volumes.Count);
+            Assert.Equal(1, session.Disconnects); Assert.Equal(1, preparer.Releases);
+            using var http = new HttpClient();
+            Assert.Equal(HttpStatusCode.NotFound, (await http.GetAsync(session.Url)).StatusCode);
+            Assert.Equal(session.Error, output.Error);
+        }
+        finally { pending.TrySetResult(); await stop; }
+    }
+
+    [Fact]
+    public async Task UnresponsiveSessionDisposalIsBoundedAfterRevokingOwnedMedia()
+    {
+        await using var server = new LocalStreamServer(); using var preparer = new Preparer(); var session = new Session();
+        await using var output = Output(server, preparer, session);
+        await output.StartAsync(default);
+        var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        session.DisposalReply = pending.Task;
+        var dispose = output.DisposeAsync().AsTask();
+        try
+        {
+            var error = await Record.ExceptionAsync(() => dispose.WaitAsync(TimeSpan.FromSeconds(7)));
+            Assert.True(dispose.IsCompleted, "The output's own disposal must finish rather than relying on the caller's timeout.");
+            Assert.IsType<TimeoutException>(error);
+            Assert.Equal(1, preparer.Releases); Assert.Equal(1, session.Disconnects);
+            Assert.Equal(.4, session.Volumes.Last());
+            using var http = new HttpClient();
+            Assert.Equal(HttpStatusCode.NotFound, (await http.GetAsync(session.Url)).StatusCode);
+        }
+        finally { pending.TrySetResult(); try { await dispose; } catch (TimeoutException) { } }
+    }
+
+    [Fact]
+    public async Task MediaErrorsWithAnIntactConnectionStillStopAndRestoreVolume()
+    {
+        await using var server = new LocalStreamServer(); using var preparer = new Preparer();
+        var session = new Session(); await using var output = Output(server, preparer, session);
+        await output.StartAsync(default); session.Error = "Synthetic media rejected";
+        await output.StopAsync();
+        Assert.Equal(1, session.Stops); Assert.Equal(.4, session.Volumes.Last()); Assert.Equal(1, session.Disconnects);
+        Assert.Equal(1, preparer.Releases);
+    }
     [Fact]
     public async Task PreloadServesRangesWithoutPlayingAndRevokesTheUrlOnStop()
     {

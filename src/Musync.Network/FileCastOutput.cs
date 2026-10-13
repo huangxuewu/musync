@@ -196,11 +196,12 @@ public sealed class FileCastOutput : IAudioOutput
         _playTask = null; _scheduledPlay?.Dispose(); _scheduledPlay = null;
         if (_key is not null) _server.RemoveFile(_key);
         _key = null;
-        if (_loaded) try { await _session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch { }
+        if (_loaded && !_session.ConnectionLost) try { await _session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch { }
         _loaded = false;
-        if (_originalVolume is { } level)
+        if (_originalVolume is { } level && !_session.ConnectionLost)
             try { await _session.SetVolumeAsync(level).WaitAsync(TimeSpan.FromSeconds(3)); } catch { }
         _originalVolume = null; _appliedVolume = null;
+        if (_session.ConnectionLost) _error ??= _session.Error;
         if (_connected) try { await _session.DisconnectAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch { }
         _connected = false; _paused = true; _remainingDelay = 0; _delayClock.Reset();
         if (_media is { } media) { _media = null; await media.DisposeAsync(); }
@@ -210,6 +211,11 @@ public sealed class FileCastOutput : IAudioOutput
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-        await StopAsync(); await _session.DisposeAsync(); _gate.Dispose();
+        try
+        {
+            await StopAsync();
+            await _session.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally { _gate.Dispose(); }
     }
 }

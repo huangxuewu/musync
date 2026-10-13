@@ -122,6 +122,9 @@ public sealed class CastLifecycleTests
     private sealed class Session : ICastSession
     {
         public string? Error { get; set; }
+        public bool ConnectionLost { get; set; }
+        public Task? CleanupReply;
+        public bool DropDuringStop;
         public readonly List<string> Events = [];
         public readonly List<double> Levels = [];
         public readonly List<string> Urls = [];
@@ -135,6 +138,7 @@ public sealed class CastLifecycleTests
         public async Task SetVolumeAsync(double level)
         {
             Events.Add("volume"); Levels.Add(level);
+            if (CleanupReply is { } cleanup) { await cleanup; return; }
             if (RejectVolume && level != .47) throw new IOException("Volume rejected");
             VolumeSent?.TrySetResult();
             if (VolumeReady is { } ready) { VolumeReady = null; await ready; }
@@ -144,9 +148,49 @@ public sealed class CastLifecycleTests
             Events.Add("load"); Urls.Add(url);
             return RejectLoad ? Task.FromException(new IOException("Receiver rejected the audio stream")) : Task.CompletedTask;
         }
-        public Task StopMediaAsync() { Events.Add("stop"); return Task.CompletedTask; }
+        public Task StopMediaAsync()
+        {
+            Events.Add("stop");
+            if (DropDuringStop) { ConnectionLost = true; Error = "Synthetic connection lost"; return Task.CompletedTask; }
+            return CleanupReply ?? Task.CompletedTask;
+        }
         public Task DisconnectAsync() { Events.Add("disconnect"); return Task.CompletedTask; }
         public ValueTask DisposeAsync() { Events.Add("dispose"); return ValueTask.CompletedTask; }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfirmedConnectionLossRevokesTheLiveStreamWithoutDeadControlRequests(bool duringStop)
+    {
+        await using var server = new LocalStreamServer(); var session = new Session();
+        await using var output = new CastOutput(new("cast", "Test Cast", SpeakerTransport.Chromecast, "127.0.0.1", 8009), server, new Encoder(), session);
+        await output.StartAsync(default);
+        var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        session.ConnectionLost = !duringStop; session.Error = duringStop ? null : "Synthetic connection lost";
+        session.DropDuringStop = duringStop; session.CleanupReply = pending.Task;
+        var levels = session.Levels.Count;
+        var stop = output.StopAsync();
+        try
+        {
+            await stop.WaitAsync(TimeSpan.FromSeconds(1));
+            if (duringStop) Assert.Contains("stop", session.Events); else Assert.DoesNotContain("stop", session.Events);
+            Assert.Equal(levels, session.Levels.Count);
+            Assert.Contains("disconnect", session.Events);
+            using var http = new HttpClient();
+            Assert.Equal(HttpStatusCode.NotFound, (await http.GetAsync(Assert.Single(session.Urls))).StatusCode);
+        }
+        finally { pending.TrySetResult(); await stop; }
+    }
+
+    [Fact]
+    public async Task MediaErrorsWithAnIntactConnectionStillStopLiveMediaAndRestoreVolume()
+    {
+        await using var server = new LocalStreamServer(); var session = new Session();
+        await using var output = new CastOutput(new("cast", "Test Cast", SpeakerTransport.Chromecast, "127.0.0.1", 8009), server, new Encoder(), session);
+        await output.StartAsync(default); session.Error = "Synthetic media rejected";
+        await output.StopAsync();
+        Assert.Contains("stop", session.Events); Assert.Equal(.47, session.Levels.Last()); Assert.Contains("disconnect", session.Events);
     }
     [Fact]
     public async Task RejectedMediaLoadRevokesTheStreamAndRestoresReceiverVolume()
