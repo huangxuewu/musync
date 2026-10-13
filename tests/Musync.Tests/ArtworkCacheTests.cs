@@ -55,6 +55,25 @@ public sealed class ArtworkCacheTests
         var restarted = fixture.Restart();
         Assert.Null(restarted.ReadCover("b", "b")); Assert.NotNull(restarted.ReadCover("a", "a")); Assert.NotNull(restarted.ReadCover("c", "c"));
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CacheHitsPersistLastUseBeforeRestartAndCapacityReduction(bool memoryHit)
+    {
+        using var fixture = new Fixture();
+        foreach (var name in new[] { "a", "b", "c" })
+        { fixture.Cache.SaveCover(name, fixture.Cover(5000), name); fixture.Clock.Advance(); }
+        var stats = fixture.Cache.Maintain(SpotifyArtworkResolver.DefaultCacheBytes);
+        if (memoryHit) Assert.True(fixture.Cache.AssociateCover("a", "a"));
+        else Assert.NotNull(fixture.Cache.ReadCover("a", "a"));
+        // Restart without another maintenance pass: the hit itself must persist recency.
+        var restarted = fixture.Restart();
+        var coverBytes = JsonSerializer.SerializeToUtf8Bytes(fixture.Cover(5000)).LongLength;
+        var reduced = restarted.Maintain(stats.Bytes - coverBytes);
+        Assert.Equal(2, reduced.Files); Assert.True(reduced.Bytes <= reduced.LimitBytes);
+        Assert.Null(restarted.ReadCover("b", "b"));
+        Assert.NotNull(restarted.ReadCover("a", "a")); Assert.NotNull(restarted.ReadCover("c", "c"));
+    }
     [Fact]
     public void RemovingTracksDeletesTheirMatchesButKeepsSharedCoverUntilItsLastOwnerIsRemoved()
     {

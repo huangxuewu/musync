@@ -33,6 +33,8 @@ Spotify plays through its selected Connect device. Spotify audio is not passed i
 
 **Settings → General** provides a **Music recognition & artwork cache** limit, initially **500 MB**, with current disk usage and file count. The limit is adjustable from 50 to 10,000 MB. A background task maintains `artwork-cache/cache-index.json`, tracks file ownership and last use, and cleans expired, missing and least recently used files within the configured capacity. The index also counts toward disk usage. Local tag results remain reusable until the source file's size or modification time changes; Spotify matching results and covers remain temporary (up to one hour), with shorter retry periods for misses and failures. Disconnecting Spotify removes Spotify data while retaining independent local tag results.
 
+Cache hits immediately persist their last-use timestamps, including a cover reused from memory, so a restart before the next background cleanup does not lose the eviction order.
+
 The minus button on a local song removes it from the selected playlist, or from the library when viewing the library. Removing a library song also removes its playlist/favorite references. Playlist deletion and song removal clean the corresponding unused recognition/cover caches; a cover shared by other tracks is retained until its last reference is removed. Original music files remain in their folders. Returning explicitly to a retained library song may identify and cache it again.
 
 This cache management extension is not included in the existing 1.0.0 release download.

@@ -53,7 +53,8 @@ internal sealed class TemporaryArtworkCache(string directory, TimeProvider clock
                 if (kind != "local" && (expiration is null || expiration <= clock.GetUtcNow() || expiration > clock.GetUtcNow().AddHours(1)))
                 { Delete(name); WriteIndex(); return null; }
                 file.LastAccess = clock.GetUtcNow(); file.Bytes = info.Length;
-                if (file.Owners.Add(owner)) Prune();
+                file.Owners.Add(owner);
+                PersistAccess();
                 return entry;
             }
             catch (Exception error) when (Optional(error)) { return null; }
@@ -88,7 +89,7 @@ internal sealed class TemporaryArtworkCache(string directory, TimeProvider clock
             {
                 LoadIndex();
                 if (_files!.TryGetValue(Name("cover:" + url), out var entry))
-                { entry.LastAccess = clock.GetUtcNow(); if (entry.Owners.Add(owner)) Prune(); return _files.ContainsKey(Name("cover:" + url)); }
+                { entry.LastAccess = clock.GetUtcNow(); entry.Owners.Add(owner); PersistAccess(); return _files.ContainsKey(Name("cover:" + url)); }
             }
             catch (Exception error) when (Optional(error)) { }
             return false;
@@ -128,6 +129,14 @@ internal sealed class TemporaryArtworkCache(string directory, TimeProvider clock
         Prune();
     }
     private byte[] IndexBytes() => JsonSerializer.SerializeToUtf8Bytes(_files);
+    private void PersistAccess()
+    {
+        // Persist hits as well as new owners so a restart retains actual LRU order.
+        // Normal hits need no directory scan; capacity/expiry maintenance runs separately.
+        var bytes = IndexBytes();
+        if (_files!.Values.Sum(f => f.Bytes) + bytes.LongLength > _limitBytes) Prune();
+        else WriteIndex(bytes);
+    }
     private void WriteIndex(byte[]? bytes = null)
     {
         if (!Directory.Exists(_directory)) { if (_files!.Count == 0) return; Directory.CreateDirectory(_directory); }
