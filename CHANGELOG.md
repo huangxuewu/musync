@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Music recognition and artwork caches have a configurable 500 MB default capacity, an atomic ownership index, background expiry/unused-file maintenance and least-recently-used eviction. Local tags survive restart and Spotify disconnection; source file size/timestamp changes invalidate their cached identification.
+- Local songs can be removed from playlists or the library using a Lucide minus action. Song/playlist removal cleans unreferenced cache files and retains shared covers; original audio files stay in place. Settings shows cache usage and the capacity control in all three languages.
+- Spotify attribution icons use high-quality bitmap scaling so the official mark remains clear at 24 px.
+
 - The frosted lyric sheet reveals more of the poster's cropped color disc and widened diagonal ribbon, with sharp text above the blur and a single glass edge. Navigation, music lists and playback controls retain their existing layout.
 - AirPlay helper control queues are independent for each receiver, so a slow handshake or volume reply cannot delay another speaker's setup or close. Concurrent handshakes wait for one shared timing clock; pending sessions retain that clock and peer until their own cleanup completes.
 - AirPlay helper instances own their requests, diagnostics and receiver sessions. Replacing a stopped helper retains old receivers' failures and prevents their PCM, volume or close commands from being sent to the replacement; both output readers are cancelled and awaited during cleanup.

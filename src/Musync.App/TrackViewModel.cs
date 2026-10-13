@@ -18,6 +18,7 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
         PlayCommand = new AsyncCommand(_ => owner.PlayTrackAsync(Track), owner.ShowError);
         LikeCommand = new AsyncCommand(_ => { owner.ToggleLike(track.Id); return Task.CompletedTask; }, owner.ShowError);
         AddCommand = new AsyncCommand(_ => { owner.OpenPlaylist(track); return Task.CompletedTask; }, owner.ShowError);
+        RemoveCommand = new AsyncCommand(_ => owner.RemoveTrackAsync(Track), owner.ShowError, () => owner.CanRemoveTrack(Track));
         OpenArtworkSource = new AsyncCommand(_ =>
         {
             if (SpotifyArtworkResolver.TrySpotifyLink(_artworkSpotifyUri, out var link)) owner.OpenArtworkSource(link!);
@@ -33,12 +34,14 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public string PlayLabel => _owner.Text["Play"];
     public string AddPlaylistLabel => _owner.Text["AddPlaylist"];
     public string ArtworkSourceLabel => _owner.Text["ArtworkSourceSpotify"];
+    public string RemoveLabel => _owner.TrackRemoveLabel(Track);
+    public bool CanRemove => _owner.CanRemoveTrack(Track);
     public Bitmap? Artwork => _artwork;
     public bool HasArtwork => _artwork is not null;
     public ICommand OpenArtworkSource { get; }
     internal void UpdateMetadata(MusicTrack metadata)
     {
-        Track = metadata; Raise(nameof(Title)); Raise(nameof(Artist));
+        Track = metadata; Raise(nameof(Title)); Raise(nameof(Artist)); Raise(nameof(RemoveLabel));
     }
     internal void SetArtworkVisible(bool visible)
     {
@@ -100,6 +103,8 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public ICommand PlayCommand { get; }
     public ICommand LikeCommand { get; }
     public ICommand AddCommand { get; }
+    public ICommand RemoveCommand { get; }
+    internal void RefreshAvailability() => Raise(nameof(CanRemove));
 }
 
 public sealed class PlaylistViewModel(string name, int count, ICommand openCommand, ICommand removeCommand, MainViewModel owner, bool isFavorites = false) : ObservableObject

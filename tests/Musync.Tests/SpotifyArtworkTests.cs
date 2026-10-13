@@ -218,6 +218,48 @@ public sealed class SpotifyArtworkTests
     }
 
     [Fact]
+    public async Task RemovingATrackWaitsForItsPendingLookupThenRemovesDiskAndMemoryResults()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "Musync-PendingCache-" + Guid.NewGuid().ToString("N"));
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var finish = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            var handler = new Handler((_, _) => { entered.TrySetResult(); return finish.Task; });
+            using var client = new SpotifyClient(new Vault(), new HttpClient(handler));
+            var resolver = new SpotifyArtworkResolver(client, directory);
+            var loading = resolver.ResolveAsync(Catalog(), CancellationToken.None); await entered.Task;
+            var removing = resolver.ForgetTracksAsync([Catalog()]); Assert.False(removing.IsCompleted);
+            finish.SetResult(new(HttpStatusCode.OK) { Content = new ByteArrayContent([1]) });
+            await loading; await removing;
+            Assert.Equal(0, (await resolver.MaintainAsync(SpotifyArtworkResolver.DefaultCacheBytes)).Files);
+            await resolver.ResolveAsync(Catalog(), CancellationToken.None); Assert.Equal(2, handler.Calls);
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    [Fact]
+    public async Task LegacyUnindexedMatchesAndCoversRemainReusableDuringUpgrade()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "Musync-LegacyCache-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var audio = Path.Combine(directory, "original.mp3"); File.WriteAllText(audio, "original");
+            var source = Local() with { FilePath = audio }; var catalog = Catalog(); var expires = DateTimeOffset.UtcNow.AddMinutes(30);
+            string CachePath(string key) => Path.Combine(directory, Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(key))) + ".json");
+            var key = "local:" + audio + ":" + File.GetLastWriteTimeUtc(audio).Ticks;
+            File.WriteAllBytes(CachePath("match:" + key), JsonSerializer.SerializeToUtf8Bytes(new TemporaryArtworkCache.Match(source.Title, source.Artist, source.Album, catalog, expires)));
+            File.WriteAllBytes(CachePath("cover:" + catalog.ImageUrl), JsonSerializer.SerializeToUtf8Bytes(new TemporaryArtworkCache.Cover([1], expires)));
+            var handler = new Handler((_, _) => throw new InvalidOperationException("Upgrade should reuse the cache."));
+            using var client = new SpotifyClient(new Vault(), new HttpClient(handler));
+            var result = await new SpotifyArtworkResolver(client, directory).ResolveAsync(source, CancellationToken.None);
+            Assert.Equal(new byte[] { 1 }, result.Image); Assert.Equal(0, handler.Calls); Assert.Equal("original", File.ReadAllText(audio));
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    [Fact]
     public async Task DiskMissesExpireAfterTenMinutesAndDisconnectDeletesOnlyOwnedCacheFiles()
     {
         var directory = Path.Combine(Path.GetTempPath(), "Musync-CoverCache-" + Guid.NewGuid().ToString("N")); var clock = new Clock();

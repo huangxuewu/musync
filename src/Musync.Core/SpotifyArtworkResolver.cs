@@ -19,17 +19,20 @@ public sealed class SpotifyArtworkResolver
     private readonly Dictionary<string, ImageEntry> _images = new(StringComparer.Ordinal);
     private DateTimeOffset _searchAfter, _blockedUntil;
     private long _generation;
+    public const long DefaultCacheBytes = 500L * 1024 * 1024;
+    private long _diskLimitBytes;
     private const int MaxImageBytes = 16 * 1024 * 1024;
     private sealed record MatchEntry(MusicTrack Metadata, MusicTrack? SpotifyTrack, DateTimeOffset Expires);
     private sealed record ImageEntry(byte[]? Data, DateTimeOffset Expires);
 
-    public SpotifyArtworkResolver(SpotifyClient spotify, string? cacheDirectory = null) : this(spotify, TimeProvider.System, cacheDirectory) { }
-    internal SpotifyArtworkResolver(SpotifyClient spotify, TimeProvider clock, string? cacheDirectory = null)
-    { _spotify = spotify; _clock = clock; _disk = cacheDirectory is null ? null : new(cacheDirectory, clock); }
+    public SpotifyArtworkResolver(SpotifyClient spotify, string? cacheDirectory = null, long cacheLimitBytes = DefaultCacheBytes)
+        : this(spotify, TimeProvider.System, cacheDirectory, cacheLimitBytes) { }
+    internal SpotifyArtworkResolver(SpotifyClient spotify, TimeProvider clock, string? cacheDirectory = null, long cacheLimitBytes = DefaultCacheBytes)
+    { _spotify = spotify; _clock = clock; _diskLimitBytes = Math.Max(0, cacheLimitBytes); _disk = cacheDirectory is null ? null : new(cacheDirectory, clock, _diskLimitBytes); }
 
-    public void Clear()
+    public void Clear(bool includeLocalMetadata = true)
     {
-        lock (_cacheGate) { _generation++; _matches.Clear(); _images.Clear(); _searchAfter = _blockedUntil = default; _disk?.Clear(); }
+        lock (_cacheGate) { _generation++; _matches.Clear(); _images.Clear(); _searchAfter = _blockedUntil = default; _disk?.Clear(includeLocalMetadata); }
     }
 
     public async Task<TrackArtwork> ResolveAsync(MusicTrack track, CancellationToken token)
@@ -40,19 +43,37 @@ public sealed class SpotifyArtworkResolver
             long generation;
             lock (_cacheGate) generation = _generation;
             var now = _clock.GetUtcNow();
-            var key = track.FilePath is null ? "spotify:" + track.Id + ":" + track.ImageUrl
-                : "local:" + track.FilePath + ":" + FileStamp(track.FilePath)
-                    + (File.Exists(track.FilePath) ? "" : ":" + track.Title + ":" + track.Artist);
+            var key = TrackKey(track);
+            var owner = TemporaryArtworkCache.Owner(track);
             MatchEntry? entry;
             lock (_cacheGate) { Prune(now); _matches.TryGetValue(key, out entry); }
             if (entry is null && _disk is not null)
             {
-                var saved = await Task.Run(() => _disk.ReadMatch(key), token).ConfigureAwait(false);
-                if (saved is not null)
+                var saved = await Task.Run(() =>
+                {
+                    var result = _disk.ReadMatch(key, owner);
+                    // Preserve still-valid pre-index matches while upgrading file identities.
+                    if (result is null && track.FilePath is not null)
+                    {
+                        var legacy = "local:" + track.FilePath + ":" + File.GetLastWriteTimeUtc(track.FilePath).Ticks
+                            + (File.Exists(track.FilePath) ? "" : ":" + track.Title + ":" + track.Artist);
+                        result = _disk.ReadMatch(legacy, owner);
+                        if (result is not null) _disk.SaveMatch(key, result, owner);
+                    }
+                    return result;
+                }, token).ConfigureAwait(false);
+                if (saved is { Title: not null, Artist: not null })
                     entry = new(track with { Title = saved.Title, Artist = saved.Artist, Album = saved.Album }, saved.Catalog, saved.Expires);
             }
-            var metadata = entry is null ? await Task.Run(() => LocalTrackMetadata.Read(track), token).ConfigureAwait(false)
-                : track with { Title = entry.Metadata.Title, Artist = entry.Metadata.Artist, Album = entry.Metadata.Album };
+            var local = entry is null && track.FilePath is not null && _disk is not null
+                ? await Task.Run(() => _disk.ReadLocal(key, owner), token).ConfigureAwait(false) : null;
+            var metadata = entry is not null ? track with { Title = entry.Metadata.Title, Artist = entry.Metadata.Artist, Album = entry.Metadata.Album }
+                : local is { Title: not null, Artist: not null } ? track with { Title = local.Title, Artist = local.Artist, Album = local.Album }
+                : await Task.Run(() => LocalTrackMetadata.Read(track), token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            if (local is null && track.FilePath is not null && !track.IsDemo && _disk is not null)
+                lock (_cacheGate) if (_generation == generation)
+                    _disk.SaveLocal(key, new(metadata.Title, metadata.Artist, metadata.Album), owner);
             if (!_spotify.Connected || track.IsDemo) return new(metadata, null, null);
             try
             {
@@ -75,7 +96,7 @@ public sealed class SpotifyArtworkResolver
                     lock (_cacheGate) if (_generation == generation)
                     {
                         LimitMatches(); _matches[key] = entry;
-                        _disk?.SaveMatch(key, new(metadata.Title, metadata.Artist, metadata.Album, catalog, entry.Expires));
+                        _disk?.SaveMatch(key, new(metadata.Title, metadata.Artist, metadata.Album, catalog, entry.Expires), owner);
                     }
                 }
                 if (catalog?.ImageUrl is null || !TrySpotifyLink(catalog.SpotifyUri, out _)) return new(metadata, null, null);
@@ -83,7 +104,7 @@ public sealed class SpotifyArtworkResolver
                 lock (_cacheGate) _images.TryGetValue(catalog.ImageUrl, out image);
                 if (image is null && _disk is not null)
                 {
-                    var saved = await Task.Run(() => _disk.ReadCover(catalog.ImageUrl), token).ConfigureAwait(false);
+                    var saved = await Task.Run(() => _disk.ReadCover(catalog.ImageUrl, owner), token).ConfigureAwait(false);
                     if (saved is not null && (saved.Data?.Length ?? 0) <= 5_000_000) image = new(saved.Data, saved.Expires);
                 }
                 var data = image?.Data;
@@ -103,8 +124,10 @@ public sealed class SpotifyArtworkResolver
                             _images.Remove(_images.Keys.First());
                         var cached = image ?? new(data, _clock.GetUtcNow().AddMinutes(data is null ? 1 : 60));
                         _images[catalog.ImageUrl] = cached;
-                        if (image is null) _disk?.SaveCover(catalog.ImageUrl, new(data, cached.Expires));
+                        if (image is null) _disk?.SaveCover(catalog.ImageUrl, new(data, cached.Expires), owner);
                     }
+                    if (_disk is not null && !_disk.AssociateCover(catalog.ImageUrl, owner) && image is not null)
+                        _disk.SaveCover(catalog.ImageUrl, new(data, image.Expires), owner);
                 }
                 return new(metadata, data, data is null ? null : catalog.SpotifyUri);
             }
@@ -127,14 +150,46 @@ public sealed class SpotifyArtworkResolver
     public void ReleaseMemory()
     { lock (_cacheGate) { _generation++; _matches.Clear(); _images.Clear(); } }
 
+    public async Task ForgetTracksAsync(IEnumerable<MusicTrack> tracks, CancellationToken token = default)
+    {
+        var owners = tracks.Select(TemporaryArtworkCache.Owner).ToHashSet(StringComparer.Ordinal);
+        await _work.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            lock (_cacheGate) { _generation++; _matches.Clear(); _images.Clear(); }
+            if (_disk is not null) await Task.Run(() => _disk.RemoveOwners(owners), token).ConfigureAwait(false);
+        }
+        finally { _work.Release(); }
+    }
+    public async Task<ArtworkCacheStats> MaintainAsync(long limitBytes, IEnumerable<MusicTrack>? library = null, CancellationToken token = default)
+    {
+        var snapshot = library?.ToArray();
+        await _work.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            _diskLimitBytes = Math.Max(0, limitBytes);
+            return _disk is null ? new(0, 0, _diskLimitBytes)
+                : await Task.Run(() =>
+                {
+                    var owners = snapshot?.Where(t => !t.IsDemo && t.FilePath is not null && File.Exists(t.FilePath))
+                        .Select(TemporaryArtworkCache.Owner).ToHashSet(StringComparer.Ordinal);
+                    return _disk.Maintain(_diskLimitBytes, owners);
+                }, token).ConfigureAwait(false);
+        }
+        finally { _work.Release(); }
+    }
+
     private void Prune(DateTimeOffset now)
     {
         foreach (var key in _matches.Where(p => p.Value.Expires <= now).Select(p => p.Key).ToArray()) _matches.Remove(key);
         foreach (var key in _images.Where(p => p.Value.Expires <= now).Select(p => p.Key).ToArray()) _images.Remove(key);
     }
     private void LimitMatches() { while (_matches.Count >= 128) _matches.Remove(_matches.Keys.First()); }
-    private static long FileStamp(string path)
-    { try { return File.GetLastWriteTimeUtc(path).Ticks; } catch (IOException) { return 0; } catch (UnauthorizedAccessException) { return 0; } }
+    private static string TrackKey(MusicTrack track) => track.FilePath is null ? "spotify:" + track.Id + ":" + track.ImageUrl
+        : "local:" + TemporaryArtworkCache.Owner(track) + ":" + FileStamp(track.FilePath)
+            + (File.Exists(track.FilePath) ? "" : ":" + track.Title + ":" + track.Artist);
+    private static string FileStamp(string path)
+    { try { var file = new FileInfo(path); return file.Exists ? file.LastWriteTimeUtc.Ticks + ":" + file.Length : "missing"; } catch (IOException) { return "missing"; } catch (UnauthorizedAccessException) { return "missing"; } }
     private static string QueryValue(string text) => text.Replace('"', ' ').Trim();
     private static bool CanSearch(MusicTrack track) => !track.IsDemo && Normalize(track.Title).Any(char.IsLetter)
         && (!string.IsNullOrWhiteSpace(track.Artist) || track.DurationSeconds > 0);

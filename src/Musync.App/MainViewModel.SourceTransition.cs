@@ -26,6 +26,7 @@ public sealed partial class MainViewModel
         foreach (var name in new[] { nameof(CanPlayLink), nameof(CanConfigureLink), nameof(CanEditLink),
             nameof(CanSaveLink), nameof(CanManagePlaylists), nameof(PlayEnabled), nameof(Seekable) }) Raise(name);
         foreach (var playlist in Playlists) playlist.RefreshAvailability();
+        foreach (var track in Tracks) track.RefreshAvailability();
         foreach (var station in RadioStations) station.RefreshAvailability();
     }
     private async Task SwitchSourceAsync(long version)

@@ -62,7 +62,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         _backend = backend; _player = player; _spotify = spotify; _store = store; _settings = settings; _dataDirectory = dataDirectory;
         _discoverNetwork = discoverNetwork ?? new NetworkDiscovery().DiscoverAsync;
-        _listArtwork = new(spotify, Path.Combine(dataDirectory, "artwork-cache"));
+        settings.ArtworkCacheLimitMb = settings.ArtworkCacheLimitMb is < 50 or > 10000 ? 500 : settings.ArtworkCacheLimitMb;
+        _listArtwork = new(spotify, Path.Combine(dataDirectory, "artwork-cache"), settings.ArtworkCacheLimitMb * 1024L * 1024);
         if (settings.MasterVolume > 0) _localVolumeBeforeMute = settings.MasterVolume;
         Text = new(settings.Language);
         Languages = [new("en", "English"), new("zh-Hans", "简体中文"), new("ja", "日本語")];
@@ -97,7 +98,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         SettingsCommand = new AsyncCommand(_ => { SettingsOpen = true; return Task.CompletedTask; }, ShowError);
         CloseSettings = new AsyncCommand(async _ => { await SaveSettings(); SettingsOpen = false; }, ShowError);
         ConnectSpotify = new AsyncCommand(_ => ConnectSpotifyAsync(), ShowError);
-        DisconnectSpotify = new AsyncCommand(async _ => { _spotify.Disconnect(); _listArtwork.Clear(); RefreshTracks(); _spotifyStateVersion++; Raise(nameof(SpotifyStatus)); if (SpotifyMode) { await StopAsync(); ClearSpotifyPlayback(); } Status = Text["NotConnected"]; }, ShowError);
+        DisconnectSpotify = new AsyncCommand(async _ => { _spotify.Disconnect(); _listArtwork.Clear(includeLocalMetadata: false); RefreshTracks(); _spotifyStateVersion++; Raise(nameof(SpotifyStatus)); if (SpotifyMode) { await StopAsync(); ClearSpotifyPlayback(); } Status = Text["NotConnected"]; }, ShowError);
         RefreshSpotifyDevices = new AsyncCommand(_ => RefreshSpotifyDevicesAsync(), ShowError);
         DashboardCommand = new AsyncCommand(_ => { OpenBrowser(new("https://developer.spotify.com/dashboard")); return Task.CompletedTask; }, ShowError);
         ShuffleCommand = new AsyncCommand(_ => ToggleSpotifyOptionAsync(shuffle: true), ShowError);
@@ -119,6 +120,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         _timer.Start();
         InitializeRadio();
         RefreshPresentation();
+        _cacheMaintenance = MaintainArtworkCacheAsync();
     }
     public Localizer Text { get; }
     public ObservableCollection<SpeakerViewModel> Speakers { get; } = [];
@@ -273,7 +275,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool SettingsOpen
     {
         get => _settingsOpen;
-        set { if (Set(ref _settingsOpen, value)) { RefreshNavigationState(); UpdatePlaylistSelection(); } }
+        set { if (Set(ref _settingsOpen, value)) { RefreshNavigationState(); UpdatePlaylistSelection(); if (value) _ = RunSafely(RefreshArtworkCacheAsync); } }
     }
     public bool PlaylistOpen { get => _playlistOpen; set => Set(ref _playlistOpen, value); }
     public string PlaylistName { get => _playlistName; set { if (Set(ref _playlistName, value)) PlaylistError = ""; } }
@@ -506,6 +508,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Raise(nameof(PlaylistSectionLabel)); Raise(nameof(PlaylistDialogTitle)); PlaylistError = "";
         foreach (var playlist in Playlists) playlist.RefreshText();
         RefreshRadioText();
+        Raise(nameof(ArtworkCacheUsage));
         if (!_session) Status = Text[IsSwitchingSource ? "SwitchingSource" : "Idle"];
     }
     private void RefreshTracks()
@@ -522,7 +525,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         RefreshNavigationState(); RefreshPoster();
         RefreshSearchState();
     }
-    private void Navigate(string view) { _view = view; _playlistFilter = null; RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); Raise(nameof(IsRadioPage)); }
+    private void Navigate(string view) { _cacheOmittedTracks.Clear(); _view = view; _playlistFilter = null; RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); Raise(nameof(IsRadioPage)); }
     private void RefreshPlaylists()
     {
         Playlists.Clear();
@@ -533,11 +536,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         foreach (var (name, ids) in _settings.Playlists)
             Playlists.Add(new(name, ids.Count,
                 new AsyncCommand(_ => { SelectPlaylist(name); return Task.CompletedTask; }, ShowError),
-                new AsyncCommand(_ => { RemovePlaylist(name); return Task.CompletedTask; }, ShowError, () => CanManagePlaylists), this));
+                new AsyncCommand(_ => RemovePlaylistAsync(name), ShowError, () => CanManagePlaylists), this));
         UpdatePlaylistSelection();
     }
     private void SelectPlaylist(string name)
     {
+        _cacheOmittedTracks.Clear();
         Source = Sources.First(s => s.Id == "local");
         _playlistFilter = name; _view = "home"; Search = "";
         RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); Raise(nameof(IsRadioPage));
@@ -576,14 +580,15 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         { PlaylistError = Text["PlaylistNameExists"]; return; }
         if (!_settings.Playlists.TryGetValue(name, out var ids)) _settings.Playlists[name] = ids = [];
         if (_playlistTrack is not null && !ids.Contains(_playlistTrack.Id)) ids.Add(_playlistTrack.Id);
+        if (_playlistTrack is not null) _cacheOmittedTracks.Remove(_playlistTrack.Id);
         var creating = _playlistTrack is null;
         RefreshPlaylists(); PlaylistsExpanded = true; PlaylistOpen = false;
         if (creating && IsLocal) SelectPlaylist(name);
         ShowToast(creating ? string.Format(Text["PlaylistCreated"], name) : Text["PlaylistSaved"]); SaveSoon();
     }
-    private void RemovePlaylist(string name)
+    private async Task RemovePlaylistAsync(string name)
     {
-        if (!CanManagePlaylists || !_settings.Playlists.Remove(name)) return;
+        if (!CanManagePlaylists || !_settings.Playlists.Remove(name, out var ids)) return;
         // A playlist is an index into the library. Never remove its audio files or library entries.
         foreach (var folder in _settings.ImportedPlaylistFolders.Where(p => p.Value == name).Select(p => p.Key).ToArray())
             _settings.ImportedPlaylistFolders.Remove(folder);
@@ -591,6 +596,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         if (item is not null) Playlists.Remove(item);
         if (_playlistFilter == name) Navigate("library");
         ShowToast(string.Format(Text["PlaylistRemoved"], name)); SaveSoon();
+        await ForgetUnusedTrackCachesAsync(_library.Where(t => ids.Contains(t.Id)).ToArray());
     }
     public async Task ImportFoldersAsync(IEnumerable<string> paths)
     {
@@ -606,6 +612,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 folders, _backend.ProbeFile, _lifetime.Token), _lifetime.Token);
             if (_disposed) return;
             _library.AddRange(result.Tracks);
+            _cacheOmittedTracks.Clear();
             _settings.Playlists = result.Playlists; _settings.ImportedPlaylistFolders = result.Folders;
             _settings.Library = _library.Where(t => !t.IsDemo).ToList();
             Source = Sources.First(s => s.Id == "local");
@@ -987,7 +994,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         await SaveSettings(); Status = Text["SpotifySetup"];
         await _spotify.ConnectAsync(OpenBrowser, _lifetime.Token); Raise(nameof(SpotifyStatus));
-        _listArtwork.Clear(); RefreshTracks();
+        _listArtwork.Clear(includeLocalMetadata: false); RefreshTracks();
         await RefreshSpotifyDevicesAsync(); Status = Text["Connected"];
         if (SpotifyMode) await RefreshSpotifyPlaybackAsync();
     }
@@ -1127,7 +1134,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ? Text[spotifyError.ErrorKey] : exception.Message == "NoOutputs" ? Text["NoOutputs"] : exception.Message;
     private static void OpenBrowser(Uri uri) => Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
     internal CancellationToken ArtworkLifetime => _lifetime.Token;
-    internal Task<TrackArtwork> ResolveListArtworkAsync(MusicTrack track, CancellationToken token) => _listArtwork.ResolveAsync(track, token);
+    internal Task<TrackArtwork> ResolveListArtworkAsync(MusicTrack track, CancellationToken token) => _cacheOmittedTracks.Contains(track.Id)
+        ? Task.FromResult(new TrackArtwork(track, null, null)) : _listArtwork.ResolveAsync(track, token);
     internal void OpenArtworkSource(Uri link) => OpenBrowser(link);
     internal void ApplyLocalMetadata(MusicTrack track)
     {
@@ -1147,6 +1155,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         _radioRequest?.Cancel();
         _player.CancelPreparation();
         foreach (var row in Tracks) row.Dispose();
+        await _cacheMaintenance;
         _listArtwork.ReleaseMemory();
         ResetSpotifyVolume();
         await _sourceTransition;

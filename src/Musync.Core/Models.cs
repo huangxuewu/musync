@@ -10,6 +10,7 @@ public sealed class AppSettings
     public string Language { get; set; } = "";
     public double MasterVolume { get; set; } = 65;
     public string SpotifyClientId { get; set; } = "";
+    public int ArtworkCacheLimitMb { get; set; } = 500;
     public string? CaptureDeviceId { get; set; }
     public Dictionary<string, SpeakerPreferences> Speakers { get; set; } = new();
     public List<SpeakerLink> Links { get; set; } = [];

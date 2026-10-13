@@ -194,7 +194,7 @@
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="local:TrackViewModel">
-                      <Grid ColumnDefinitions="48,*,Auto,Auto,Auto,Auto" Margin="0,0,0,13" ColumnSpacing="12">
+                      <Grid ColumnDefinitions="48,*,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,13" ColumnSpacing="12">
                         <Button Command="{Binding PlayCommand}" Padding="0" Width="48" Height="48" Background="{Binding Color}" CornerRadius="9" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding Title}">
                           <Grid Width="48" Height="48">
                             <icons:LucideIcon Kind="music-2" Classes="large" Foreground="White" IsVisible="{Binding !HasArtwork}"/>
@@ -212,6 +212,7 @@
                         <TextBlock Grid.Column="3" Text="{Binding Duration}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
                         <Button Grid.Column="4" Classes="ghost iconButton" Command="{Binding LikeCommand}" Foreground="#D83855" AutomationProperties.Name="{Binding LikeLabel}" ToolTip.Tip="{Binding LikeLabel}"><icons:LucideIcon Kind="heart" Filled="{Binding Liked}"/></Button>
                         <Button Grid.Column="5" Classes="ghost iconButton" Command="{Binding AddCommand}" AutomationProperties.Name="{Binding AddPlaylistLabel}" ToolTip.Tip="{Binding AddPlaylistLabel}"><icons:LucideIcon Kind="plus"/></Button>
+                        <Button Grid.Column="6" Classes="ghost iconButton" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}" AutomationProperties.Name="{Binding RemoveLabel}" ToolTip.Tip="{Binding RemoveLabel}"><icons:LucideIcon Kind="minus"/></Button>
                       </Grid>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -459,6 +460,16 @@
               <TextBlock Text="{Binding Text[Language]}" FontWeight="SemiBold"/>
               <ComboBox x:Name="SettingsLanguageSelector" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language, Mode=TwoWay}"
                         HorizontalAlignment="Stretch" Background="White" AutomationProperties.Name="{Binding Text[Language]}"/>
+            </StackPanel>
+            <Separator Margin="0,6"/>
+            <StackPanel Spacing="8">
+              <TextBlock Text="{Binding Text[ArtworkCache]}" FontWeight="SemiBold"/>
+              <Grid ColumnDefinitions="*,140,Auto" ColumnSpacing="10">
+                <TextBlock Text="{Binding Text[ArtworkCacheLimit]}" VerticalAlignment="Center"/>
+                <NumericUpDown x:Name="ArtworkCacheLimitInput" Grid.Column="1" Value="{Binding ArtworkCacheLimitMb, Mode=TwoWay}" Minimum="50" Maximum="10000" Increment="50" FormatString="0" Height="40" Padding="12,8" ShowButtonSpinner="False" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text[ArtworkCacheLimit]}"/>
+                <TextBlock Grid.Column="2" Text="MB" VerticalAlignment="Center"/>
+              </Grid>
+              <TextBlock Text="{Binding ArtworkCacheUsage}" FontSize="12" Foreground="#716877" TextWrapping="Wrap"/>
             </StackPanel>
             <Separator Margin="0,6"/>
             <TextBlock Text="{Binding Text[SourceEndpoint]}" FontWeight="SemiBold"/>
