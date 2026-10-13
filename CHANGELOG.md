@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.1 — 2026-10-13
+
+- YouTube radio accepts saved video/live addresses and routes one buffered audio timeline through the active Windows/Bluetooth, AirPlay and Chromecast speaker link. It includes pause/resume, volume and station navigation, with bundled checksum-pinned yt-dlp and LGPL shared FFmpeg helpers. Seeking is disabled; physical multi-speaker radio synchronization has not been retested for this release.
 
 - Playback visual tests verify contrasting foreground and background pixels for navigation and transport icons in English, Simplified Chinese and Japanese. Animated headless captures advance pending render frames before inspection, avoiding incomplete snapshots being mistaken for a language or palette defect.
 - Song rows highlight the current track, show preparing/playing activity or a paused icon, and expose a play/pause overlay on hover or keyboard focus. Activating the current row pauses/resumes at its existing position; Spotify resumes its queue without resending the track URI. Row activity stops for reduced motion, minimized/hidden windows, the mini player and hidden song lists. Busy rows do not queue duplicate playback requests.

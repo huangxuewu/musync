@@ -50,7 +50,7 @@ try {
             if (Get-Process -Name Musync -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.StartsWith($destination + [IO.Path]::DirectorySeparatorChar) }) { throw 'Close this version of Musync before rebuilding its package.' }
             Remove-Item -LiteralPath $destination -Recurse -Force
         }
-        & $sdkPath publish src/Musync.App/Musync.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -o $destination --nologo -v minimal
+        & $sdkPath publish src/Musync.App/Musync.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:IncludeSourceRevisionInInformationalVersion=false -o $destination --nologo -v minimal
         if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
         $bridgeDestination = Join-Path $destination 'AirPlayBridge'
         New-Item -ItemType Directory -Force $bridgeDestination | Out-Null
