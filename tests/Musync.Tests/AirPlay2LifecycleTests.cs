@@ -15,32 +15,100 @@ public sealed class AirPlay2LifecycleTests
         public readonly ConcurrentQueue<byte[]> Packets = new();
         public readonly TaskCompletionSource Sent = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly TaskCompletionSource VolumeEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public Task? VolumeRelease;
+        public readonly TaskCompletionSource SendEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public readonly TaskCompletionSource OpenEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task? VolumeRelease, SendRelease, OpenRelease;
         public bool FailOpen, FailSend;
         public int Closes;
         public string? Error(string id) => null;
-        public Task OpenAsync(SpeakerDevice device, float gain, CancellationToken token)
+        public async Task OpenAsync(SpeakerDevice device, float gain, CancellationToken token)
         {
             token.ThrowIfCancellationRequested(); Gains.Enqueue(gain);
-            return FailOpen ? Task.FromException(new IOException("Open rejected")) : Task.CompletedTask;
+            OpenEntered.TrySetResult();
+            if (OpenRelease is { } release) await release.WaitAsync(token);
+            if (FailOpen) throw new IOException("Open rejected");
         }
-        public async Task SetVolumeAsync(string id, float gain)
+        public async Task SetVolumeAsync(string id, float gain, CancellationToken token = default)
         {
             Volumes.Enqueue(gain); VolumeEntered.TrySetResult();
-            if (VolumeRelease is not null) await VolumeRelease;
+            if (VolumeRelease is not null) await VolumeRelease.WaitAsync(token);
         }
-        public Task SendAsync(string id, byte[] pcm)
+        public async Task SendAsync(string id, byte[] pcm, CancellationToken token = default)
         {
+            SendEntered.TrySetResult();
+            if (SendRelease is { } release) await release.WaitAsync(token);
             if (FailSend) throw new IOException("PCM pipe lost");
-            Packets.Enqueue(pcm); Sent.TrySetResult(); return Task.CompletedTask;
+            Packets.Enqueue(pcm); Sent.TrySetResult();
         }
-        public Task CloseAsync(string id) { Interlocked.Increment(ref Closes); return Task.CompletedTask; }
+        public Task CloseAsync(string id, CancellationToken token = default) { Interlocked.Increment(ref Closes); return Task.CompletedTask; }
     }
     private static AirPlay2Output Output(Bridge bridge) => new(new("homepod", "Simulated HomePod", SpeakerTransport.AirPlay), bridge);
     private static async Task Until(Func<bool> condition)
     {
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         while (!condition()) await Task.Delay(5, deadline.Token);
+    }
+    [Fact]
+    public async Task StopCancelsABlockedPcmSendAndTheOutputCanStartAgain()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var bridge = new Bridge { SendRelease = release.Task };
+        await using var output = Output(bridge);
+        await output.StartAsync(default);
+        await bridge.SendEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var stop = output.StopAsync();
+        try { await stop.WaitAsync(TimeSpan.FromSeconds(1)); }
+        finally { release.TrySetResult(); await stop; }
+        Assert.Equal(1, bridge.Closes);
+        Assert.Empty(bridge.Packets); Assert.Null(output.Error);
+        bridge.SendRelease = null;
+        await output.StartAsync(default);
+        await bridge.Sent.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.Equal(2, bridge.Gains.Count);
+        await output.StopAsync(); Assert.Equal(2, bridge.Closes);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task StopOrPauseCancelsAWaitingVolumeReplyWithoutAPlaybackError(bool pause)
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var bridge = new Bridge { VolumeRelease = release.Task };
+        await using var output = Output(bridge);
+        output.Control.Gain = 1f;
+        await output.StartAsync(default);
+        output.Control.Gain = .4f;
+        var update = output.UpdateControlsAsync();
+        await bridge.VolumeEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var end = pause ? output.SetPausedAsync(true) : output.StopAsync();
+        try { await end.WaitAsync(TimeSpan.FromSeconds(1)); await update; }
+        finally { release.TrySetResult(); await update; await end; }
+        Assert.Equal(1, bridge.Closes); Assert.Null(output.Error);
+        if (pause)
+        {
+            bridge.VolumeRelease = null;
+            await output.SetPausedAsync(false);
+            Assert.Equal(new[] { 1f, .4f }, bridge.Gains);
+        }
+    }
+
+    [Fact]
+    public async Task StopCancelsAnOpenThatHasNotAcknowledgedItsSession()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var bridge = new Bridge { OpenRelease = release.Task };
+        await using var output = Output(bridge);
+        var start = output.StartAsync(default);
+        await bridge.OpenEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var stop = output.StopAsync();
+        try
+        {
+            await stop.WaitAsync(TimeSpan.FromSeconds(1));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => start);
+        }
+        finally { release.TrySetResult(); try { await start; } catch (OperationCanceledException) { } await stop; }
+        Assert.Equal(1, bridge.Closes); Assert.Empty(bridge.Packets);
     }
     [Fact]
     public async Task PauseRetainsUnreadPcmAndResumeUsesAFreshSessionWithLatestControls()

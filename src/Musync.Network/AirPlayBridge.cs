@@ -9,9 +9,9 @@ internal interface IAirPlayBridge
 {
     string? Error(string id);
     Task OpenAsync(SpeakerDevice device, float gain, CancellationToken token);
-    Task SetVolumeAsync(string id, float gain);
-    Task SendAsync(string id, byte[] pcm);
-    Task CloseAsync(string id);
+    Task SetVolumeAsync(string id, float gain, CancellationToken token = default);
+    Task SendAsync(string id, byte[] pcm, CancellationToken token = default);
+    Task CloseAsync(string id, CancellationToken token = default);
 }
 
 public sealed class AirPlayBridge(string directory, string nodePath) : IAsyncDisposable, IAirPlayBridge
@@ -23,9 +23,9 @@ public sealed class AirPlayBridge(string directory, string nodePath) : IAsyncDis
     private Process? _process;
     private Task? _reader;
     public string? Error(string id) => _errors.GetValueOrDefault(id) ?? _errors.GetValueOrDefault("*");
-    private async Task EnsureStarted()
+    private async Task EnsureStarted(CancellationToken token)
     {
-        await _start.WaitAsync();
+        await _start.WaitAsync(token);
         try
         {
             if (_process is { HasExited: false }) return;
@@ -43,14 +43,7 @@ public sealed class AirPlayBridge(string directory, string nodePath) : IAsyncDis
                     try
                     {
                         using var json = JsonDocument.Parse(line);
-                        var root = json.RootElement;
-                        var error = root.TryGetProperty("error", out var value) ? value.GetString() : null;
-                        if (root.TryGetProperty("request", out var request) && request.ValueKind == JsonValueKind.String
-                            && _pending.TryRemove(request.GetString()!, out var completion))
-                        {
-                            if (error is null) completion.TrySetResult(); else completion.TrySetException(new IOException(error));
-                        }
-                        else if (error is not null) _errors[root.TryGetProperty("id", out var id) ? id.GetString() ?? "*" : "*"] = error;
+                        ObserveReply(json.RootElement);
                     }
                     catch (JsonException) { }
                 }
@@ -65,38 +58,60 @@ public sealed class AirPlayBridge(string directory, string nodePath) : IAsyncDis
         }
         finally { _start.Release(); }
     }
+    internal void ObserveReply(JsonElement root)
+    {
+        var error = root.TryGetProperty("error", out var value) ? value.GetString() : null;
+        if (root.TryGetProperty("request", out var request) && request.ValueKind == JsonValueKind.String)
+        {
+            // A cancelled request can still receive a reply. Its error belongs
+            // to that request, rather than a receiver's newer playback session.
+            if (_pending.TryRemove(request.GetString()!, out var completion))
+            {
+                if (error is null) completion.TrySetResult(); else completion.TrySetException(new IOException(error));
+            }
+        }
+        else if (error is not null) _errors[root.TryGetProperty("id", out var id) ? id.GetString() ?? "*" : "*"] = error;
+    }
     public async Task OpenAsync(SpeakerDevice device, float gain, CancellationToken token)
     {
-        await EnsureStarted();
+        await EnsureStarted(token);
         _errors.TryRemove(device.Id, out _);
         await RequestAsync(new { op = "open", id = device.Id, host = device.Host, port = device.Port, properties = device.Properties, volume = gain * 100 }, token);
     }
-    public Task SetVolumeAsync(string id, float gain) => RequestAsync(new { op = "volume", id, volume = gain * 100 }, CancellationToken.None);
+    public Task SetVolumeAsync(string id, float gain, CancellationToken token = default)
+        => RequestAsync(new { op = "volume", id, volume = gain * 100 }, token);
     private async Task RequestAsync(object command, CancellationToken token)
     {
         var request = Guid.NewGuid().ToString("N");
         var values = JsonSerializer.SerializeToNode(command)!.AsObject(); values["request"] = request;
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending[request] = completion;
-        try { await WriteAsync(values); await completion.Task.WaitAsync(TimeSpan.FromSeconds(35), token); }
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(35));
+        try { await WriteAsync(values, deadline.Token); await completion.Task.WaitAsync(deadline.Token); }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        { throw new TimeoutException("AirPlay bridge request timed out."); }
         finally { _pending.TryRemove(request, out _); }
     }
-    private async Task WriteAsync(object command)
+    private async Task WriteAsync(object command, CancellationToken token)
     {
-        await _write.WaitAsync();
+        await _write.WaitAsync(token);
         try
         {
             if (_process is null || _process.HasExited) throw new IOException("AirPlay bridge is not running.");
-            await _process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(command));
-            await _process.StandardInput.FlushAsync();
+            await _process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(command).AsMemory(), token);
+            await _process.StandardInput.FlushAsync(token);
         }
         finally { _write.Release(); }
     }
-    public Task SendAsync(string id, byte[] pcm) => WriteAsync(new { op = "pcm", id, data = Convert.ToBase64String(pcm) });
-    public async Task CloseAsync(string id)
+    public Task SendAsync(string id, byte[] pcm, CancellationToken token = default)
+        => WriteAsync(new { op = "pcm", id, data = Convert.ToBase64String(pcm) }, token);
+    public async Task CloseAsync(string id, CancellationToken token = default)
     {
         if (_process is not { HasExited: false }) return;
-        try { await RequestAsync(new { op = "close", id }, CancellationToken.None); } catch (Exception) { }
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(5));
+        try { await RequestAsync(new { op = "close", id }, deadline.Token); } catch (Exception) { }
     }
     public async ValueTask DisposeAsync()
     {
@@ -146,13 +161,14 @@ public sealed class AirPlay2Output : IAudioOutput
     private async Task BeginSession(CancellationToken token)
     {
         var gain = Control.Gain;
+        _lifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var lifetime = _lifetime;
         // Mark an attempted open for cleanup even if cancellation arrives after
         // the helper accepted it but before its response reached this process.
         _opened = true;
-        await _bridge.OpenAsync(Device, gain, token);
+        await _bridge.OpenAsync(Device, gain, lifetime.Token);
+        lifetime.Token.ThrowIfCancellationRequested();
         _appliedGain = gain;
-        _lifetime = CancellationTokenSource.CreateLinkedTokenSource(token);
-        var lifetime = _lifetime;
         _worker = Task.Run(async () =>
         {
             var clock = Stopwatch.StartNew();
@@ -166,7 +182,7 @@ public sealed class AirPlay2Output : IAudioOutput
                     if (wait > 0) await Task.Delay(TimeSpan.FromSeconds(wait), lifetime.Token);
                     Buffer.SetDelay(Control.DelayMs);
                     Buffer.Read(samples, Control.Gain == 0 ? 0 : 1);
-                    await _bridge.SendAsync(Device.Id, PcmEncoding.ToInt16(samples));
+                    await _bridge.SendAsync(Device.Id, PcmEncoding.ToInt16(samples), lifetime.Token);
                     packet++;
                 }
             }
@@ -176,6 +192,7 @@ public sealed class AirPlay2Output : IAudioOutput
     }
     public async Task SetPausedAsync(bool paused)
     {
+        if (paused) CancelLifetime();
         await _gate.WaitAsync();
         try
         {
@@ -195,15 +212,17 @@ public sealed class AirPlay2Output : IAudioOutput
     public async Task UpdateControlsAsync()
     {
         await _gate.WaitAsync();
+        var lifetime = _lifetime;
         try
         {
             while (_opened && _appliedGain != Control.Gain)
             {
                 var gain = Control.Gain;
-                await _bridge.SetVolumeAsync(Device.Id, gain);
+                await _bridge.SetVolumeAsync(Device.Id, gain, lifetime!.Token);
                 _appliedGain = gain;
             }
         }
+        catch (OperationCanceledException) when (lifetime?.IsCancellationRequested == true) { }
         finally { _gate.Release(); }
     }
     public async Task StopAsync()

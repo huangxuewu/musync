@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- AirPlay preparation, PCM pipe writes and volume requests honor the playback session's cancellation. Stop or Pause can cancel pending sends and control replies, and helper session closure has a five-second wait limit. Late replies to cancelled requests cannot become errors in a newer session.
 - Discovery queries a receiver's missing IPv4 address when service details arrive separately, retries within the existing three scan rounds, and avoids repeated queries for shared or already resolved hosts.
 - The sidebar uses a larger wave wordmark, plum selection for primary navigation, compact playlist icons and localized track counts. Playlist creation and settings stay reachable while the song lists scroll, with restrained hover and disclosure motion.
 - Invalid Unicode character escapes in a receiver's friendly name remain visible instead of interrupting discovery for all speakers; valid Unicode names and supplementary characters still decode.
