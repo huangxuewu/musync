@@ -420,7 +420,7 @@
                             <TextBlock Text="{Binding DelayLabel}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"/>
                             <Grid Grid.Column="1" ColumnDefinitions="36,72,36,Auto" ColumnSpacing="4">
                               <Button Classes="delayStep" Command="{Binding Minus}" AutomationProperties.Name="{Binding DecreaseDelayLabel}" ToolTip.Tip="{Binding DecreaseDelayLabel}"><icons:LucideIcon Kind="minus" Classes="compact"/></Button>
-                              <NumericUpDown Grid.Column="1" Value="{Binding DelayMs, Mode=TwoWay}" Minimum="0" Maximum="10000" Increment="10" ShowButtonSpinner="False" FormatString="0" FontSize="12" MinHeight="36" Height="36" Padding="8,4" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource LinkFieldBorderBrush}" VerticalContentAlignment="Center" TextAlignment="Center" AutomationProperties.Name="{Binding DelayLabel}"/>
+                              <NumericUpDown Grid.Column="1" Value="{Binding DelayMs, Mode=TwoWay}" Minimum="0" Maximum="10000" Increment="{Binding DelayStepMs}" ShowButtonSpinner="False" FormatString="0" FontSize="12" MinHeight="36" Height="36" Padding="8,4" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource LinkFieldBorderBrush}" VerticalContentAlignment="Center" TextAlignment="Center" AutomationProperties.Name="{Binding DelayLabel}"/>
                               <Button Grid.Column="2" Classes="delayStep" Command="{Binding Plus}" AutomationProperties.Name="{Binding IncreaseDelayLabel}" ToolTip.Tip="{Binding IncreaseDelayLabel}"><icons:LucideIcon Kind="plus" Classes="compact"/></Button>
                               <TextBlock Grid.Column="3" Text="ms" Foreground="{DynamicResource LinkMutedBrush}" FontSize="10" VerticalAlignment="Center"/>
                             </Grid>
@@ -438,6 +438,17 @@
             </StackPanel>
           </Grid>
           <StackPanel Grid.Row="3" Spacing="12">
+            <Grid x:Name="SyncTuningControls" IsVisible="{Binding HasDelayControls}" ColumnDefinitions="*,108,Auto" ColumnSpacing="8">
+                <TextBlock Text="{Binding Text[DelayStep]}" IsVisible="{Binding IsLinkEditing}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="12" VerticalAlignment="Center"/>
+                <Button Classes="ghost" IsVisible="{Binding LinkOverview}" Content="{Binding Text[Calibrate]}" Command="{Binding CalibrateCommand}" IsEnabled="{Binding CanPlayLink}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationInfo]}"/>
+                <ComboBox x:Name="DelayStepSelector" Grid.Column="1" ItemsSource="{Binding DelaySteps}" SelectedItem="{Binding DelayStep, Mode=TwoWay}" HorizontalAlignment="Stretch" MinHeight="36" AutomationProperties.Name="{Binding Text[DelayStep]}" AutomationProperties.HelpText="{Binding Text[DelayTuningHint]}" ToolTip.Tip="{Binding Text[DelayTuningHint]}">
+                  <ComboBox.Resources>
+                    <SolidColorBrush x:Key="MusyncComboPopupSurfaceBrush" Color="#342741"/>
+                    <SolidColorBrush x:Key="MusyncComboPopupBorderBrush" Color="#A191AD"/>
+                  </ComboBox.Resources>
+                </ComboBox>
+                <Button Grid.Column="2" Classes="ghost iconButton" IsVisible="{Binding LinkOverview}" Command="{Binding ResetDelays}" IsEnabled="{Binding CanPlayLink}" AutomationProperties.Name="{Binding Text[ResetSyncDelays]}" ToolTip.Tip="{Binding Text[ResetSyncDelays]}"><icons:LucideIcon Kind="refresh-cw"/></Button>
+            </Grid>
             <Border IsVisible="{Binding IsLinkEditing}" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource LinkDividerBrush}" Padding="0,14,0,0">
               <Grid ColumnDefinitions="*,1.618*" ColumnSpacing="12">
                 <Button Classes="ghost" Content="{Binding Text[Cancel]}" Command="{Binding CancelLink}" Height="40"/>
@@ -452,10 +463,6 @@
                   <TextBlock Grid.Column="2" Text="{Binding MasterVolume, StringFormat={}{0:0}%}" Classes="muted" FontSize="12" VerticalAlignment="Center"/>
                 </Grid>
                 <Button Classes="primary" Content="{Binding Text[PlayLink]}" Command="{Binding PlayEverywhere}" IsEnabled="{Binding CanPlayLink}" HorizontalAlignment="Stretch" FontSize="12" Padding="10,12"/>
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsEnabled="{Binding CanPlayLink}">
-                  <Button Classes="ghost" Content="{Binding Text[Calibrate]}" Command="{Binding CalibrateCommand}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationInfo]}"/>
-                  <Button Grid.Column="1" Classes="ghost" Content="{Binding Text[Reset]}" Command="{Binding ResetDelays}" FontSize="11"/>
-                </Grid>
               </StackPanel>
               <TextBlock Text="{Binding Text[SpotifyBoundary]}" IsVisible="{Binding SpotifyMode}" Classes="muted" FontSize="10" TextWrapping="Wrap"/>
               <TextBlock Text="{Binding Text[Experimental]}" Classes="muted" FontSize="10" TextWrapping="Wrap"/>

@@ -26,6 +26,8 @@ YouTube radio uses an unmodified [FFmpeg](https://ffmpeg.org/) LGPL v3 shared bu
 
 In the unreleased UI, adjacent local lyric lines smoothly move into the center highlight and then into the previous-line role. Large jumps and paused seeks show the latest text immediately. The movement follows the Windows animation preference and settles when the poster is hidden or the mini player is open.
 
+The unreleased link panel offers 1, 10 and 100 ms adjustment steps for the delay buttons and keyboard arrows. Directly entered millisecond values are preserved, and the active link applies changes during playback. The step is shared by the open editing session; saved speaker delays persist independently. **Test sync** plays a short listening test for manual tuning. Microphone measurement and automatic acoustic calibration are not implemented.
+
 ## Spotify setup
 
 1. Use your own Spotify Developer app and a Spotify Premium account.

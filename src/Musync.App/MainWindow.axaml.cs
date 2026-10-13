@@ -319,7 +319,7 @@ public partial class MainWindow : Window
         SpeakerPanel.Width = _linkModel?.IsLinkEditing == true ? 440 : 336;
         SpeakerPanel.MaxHeight = maximum;
         var content = _linkModel is null || _linkModel.IsLinkEditing ? 640
-            : 360 + _linkModel.LinkedSpeakers.Count * 150;
+            : 360 + (_linkModel.HasDelayControls ? 8 : 0) + _linkModel.LinkedSpeakers.Count * 150;
         SpeakerPanel.Height = _linkModel is { NoLinks: true, IsLinkEditing: false } ? double.NaN : Math.Min(maximum, content);
     }
     private void SpeakerPopoverOpened(object? sender, EventArgs e)

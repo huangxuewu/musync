@@ -12,12 +12,13 @@ public sealed class SpeakerViewModel : ObservableObject
     private readonly Action<SpeakerViewModel, bool> _changed;
     private string? _error;
     private SpeakerPlaybackPhase _phase;
+    private int _delayStepMs = 10;
     public SpeakerViewModel(SpeakerDevice device, SpeakerPreferences preferences, Localizer text, Action<SpeakerViewModel, bool> changed, bool selectionVisible = false)
     {
         Device = device; Preferences = preferences; _text = text; _changed = changed;
         SelectionVisible = selectionVisible;
-        Minus = new AsyncCommand(_ => { DelayMs -= 10; return Task.CompletedTask; }, _ => { });
-        Plus = new AsyncCommand(_ => { DelayMs += 10; return Task.CompletedTask; }, _ => { });
+        Minus = new AsyncCommand(_ => { DelayMs -= DelayStepMs; return Task.CompletedTask; }, _ => { }, () => DelayMs > 0);
+        Plus = new AsyncCommand(_ => { DelayMs += DelayStepMs; return Task.CompletedTask; }, _ => { }, () => DelayMs < 10000);
         MuteCommand = new AsyncCommand(_ => { Muted = !Muted; return Task.CompletedTask; }, _ => { });
         text.Changed += RefreshText;
         RefreshText();
@@ -36,12 +37,32 @@ public sealed class SpeakerViewModel : ObservableObject
     public bool Selected { get => Preferences.Selected; set { if (value == Preferences.Selected) return; Preferences.Selected = value; Raise(); Raise(nameof(ControlsVisible)); _changed(this, true); } }
     public bool ControlsVisible => !SelectionVisible || Selected;
     public double Volume { get => Preferences.Volume; set { Preferences.Volume = Math.Clamp(value, 0, 100); Raise(); _changed(this, false); } }
-    public decimal DelayMs { get => Preferences.DelayMs; set { Preferences.DelayMs = Math.Clamp((int)value, 0, 10000); Raise(); _changed(this, false); } }
+    public decimal DelayMs
+    {
+        get => Preferences.DelayMs;
+        set
+        {
+            var delay = (int)Math.Clamp(value, 0, 10000);
+            if (delay == Preferences.DelayMs) return;
+            Preferences.DelayMs = delay; Raise();
+            ((AsyncCommand)Minus).RefreshAvailability(); ((AsyncCommand)Plus).RefreshAvailability();
+            _changed(this, false);
+        }
+    }
+    public int DelayStepMs
+    {
+        get => _delayStepMs;
+        set
+        {
+            if (value is not (1 or 10 or 100) || !Set(ref _delayStepMs, value)) return;
+            Raise(nameof(DecreaseDelayLabel)); Raise(nameof(IncreaseDelayLabel));
+        }
+    }
     public bool Muted { get => Preferences.Muted; set { Preferences.Muted = value; Raise(); Raise(nameof(MuteIcon)); Raise(nameof(MuteLabel)); _changed(this, false); } }
     public string MuteIcon => Muted ? "volume-x" : "volume-2";
     public string MuteLabel => _text[Muted ? "Unmute" : "Mute"];
-    public string DecreaseDelayLabel => _text["DecreaseDelay"];
-    public string IncreaseDelayLabel => _text["IncreaseDelay"];
+    public string DecreaseDelayLabel => string.Format(_text["DecreaseDelay"], DelayStepMs);
+    public string IncreaseDelayLabel => string.Format(_text["IncreaseDelay"], DelayStepMs);
     public string Status => _error is not null ? _text["DeviceError"] : Device.UnsupportedReason is not null ? _text[Device.UnsupportedReason] : _text[_phase switch
     {
         SpeakerPlaybackPhase.Connecting => "SpeakerConnecting",

@@ -156,7 +156,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool IsLinkEditing
     {
         get => _linkEditing;
-        private set { if (Set(ref _linkEditing, value)) { Raise(nameof(LinkOverview)); Raise(nameof(VisibleLinkSpeakers)); Raise(nameof(LinkPopoverTitle)); Raise(nameof(CanPlayLink)); Raise(nameof(CanSaveLink)); Raise(nameof(NoDraftSpeakers)); } }
+        private set { if (Set(ref _linkEditing, value)) { Raise(nameof(LinkOverview)); Raise(nameof(VisibleLinkSpeakers)); Raise(nameof(LinkPopoverTitle)); Raise(nameof(CanPlayLink)); Raise(nameof(CanSaveLink)); Raise(nameof(NoDraftSpeakers)); Raise(nameof(HasDelayControls)); } }
     }
     public bool LinkOverview => !IsLinkEditing;
     public string LinkName { get => _linkName; set { if (Set(ref _linkName, value)) LinkEditError = ""; } }
@@ -441,6 +441,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var link = ActiveLinkProfile;
             foreach (var speaker in Speakers)
             {
+                speaker.DelayStepMs = _delayStepMs;
                 if (link is not null && link.Speakers.TryGetValue(speaker.Id, out var member))
                 {
                     member.Name = speaker.Name; member.Transport = speaker.Device.Transport;
@@ -457,13 +458,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                     var preferences = SpeakerLinks.Copy(member.Preferences);
                     preferences.Selected = true;
                     _settings.Speakers[id] = preferences;
-                    LinkedSpeakers.Add(new(new(id, member.Name, member.Transport, UnsupportedReason: "DeviceOffline"), preferences, Text, SpeakerChanged));
+                    LinkedSpeakers.Add(new(new(id, member.Name, member.Transport, UnsupportedReason: "DeviceOffline"), preferences, Text, SpeakerChanged) { DelayStepMs = _delayStepMs });
                 }
                 MasterVolume = link.MasterVolume;
             }
         }
         finally { _applyingLink = false; }
-        RefreshLinks(); Raise(nameof(SelectedCount)); Raise(nameof(VisibleLinkSpeakers));
+        RefreshLinks(); Raise(nameof(SelectedCount)); Raise(nameof(VisibleLinkSpeakers)); Raise(nameof(HasDelayControls));
     }
     private void BeginLinkEdit(SpeakerLink? link)
     {
@@ -485,14 +486,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var preferences = _linkDraft.Speakers.TryGetValue(device.Id, out var member)
                 ? SpeakerLinks.Copy(member.Preferences) : new SpeakerPreferences();
             preferences.Selected = member is not null;
-            DraftSpeakers.Add(new(device, preferences, Text, DraftSpeakerChanged, selectionVisible: true));
+            DraftSpeakers.Add(new(device, preferences, Text, DraftSpeakerChanged, selectionVisible: true) { DelayStepMs = _delayStepMs });
         }
-        Raise(nameof(LinkSelectionSummary)); Raise(nameof(NoDraftSpeakers));
+        Raise(nameof(LinkSelectionSummary)); Raise(nameof(NoDraftSpeakers)); Raise(nameof(HasDelayControls));
     }
     private void DraftSpeakerChanged(SpeakerViewModel speaker, bool selectionChanged)
     {
         LinkEditError = "";
-        if (selectionChanged) Raise(nameof(LinkSelectionSummary));
+        if (selectionChanged) { Raise(nameof(LinkSelectionSummary)); Raise(nameof(HasDelayControls)); }
         if (!selectionChanged || !speaker.Selected) return;
         foreach (var alternate in DraftSpeakers.Where(s => s.Id != speaker.Id && s.Selected && ReceiverRoutes.SameReceiver(s.Device, speaker.Device)))
             alternate.Selected = false;
@@ -503,6 +504,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         DraftSpeakers.Clear(); _linkDraft = null; IsLinkEditing = false; LinkEditError = "";
         Raise(nameof(LinkSelectionSummary));
         Raise(nameof(CanPlayLink));
+        Raise(nameof(HasDelayControls));
     }
     private async Task SaveLinkAsync()
     {
@@ -531,6 +533,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         var id = _source?.Id ?? "local";
         Raise(nameof(Text));
+        RefreshDelaySteps();
         Raise(nameof(InterfaceFont)); Raise(nameof(InterfaceFontSize));
         Sources.Clear();
         Sources.Add(new("local", Text["Local"])); Sources.Add(new("capture", Text["Capture"])); Sources.Add(new("spotify", "Spotify"));

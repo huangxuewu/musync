@@ -19,6 +19,7 @@ public sealed class AsyncCommand(Func<object?, Task> execute, Action<Exception> 
 {
     private bool _running;
     public event EventHandler? CanExecuteChanged;
+    public void RefreshAvailability() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     public bool CanExecute(object? parameter) => !_running && (canExecute?.Invoke() ?? true);
     public async void Execute(object? parameter)
     {
