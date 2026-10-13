@@ -57,7 +57,7 @@ yt-dlp supplies the encoded stream to FFmpeg through a pipe. FFmpeg produces one
 
 Playback supports pause/resume, volume, and next/previous saved stations. Seeking is currently disabled for radio recordings and live streams. Videos requiring sign-in, private access or geographic access may fail; Musync does not import browser cookies. A YouTube playlist page cannot be added, but a single long music video containing a playlist can. No audio file is added to the local library; station URLs are saved and the stream queue stays in memory. This uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org/), rather than the official YouTube IFrame API. Only play content you are permitted to access and use.
 
-The current source and Debug preview additionally let the current station row pause/resume its existing stream without another metadata lookup. Rows show preparation, playing and paused states with contextual controls; their activity stops for reduced motion or hidden views. This refinement is listed under Unreleased and is not included in the 1.0.1 download.
+The current source and Debug preview additionally let the current station row pause/resume its existing stream without another metadata lookup. Rows show preparation, playing and paused states with contextual controls; their activity stops for reduced motion or hidden views. Failed stations retain a Retry action after the five-second toast expires; selecting Retry starts a fresh stream. A volume-control error on a receiver that is still playing does not offer a stream restart. These refinements are listed under Unreleased and are not included in the 1.0.1 download.
 
 ## Speaker setup
 

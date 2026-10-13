@@ -770,6 +770,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (!OwnsSource(sourceVersion) || IsSwitchingSource) return;
             Busy = true; _startingPlayback = true; _preparationCancelled = false; Status = Text["Starting"];
+            if (YouTubeMode) ClearRadioPlaybackError(track);
             if (SpotifyMode)
             {
                 _spotifyStateVersion++;
@@ -834,8 +835,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             foreach (var speaker in Speakers) speaker.UpdateStatus(false, _player.OutputErrors.GetValueOrDefault(speaker.Id));
             if (YouTubeMode)
             {
-                RadioError = Text[ex is FileNotFoundException ? "RadioToolsMissing" : "RadioPlaybackFailed"];
-                ShowError(ex, RadioError); return;
+                var errorKey = ex is FileNotFoundException ? "RadioToolsMissing" : "RadioPlaybackFailed";
+                RememberRadioPlaybackError(track, errorKey);
+                LogError(ex); ReportPlayerError(Text[errorKey]); return;
             }
             throw;
         }
@@ -1109,12 +1111,20 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (!OwnsSource(sourceVersion) || SpotifyMode || Busy || !_session) return;
             RefreshLocalProgress();
             RefreshSpeakerPlaybackStatus();
-            RefreshPlayerError();
             if (!_player.IsPlaying && _player.Error is not null) IsPlaying = false;
             if (_player.Outputs.Count == 0)
             {
+                // A volume/control error on a surviving receiver is recoverable
+                // in place. Only a terminated session offers a new radio stream.
+                if (YouTubeMode && _player.Error is not null)
+                {
+                    RememberRadioPlaybackError(_current, "RadioPlaybackInterrupted");
+                    ReportPlayerError(Text["RadioPlaybackInterrupted"]);
+                }
+                else RefreshPlayerError();
                 _session = false; IsPlaying = false; RefreshCurrent(); return;
             }
+            RefreshPlayerError();
             if (_player.Finished && IsPlaying)
             {
                 if (!_player.TailComplete) return;

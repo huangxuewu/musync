@@ -9,6 +9,7 @@ public sealed partial class MainViewModel
     private string _radioUrl = "", _radioName = "", _radioError = "";
     private bool _radioLoading;
     private CancellationTokenSource? _radioRequest;
+    private readonly Dictionary<string, string> _radioPlaybackErrors = new(StringComparer.Ordinal);
     public ObservableCollection<RadioStationViewModel> RadioStations { get; } = [];
     public bool YouTubeMode => Source?.Id == "youtube";
     public bool IsRadioPage => _view == "radio";
@@ -73,6 +74,16 @@ public sealed partial class MainViewModel
     {
         foreach (var station in RadioStations) station.RefreshPlayback();
     }
+    private void ClearRadioPlaybackError(MusicTrack? track)
+    {
+        if (track?.FilePath is { } url && _radioPlaybackErrors.Remove(url)) RefreshRadioPlayback();
+    }
+    private void RememberRadioPlaybackError(MusicTrack? track, string errorKey)
+    {
+        if (track?.FilePath is not { } url || !_settings.RadioStations.Any(s => s.Url == url)) return;
+        _radioPlaybackErrors[url] = errorKey;
+        RefreshRadioPlayback();
+    }
     private async Task RemoveRadioAsync(RadioStation station)
     {
         if (Busy) return;
@@ -82,7 +93,8 @@ public sealed partial class MainViewModel
             try { await StopAsync(); _current = null; Duration = 0; RefreshCurrent(); }
             finally { _playGate.Release(); }
         }
-        _settings.RadioStations.RemoveAll(s => s.Id == station.Id); RefreshRadios(); SaveSoon(); Status = Text["RadioRemoved"];
+        _settings.RadioStations.RemoveAll(s => s.Id == station.Id); _radioPlaybackErrors.Remove(station.Url);
+        RefreshRadios(); SaveSoon(); Status = Text["RadioRemoved"];
     }
     private void RefreshRadioName(MusicTrack track)
     {
@@ -116,15 +128,18 @@ public sealed partial class MainViewModel
         private readonly MainViewModel _owner;
         private bool _active;
         private TrackPlaybackPhase _phase;
+        private string? _failureKey;
         public RadioStation Station { get; }
         public string Name => Station.Name;
         public string Url => Station.Url;
         public bool IsActive { get => _active; internal set => Set(ref _active, value); }
         public bool IsPreparing => _phase == TrackPlaybackPhase.Preparing;
+        public bool HasPlaybackError => _failureKey is not null;
         public bool HasPlaybackActivity => _phase is TrackPlaybackPhase.Preparing or TrackPlaybackPhase.Playing;
-        public string PlayIcon => _phase == TrackPlaybackPhase.Playing ? "pause" : "play";
-        public string StatusCaption => _phase == TrackPlaybackPhase.None ? Url : _owner.Text[IsPreparing ? "RadioBuffering" : _phase == TrackPlaybackPhase.Playing ? "Playing" : "Paused"];
-        public string PlayLabel => string.Format(_owner.Text[IsPreparing ? "RadioPreparingNamed" : _phase == TrackPlaybackPhase.Playing ? "RadioPauseNamed" : "RadioPlayNamed"], Name);
+        public string PlayIcon => HasPlaybackError ? "refresh-cw" : _phase == TrackPlaybackPhase.Playing ? "pause" : "play";
+        public string StatusCaption => HasPlaybackError ? _owner.Text["RadioRetryHint"] : _phase == TrackPlaybackPhase.None ? Url : _owner.Text[IsPreparing ? "RadioBuffering" : _phase == TrackPlaybackPhase.Playing ? "Playing" : "Paused"];
+        public string CaptionTooltip => _failureKey is { } key ? _owner.Text[key] : Url;
+        public string PlayLabel => string.Format(_owner.Text[HasPlaybackError ? "RadioRetryNamed" : IsPreparing ? "RadioPreparingNamed" : _phase == TrackPlaybackPhase.Playing ? "RadioPauseNamed" : "RadioPlayNamed"], Name);
         public string RemoveLabel => string.Format(_owner.Text["RadioRemoveNamed"], Name);
         public bool CanEdit => !_owner.Busy;
         public ICommand Play { get; }
@@ -136,13 +151,15 @@ public sealed partial class MainViewModel
             Remove = new AsyncCommand(_ => owner.RemoveRadioAsync(station), owner.ShowError, () => CanEdit);
             RefreshPlayback();
         }
-        internal void RefreshText() { Raise(nameof(PlayLabel)); Raise(nameof(RemoveLabel)); Raise(nameof(StatusCaption)); }
+        internal void RefreshText() { Raise(nameof(PlayLabel)); Raise(nameof(RemoveLabel)); Raise(nameof(StatusCaption)); Raise(nameof(CaptionTooltip)); }
         internal void RefreshAvailability() => Raise(nameof(CanEdit));
         internal void RefreshPlayback()
         {
             var phase = _owner.RadioPhase(Station);
-            if (_phase == phase) return;
-            _phase = phase;
+            var failure = _owner._radioPlaybackErrors.GetValueOrDefault(Url);
+            if (_phase == phase && _failureKey == failure) return;
+            _phase = phase; _failureKey = failure;
+            Raise(nameof(HasPlaybackError)); Raise(nameof(CaptionTooltip));
             Raise(nameof(IsPreparing)); Raise(nameof(HasPlaybackActivity)); Raise(nameof(PlayIcon));
             Raise(nameof(StatusCaption)); Raise(nameof(PlayLabel));
         }

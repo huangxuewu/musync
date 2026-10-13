@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Radio playback failures remain on the affected station with a localized Retry action after the five-second toast expires. Activating Retry starts a fresh stream; playback errors stay separate from Add-station validation. Volume-control errors on a surviving receiver do not offer a restart, and source changes reject late failures from the old session.
 - Long-running yt-dlp and FFmpeg stderr readers keep draining after 65,536 characters, retaining a bounded Unicode-safe tail instead of failing at the capture limit and leaving a helper's pipe blocked. The separate startup metadata size limit remains in place. Windows pipe regressions cover a one-megabyte log flood and cancellation while no data is arriving.
 - Clicking the current YouTube radio row pauses/resumes its existing stream instead of repeating metadata lookup and restarting the decoder. Station rows show preparation/playback activity, localized status and contextual play/pause actions. The active preparing row stays readable while duplicate requests are disabled; activity stops for reduced motion, hidden/minimized windows, the mini player and other pages. Explicit station selection for next/previous continues to start the chosen station.
 

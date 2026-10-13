@@ -12,10 +12,11 @@
       <Setter Property="Foreground" Value="#251A35"/>
     </Style>
     <Style Selector="Button.radioRow.active:disabled"><Setter Property="Opacity" Value="1"/></Style>
-    <Style Selector="TextBlock.radioCaption"><Setter Property="Foreground" Value="#716877"/></Style>
+    <Style Selector="TextBlock.radioCaption"><Setter Property="Foreground" Value="#716877"/><Setter Property="FontSize" Value="11"/></Style>
     <Style Selector="TextBlock.radioCaption.current"><Setter Property="Foreground" Value="#B52C47"/></Style>
+    <Style Selector="TextBlock.radioCaption.failed"><Setter Property="Foreground" Value="#B52C47"/><Setter Property="FontSize" Value="12"/></Style>
     <Style Selector="Button.radioRow icons|LucideIcon.radioAction"><Setter Property="Opacity" Value="0"/></Style>
-    <Style Selector="Button.radioRow.active icons|LucideIcon.radioAction, Button.radioRow:pointerover icons|LucideIcon.radioAction, Button.radioRow:focus-visible icons|LucideIcon.radioAction"><Setter Property="Opacity" Value="1"/></Style>
+    <Style Selector="Button.radioRow.active icons|LucideIcon.radioAction, Button.radioRow.failed icons|LucideIcon.radioAction, Button.radioRow:pointerover icons|LucideIcon.radioAction, Button.radioRow:focus-visible icons|LucideIcon.radioAction"><Setter Property="Opacity" Value="1"/></Style>
   </UserControl.Styles>
   <Grid RowDefinitions="Auto,Auto,Auto,*">
     <Grid x:Name="RadioScene" ColumnDefinitions="1.618*,*" MinHeight="206" ClipToBounds="False">
@@ -57,7 +58,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Grid ColumnDefinitions="*,36" Margin="0,0,0,6">
-                <Button Classes="nav radioRow" Classes.active="{Binding IsActive}" Command="{Binding Play}" IsEnabled="{Binding CanEdit}"
+                <Button Classes="nav radioRow" Classes.active="{Binding IsActive}" Classes.failed="{Binding HasPlaybackError}" Command="{Binding Play}" IsEnabled="{Binding CanEdit}"
                         AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding PlayLabel}">
                   <Grid ColumnDefinitions="44,*,24" ColumnSpacing="14">
                     <Border Background="#FDE8EC" CornerRadius="12" Width="44" Height="44" VerticalAlignment="Center">
@@ -68,7 +69,7 @@
                     </Border>
                     <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
                       <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                      <TextBlock Classes="radioCaption" Classes.current="{Binding IsActive}" Text="{Binding StatusCaption}" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Url}"/>
+                      <TextBlock Classes="radioCaption" Classes.current="{Binding IsActive}" Classes.failed="{Binding HasPlaybackError}" Text="{Binding StatusCaption}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding CaptionTooltip}" AutomationProperties.LiveSetting="Polite"/>
                     </StackPanel>
                     <icons:LucideIcon Grid.Column="2" Classes="radioAction" Kind="{Binding PlayIcon}" Foreground="#B52C47" Width="22" Height="22" IsVisible="{Binding !IsPreparing}" IsHitTestVisible="False"/>
                   </Grid>
