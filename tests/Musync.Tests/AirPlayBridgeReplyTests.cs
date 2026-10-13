@@ -9,9 +9,9 @@ public sealed class AirPlayBridgeReplyTests
     [Theory]
     [InlineData("homepod")]
     [InlineData(null)]
-    public async Task ExpiredRequestRepliesCannotBecomeReceiverOrGlobalErrors(string? id)
+    public void ExpiredRequestRepliesCannotBecomeReceiverOrGlobalErrors(string? id)
     {
-        await using var bridge = new AirPlayBridge("unused", "unused");
+        var bridge = new AirPlayBridgeFeedback();
         using var json = JsonDocument.Parse(JsonSerializer.Serialize(new
         {
             request = "expired-request", id, error = "Old volume request rejected"
@@ -22,9 +22,9 @@ public sealed class AirPlayBridgeReplyTests
     }
 
     [Fact]
-    public async Task UnsolicitedDisconnectRemainsVisibleAfterALateRequestError()
+    public void UnsolicitedDisconnectRemainsVisibleAfterALateRequestError()
     {
-        await using var bridge = new AirPlayBridge("unused", "unused");
+        var bridge = new AirPlayBridgeFeedback();
         using var disconnect = JsonDocument.Parse(JsonSerializer.Serialize(new
         {
             request = (string?)null, id = "homepod", error = "Control connection dropped"
@@ -37,5 +37,23 @@ public sealed class AirPlayBridgeReplyTests
         bridge.ObserveReply(late.RootElement);
         Assert.Equal("Control connection dropped", bridge.Error("homepod"));
         Assert.Null(bridge.Error("another-receiver"));
+    }
+
+    [Fact]
+    public async Task AStoppedProcessOnlyFailsItsOwnRequestsAndRetainsItsReceiverFailure()
+    {
+        var old = new AirPlayBridgeFeedback();
+        var replacement = new AirPlayBridgeFeedback();
+        var oldReply = old.RegisterRequest("old-request");
+        var newReply = replacement.RegisterRequest("new-request");
+        old.Stop();
+        await Assert.ThrowsAsync<IOException>(() => oldReply);
+        Assert.False(newReply.IsCompleted);
+        old.ReportError("*", "Obsolete helper diagnostic");
+        Assert.Equal("AirPlay bridge stopped.", old.Error("old-receiver"));
+        Assert.Null(replacement.Error("new-receiver"));
+        using var reply = JsonDocument.Parse("{\"request\":\"new-request\",\"ok\":true}");
+        replacement.ObserveReply(reply.RootElement);
+        await newReply;
     }
 }

@@ -18,112 +18,165 @@ public sealed class AirPlayBridge(string directory, string nodePath) : IAsyncDis
 {
     private readonly SemaphoreSlim _start = new(1);
     private readonly SemaphoreSlim _write = new(1);
-    private readonly ConcurrentDictionary<string, TaskCompletionSource> _pending = new();
-    private readonly ConcurrentDictionary<string, string> _errors = new();
-    private Process? _process;
-    private Task? _reader;
-    public string? Error(string id) => _errors.GetValueOrDefault(id) ?? _errors.GetValueOrDefault("*");
-    private async Task EnsureStarted(CancellationToken token)
+    private readonly ConcurrentDictionary<string, BridgeRun> _receivers = new();
+    private volatile BridgeRun? _run;
+    private int _disposed;
+    private sealed class BridgeRun
+    {
+        public BridgeRun(Process process) { Process = process; Token = Lifetime.Token; }
+        public Process Process { get; }
+        public AirPlayBridgeFeedback Feedback { get; } = new();
+        public CancellationTokenSource Lifetime { get; } = new();
+        public CancellationToken Token { get; }
+        public Task Reader { get; set; } = Task.CompletedTask;
+        public Task Diagnostics { get; set; } = Task.CompletedTask;
+        public bool IsRunning => !Token.IsCancellationRequested && !Process.HasExited;
+        public void Stop()
+        {
+            Feedback.Stop();
+            try { Lifetime.Cancel(); } catch (ObjectDisposedException) { }
+        }
+    }
+    public string? Error(string id) => _receivers.TryGetValue(id, out var owner)
+        ? owner.Feedback.Error(id) : _run?.Feedback.Error(id);
+    private async Task<BridgeRun> EnsureStarted(CancellationToken token)
     {
         await _start.WaitAsync(token);
         try
         {
-            if (_process is { HasExited: false }) return;
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+            if (_run is { IsRunning: true } active) return active;
+            if (_run is { } previous) { await StopRun(previous); _run = null; }
+            token.ThrowIfCancellationRequested();
             if (!File.Exists(Path.Combine(directory, "bridge.mjs"))) throw new FileNotFoundException("AirPlay bridge is missing.");
             var info = new ProcessStartInfo(nodePath) { WorkingDirectory = directory, RedirectStandardInput = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
             info.ArgumentList.Add(Path.Combine(directory, "bridge.mjs"));
-            _process = Process.Start(info) ?? throw new IOException("Could not start AirPlay bridge.");
-            var process = _process;
-            _errors.Clear();
-            _reader = Task.Run(async () =>
-            {
-                while (await process.StandardOutput.ReadLineAsync() is { } line)
-                {
-                    try
-                    {
-                        using var json = JsonDocument.Parse(line);
-                        ObserveReply(json.RootElement);
-                    }
-                    catch (JsonException) { }
-                }
-                foreach (var completion in _pending.Values) completion.TrySetException(new IOException("AirPlay bridge stopped."));
-            });
-            _ = Task.Run(async () =>
-            {
-                // Drain stderr so diagnostics cannot block the protocol process.
-                while (await process.StandardError.ReadLineAsync() is { } line)
-                    if (line.Length > 0) _errors["*"] = line[..Math.Min(300, line.Length)];
-            });
+            var run = new BridgeRun(Process.Start(info) ?? throw new IOException("Could not start AirPlay bridge."));
+            _run = run;
+            run.Reader = Task.Run(() => ReadOutput(run));
+            run.Diagnostics = Task.Run(() => ReadDiagnostics(run));
+            return run;
         }
         finally { _start.Release(); }
     }
-    internal void ObserveReply(JsonElement root)
+    private static async Task ReadOutput(BridgeRun run)
     {
-        var error = root.TryGetProperty("error", out var value) ? value.GetString() : null;
-        if (root.TryGetProperty("request", out var request) && request.ValueKind == JsonValueKind.String)
+        try
         {
-            // A cancelled request can still receive a reply. Its error belongs
-            // to that request, rather than a receiver's newer playback session.
-            if (_pending.TryRemove(request.GetString()!, out var completion))
+            while (await run.Process.StandardOutput.ReadLineAsync(run.Token) is { } line)
             {
-                if (error is null) completion.TrySetResult(); else completion.TrySetException(new IOException(error));
+                try { using var json = JsonDocument.Parse(line); run.Feedback.ObserveReply(json.RootElement); }
+                catch (JsonException) { }
             }
         }
-        else if (error is not null) _errors[root.TryGetProperty("id", out var id) ? id.GetString() ?? "*" : "*"] = error;
+        catch (OperationCanceledException) when (run.Token.IsCancellationRequested) { }
+        catch (ObjectDisposedException) when (run.Token.IsCancellationRequested) { }
+        catch (Exception ex) { run.Feedback.ReportError("*", ex.Message); }
+        finally { run.Stop(); }
+    }
+    private static async Task ReadDiagnostics(BridgeRun run)
+    {
+        try
+        {
+            // Drain stderr so diagnostics cannot block the protocol process.
+            while (await run.Process.StandardError.ReadLineAsync(run.Token) is { } line)
+                if (line.Length > 0) run.Feedback.ReportError("*", line[..Math.Min(300, line.Length)]);
+        }
+        catch (OperationCanceledException) when (run.Token.IsCancellationRequested) { }
+        catch (ObjectDisposedException) when (run.Token.IsCancellationRequested) { }
+        catch (Exception ex) { run.Feedback.ReportError("*", ex.Message); }
     }
     public async Task OpenAsync(SpeakerDevice device, float gain, CancellationToken token)
     {
-        await EnsureStarted(token);
-        _errors.TryRemove(device.Id, out _);
-        await RequestAsync(new { op = "open", id = device.Id, host = device.Host, port = device.Port, properties = device.Properties, volume = gain * 100 }, token);
+        var run = await EnsureStarted(token);
+        _receivers[device.Id] = run;
+        run.Feedback.ClearDeviceError(device.Id);
+        await RequestAsync(run, new { op = "open", id = device.Id, host = device.Host, port = device.Port, properties = device.Properties, volume = gain * 100 }, token);
+    }
+    private BridgeRun ReceiverRun(string id)
+    {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+        return _receivers.TryGetValue(id, out var run) ? run : throw new IOException("AirPlay session is not open.");
     }
     public Task SetVolumeAsync(string id, float gain, CancellationToken token = default)
-        => RequestAsync(new { op = "volume", id, volume = gain * 100 }, token);
-    private async Task RequestAsync(object command, CancellationToken token)
+        => RequestAsync(ReceiverRun(id), new { op = "volume", id, volume = gain * 100 }, token);
+    private async Task RequestAsync(BridgeRun run, object command, CancellationToken token)
     {
         var request = Guid.NewGuid().ToString("N");
         var values = JsonSerializer.SerializeToNode(command)!.AsObject(); values["request"] = request;
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _pending[request] = completion;
-        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var reply = run.Feedback.RegisterRequest(request);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token, run.Token);
         deadline.CancelAfter(TimeSpan.FromSeconds(35));
-        try { await WriteAsync(values, deadline.Token); await completion.Task.WaitAsync(deadline.Token); }
+        try { await WriteAsync(run, values, deadline.Token); await reply.WaitAsync(deadline.Token); }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested && run.Token.IsCancellationRequested)
+        { throw new IOException("AirPlay bridge stopped."); }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         { throw new TimeoutException("AirPlay bridge request timed out."); }
-        finally { _pending.TryRemove(request, out _); }
+        finally { run.Feedback.ForgetRequest(request); if (reply.IsFaulted) _ = reply.Exception; }
     }
-    private async Task WriteAsync(object command, CancellationToken token)
+    private async Task WriteAsync(BridgeRun run, object command, CancellationToken token)
     {
-        await _write.WaitAsync(token);
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, run.Token);
+        var entered = false;
         try
         {
-            if (_process is null || _process.HasExited) throw new IOException("AirPlay bridge is not running.");
-            await _process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(command).AsMemory(), token);
-            await _process.StandardInput.FlushAsync(token);
+            await _write.WaitAsync(lifetime.Token); entered = true;
+            if (!run.IsRunning) throw new IOException("AirPlay bridge is not running.");
+            await run.Process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(command).AsMemory(), lifetime.Token);
+            await run.Process.StandardInput.FlushAsync(lifetime.Token);
         }
-        finally { _write.Release(); }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested && run.Token.IsCancellationRequested)
+        { throw new IOException("AirPlay bridge stopped."); }
+        finally { if (entered) _write.Release(); }
     }
     public Task SendAsync(string id, byte[] pcm, CancellationToken token = default)
-        => WriteAsync(new { op = "pcm", id, data = Convert.ToBase64String(pcm) }, token);
+        => WriteAsync(ReceiverRun(id), new { op = "pcm", id, data = Convert.ToBase64String(pcm) }, token);
     public async Task CloseAsync(string id, CancellationToken token = default)
     {
-        if (_process is not { HasExited: false }) return;
-        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
-        deadline.CancelAfter(TimeSpan.FromSeconds(5));
-        try { await RequestAsync(new { op = "close", id }, deadline.Token); } catch (Exception) { }
+        if (!_receivers.TryGetValue(id, out var run)) return;
+        try
+        {
+            if (!run.IsRunning) return;
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+            deadline.CancelAfter(TimeSpan.FromSeconds(5));
+            await RequestAsync(run, new { op = "close", id }, deadline.Token);
+        }
+        catch (Exception) { }
+        finally { _receivers.TryRemove(new KeyValuePair<string, BridgeRun>(id, run)); }
+    }
+    private async Task StopRun(BridgeRun run)
+    {
+        run.Stop();
+        var entered = await _write.WaitAsync(TimeSpan.FromSeconds(5));
+        try
+        {
+            // Closing the pipe itself avoids a synchronous writer flush when
+            // an unresponsive helper has stopped reading stdin.
+            if (entered) run.Process.StandardInput.BaseStream.Close();
+            else if (!run.Process.HasExited) run.Process.Kill(true);
+        }
+        finally { if (entered) _write.Release(); }
+        try
+        {
+            try { await run.Process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+            catch (TimeoutException)
+            {
+                if (!run.Process.HasExited) run.Process.Kill(true);
+                await run.Process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            await Task.WhenAll(run.Reader, run.Diagnostics);
+        }
+        finally { run.Lifetime.Dispose(); run.Process.Dispose(); }
     }
     public async ValueTask DisposeAsync()
     {
-        if (_process is not null)
-        {
-            _process.StandardInput.Close();
-            try { await _process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
-            catch (TimeoutException) { _process.Kill(true); }
-            if (_reader is not null) await _reader;
-            _process.Dispose();
-        }
-        _start.Dispose(); _write.Dispose();
+        if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+        await _start.WaitAsync();
+        try { if (_run is { } run) await StopRun(run); _run = null; _receivers.Clear(); }
+        finally { _start.Release(); }
+        // Queued callers still need these managed gates to settle. No wait
+        // handle is created; the gates are collected with the disposed bridge.
     }
 }
 
