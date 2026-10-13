@@ -199,7 +199,10 @@
   "RadioRetryHint": "播放失败 · 点击重试",
   "RadioPlaybackInterrupted": "电台播放已中断。请检查网络和链接中的音箱，然后重试。",
   "RadioRemoveNamed": "移除电台“{0}”",
-  "RadioBuffering": "正在缓冲电台并等待链接音箱就绪…",
+  "RadioLoadingTitle": "正在加载电台…",
+  "RadioLoadingDetail": "正在读取视频或直播信息。",
+  "RadioBuffering": "正在准备音频…",
+  "RadioBufferingDetail": "缓冲完成后将连接音箱。",
   "RadioToolsMissing": "电台播放工具尚未准备好，请配置播放依赖后重试。",
   "RadioPlaybackFailed": "电台加载失败，请检查网络及视频是否可播放，然后重试。"
 }

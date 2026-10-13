@@ -93,7 +93,7 @@ public sealed partial class SpotifyPlaybackTests
             var wave = button.GetVisualDescendants().OfType<PreparationIndicator>().Single();
             Assert.True(row.IsPreparing); Assert.True(wave.AnimationRunning); Assert.False(button.IsEnabled);
             Assert.Equal(1, button.Opacity);
-            Assert.Equal(model.Text["RadioBuffering"], row.StatusCaption);
+            Assert.Equal(model.Text["RadioLoadingTitle"], row.StatusCaption);
             Assert.Equal(string.Format(model.Text["RadioPreparingNamed"], row.Name), AutomationProperties.GetName(button));
             Assert.False(button.GetVisualDescendants().OfType<LucideIcon>().Single(icon => icon.Classes.Contains("radioAction")).IsVisible);
             using (var waiting = CaptureTrackReviewFrame(window)) { Assert.NotNull(waiting); SaveReviewFrame(waiting, $"radio-preparing-{language}-1120.png"); }

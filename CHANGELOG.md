@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Radio startup reports loading the station, preparing audio and preparing speakers separately. Receiver preparation shows the actual ready/total count after metadata and buffering finish; the station row and mini player follow the same phase. Cancellation remains available throughout startup.
 - Radio PCM reads have a 35-second deadline for each complete block, including partial reads. Normal consumer backpressure and time between completed blocks do not use that deadline; cancellation stays cancellation. Waiting for helper completion after audio EOF is also bounded, and disposal observes the retained closing tasks. A terminated radio stream uses the station's existing Retry action.
 - Radio playback failures remain on the affected station with a localized Retry action after the five-second toast expires. Activating Retry starts a fresh stream; playback errors stay separate from Add-station validation. Volume-control errors on a surviving receiver do not offer a restart, and source changes reject late failures from the old session.
 - Long-running yt-dlp and FFmpeg stderr readers keep draining after 65,536 characters, retaining a bounded Unicode-safe tail instead of failing at the capture limit and leaving a helper's pipe blocked. The separate startup metadata size limit remains in place. Windows pipe regressions cover a one-megabyte log flood and cancellation while no data is arriving.

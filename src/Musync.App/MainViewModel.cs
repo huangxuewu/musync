@@ -305,29 +305,39 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public string ListTitle { get => _listTitle; private set => Set(ref _listTitle, value); }
     public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); RefreshTrackPlayback(); RefreshRadioPlayback(); } } }
     public string PlayIcon => IsPlaying ? "pause" : "play";
-    public string PlayLabel => Text[IsSwitchingSource ? "SwitchingSource" : IsPreparingPlayback ? "PreparingSpeakers" : IsPlaying ? "Pause" : "Play"];
+    public string PlayLabel => IsSwitchingSource ? Text["SwitchingSource"] : IsPreparingPlayback ? PreparationHeadline : Text[IsPlaying ? "Pause" : "Play"];
     public bool IsPreparingPlayback
     {
         get => _preparingPlayback;
         private set
         {
             if (!Set(ref _preparingPlayback, value)) return;
-            Raise(nameof(PlayLabel)); Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); Raise(nameof(PreparationDetail));
+            Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); RefreshPreparationFeedback();
             RefreshSpeakerPlaybackStatus();
             RefreshTrackPlayback();
             RefreshRadioPlayback();
         }
     }
     public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);
+    private bool PreparingRadioAudio => YouTubeMode && _startingPlayback && !RadioLoading
+        && (!_player.IsPreparing || _player.PreparingOutputs == 0);
+    public string PreparationHeadline => Text[YouTubeMode && RadioLoading ? "RadioLoadingTitle" : PreparingRadioAudio ? "RadioBuffering" : "PreparingSpeakers"];
+    public string PreparationSummary => YouTubeMode && (RadioLoading || PreparingRadioAudio) ? PreparationHeadline : PreparationDetail;
     public string PreparationDetail
     {
         get
         {
             var total = _player.IsPreparing ? _player.PreparingOutputs : 0;
-            if (RadioLoading || YouTubeMode && _player.IsPreparing && total == 0) return Text["RadioBuffering"];
+            if (YouTubeMode && RadioLoading) return Text["RadioLoadingDetail"];
+            if (PreparingRadioAudio) return Text["RadioBufferingDetail"];
             return string.Format(Text["SpeakerPreparationProgress"], _player.IsPreparing ? _player.ReadyOutputs : 0,
                 total > 0 ? total : _preparationTotal);
         }
+    }
+    private void RefreshPreparationFeedback()
+    {
+        Raise(nameof(PlayLabel)); Raise(nameof(PreparationHeadline)); Raise(nameof(PreparationDetail)); Raise(nameof(PreparationSummary));
+        RefreshRadioPlayback();
     }
     public ICommand CancelPreparation { get; }
     private async Task CancelPreparationAsync()
@@ -523,7 +533,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Sources.Add(new("local", Text["Local"])); Sources.Add(new("capture", Text["Capture"])); Sources.Add(new("spotify", "Spotify"));
         Sources.Add(new("youtube", Text["Radio"]));
         _source = Sources.First(c => c.Id == id); Raise(nameof(Source));
-        foreach (var name in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(PlayLabel), nameof(MusicSourceHint), nameof(PreparationDetail), nameof(LikeCurrentLabel), nameof(SelectedCount), nameof(AvailableCount), nameof(SpotifyStatus), nameof(LinkSelectionSummary) }) Raise(name);
+        foreach (var name in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(PlayLabel), nameof(MusicSourceHint), nameof(PreparationHeadline), nameof(PreparationDetail), nameof(PreparationSummary), nameof(LikeCurrentLabel), nameof(SelectedCount), nameof(AvailableCount), nameof(SpotifyStatus), nameof(LinkSelectionSummary) }) Raise(name);
         RefreshSearchState();
         RefreshTracks();
         Raise(nameof(RoutingAvailable));
@@ -803,7 +813,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                     using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
                     _radioRequest = request;
                     try { track = await radio.ResolveRadioAsync(address!, request.Token); }
-                    finally { if (ReferenceEquals(_radioRequest, request)) _radioRequest = null; }
+                    finally { if (ReferenceEquals(_radioRequest, request)) _radioRequest = null; RadioLoading = false; }
                     if (!OwnsSource(sourceVersion)) return;
                     RefreshRadioName(track);
                 }
@@ -1074,7 +1084,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task TickAsync()
     {
         if (_disposed || _ending) return;
-        if (IsPreparingPlayback) { Raise(nameof(PreparationDetail)); RefreshSpeakerPlaybackStatus(); return; }
+        if (IsPreparingPlayback) { RefreshPreparationFeedback(); RefreshSpeakerPlaybackStatus(); return; }
         if (_tickRunning)
         {
             // A failed receiver may take seconds to close. Healthy outputs

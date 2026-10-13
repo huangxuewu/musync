@@ -584,9 +584,9 @@
       <Grid ColumnDefinitions="24,*,36" ColumnSpacing="12">
         <icons:PreparationIndicator x:Name="FullPreparationWave" Width="24" Height="22" VerticalAlignment="Center"/>
         <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Text[PreparingSpeakers]}" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+          <TextBlock x:Name="PreparationHeading" Text="{Binding PreparationHeadline}" Foreground="White" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2"/>
           <TextBlock x:Name="PreparationCount" Text="{Binding PreparationDetail}" Foreground="#C0B5CB" FontSize="11"
-                     AutomationProperties.LiveSetting="Polite"/>
+                     TextWrapping="Wrap" MaxLines="2" AutomationProperties.LiveSetting="Polite"/>
         </StackPanel>
         <Button x:Name="CancelPreparationButton" Grid.Column="2" Classes="transport" Command="{Binding CancelPreparation}"
                 AutomationProperties.Name="{Binding Text[CancelPreparation]}" ToolTip.Tip="{Binding Text[CancelPreparation]}">
@@ -621,9 +621,9 @@
               <TextBlock Text="{Binding Status}" IsVisible="{Binding !IsPreparingPlayback}" Foreground="#E5DCEC" FontSize="10" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}"/>
               <Grid IsVisible="{Binding IsPreparingPlayback}" ColumnDefinitions="24,*,36" ColumnSpacing="5">
                 <icons:PreparationIndicator x:Name="MiniPreparationWave" Width="24" Height="16"/>
-                <TextBlock Grid.Column="1" Text="{Binding PreparationDetail}" Foreground="#E5DCEC" FontSize="11" VerticalAlignment="Center"
-                           AutomationProperties.LiveSetting="Polite" ToolTip.Tip="{Binding Text[PreparingSpeakers]}"/>
-                <Button Grid.Column="2" Classes="transport" Width="36" Height="36" MinWidth="36" MinHeight="36" Command="{Binding CancelPreparation}"
+                <TextBlock x:Name="MiniPreparationSummary" Grid.Column="1" Text="{Binding PreparationSummary}" Foreground="#E5DCEC" FontSize="11" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" ToolTip.Tip="{Binding PreparationDetail}"/>
+                <Button x:Name="MiniCancelPreparationButton" Grid.Column="2" Classes="transport" Width="36" Height="36" MinWidth="36" MinHeight="36" Command="{Binding CancelPreparation}"
                         AutomationProperties.Name="{Binding Text[CancelPreparation]}" ToolTip.Tip="{Binding Text[CancelPreparation]}"><icons:LucideIcon Kind="x" Classes="compact"/></Button>
               </Grid>
             </StackPanel>

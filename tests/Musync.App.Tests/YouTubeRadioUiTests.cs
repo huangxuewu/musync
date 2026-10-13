@@ -81,6 +81,8 @@ public sealed partial class SpotifyPlaybackTests
     private sealed class RadioTestBackend : IAudioBackend, IYouTubeRadioBackend
     {
         public TaskCompletionSource? ResolveGate;
+        public TaskCompletionSource? SourcePreparation;
+        public readonly TaskCompletionSource PreparingSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Exception? ResolveError;
         public TaskCompletionSource? StreamFailure;
         public readonly TaskCompletionSource StreamStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -88,9 +90,15 @@ public sealed partial class SpotifyPlaybackTests
         public int Plays, Cancellations, Lookups; public double PositionValue; public bool Paused;
         public double Position => PositionValue; public double Duration => 180; public bool IsFinished => false;
         public string? DefaultDeviceId => "test-output";
-        public IReadOnlyList<SpeakerDevice> GetDevices() => [new("test-output", "Test output", SpeakerTransport.Windows)];
+        public IReadOnlyList<SpeakerDevice> Devices = [new("test-output", "Test output", SpeakerTransport.Windows)];
+        public IReadOnlyList<SpeakerDevice> GetDevices() => Devices;
         public IAudioOutput CreateOutput(SpeakerDevice device) => new PresentationOutput(device);
         public bool IsStreamingSource(string source) => YouTubeAddress.TryParse(source, out _);
+        public Task PrepareSourceAsync(string source, CancellationToken token)
+        {
+            PreparingSource.TrySetResult();
+            return SourcePreparation?.Task.WaitAsync(token) ?? Task.CompletedTask;
+        }
         public async Task<MusicTrack> ResolveRadioAsync(YouTubeAddress address, CancellationToken token)
         {
             Lookups++;
@@ -115,17 +123,18 @@ public sealed partial class SpotifyPlaybackTests
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "Musync-Radio-UI-" + Guid.NewGuid());
         public RadioTestBackend Backend { get; } = new(); public MainViewModel Model { get; }
         public PlaybackCoordinator Player { get; }
-        public RadioFixture(string language = "en", Func<SpeakerDevice, IAudioOutput>? outputFactory = null)
+        public RadioFixture(string language = "en", Func<SpeakerDevice, IAudioOutput>? outputFactory = null, int receiverCount = 1)
         {
             Directory.CreateDirectory(_directory);
-            var preferences = new SpeakerPreferences { Selected = true };
-            var link = new SpeakerLink { Id = "test-link", Name = "Test link", Speakers = new() { ["test-output"] = new() { Name = "Test output", Preferences = preferences } } };
+            Backend.Devices = Enumerable.Range(1, receiverCount).Select(i => new SpeakerDevice(i == 1 ? "test-output" : "test-output-" + i, i == 1 ? "Test output" : "Test output " + i, SpeakerTransport.Windows)).ToArray();
+            var link = new SpeakerLink { Id = "test-link", Name = "Test link", Speakers = Backend.Devices.ToDictionary(d => d.Id,
+                d => new LinkedSpeaker { Name = d.Name, Preferences = new() { Selected = true } }) };
             var settings = new AppSettings { Language = language, LinksInitialized = true, ActiveLinkId = link.Id, Links = [link] };
             Player = new(Backend, outputFactory ?? Backend.CreateOutput);
             Model = new(Backend, Player,
                 Client(new Handler((_, _) => Task.FromResult(Response(HttpStatusCode.NoContent)))),
                 new SettingsStore(Path.Combine(_directory, "settings.json")), settings, _directory);
-            Model.Speakers.Add(new(Backend.GetDevices()[0], preferences, Model.Text, (_, _) => { }));
+            foreach (var device in Backend.Devices) Model.Speakers.Add(new(device, link.Speakers[device.Id].Preferences, Model.Text, (_, _) => { }));
         }
         public async ValueTask DisposeAsync() { await Model.DisposeAsync(); Directory.Delete(_directory, true); }
     }

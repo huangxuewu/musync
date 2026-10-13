@@ -19,7 +19,7 @@ public sealed partial class MainViewModel
     public string RadioName { get => _radioName; set { if (Set(ref _radioName, value)) RadioError = ""; } }
     public string RadioError { get => _radioError; private set { if (Set(ref _radioError, value)) Raise(nameof(HasRadioError)); } }
     public bool HasRadioError => RadioError.Length > 0;
-    public bool RadioLoading { get => _radioLoading; private set { if (Set(ref _radioLoading, value)) Raise(nameof(PreparationDetail)); } }
+    public bool RadioLoading { get => _radioLoading; private set { if (Set(ref _radioLoading, value)) RefreshPreparationFeedback(); } }
     public string RadioHeadline => YouTubeMode && _current is not null ? Title : Text["RadioHeadline"];
     public ICommand SaveRadio { get; private set; } = null!;
 
@@ -129,6 +129,7 @@ public sealed partial class MainViewModel
         private bool _active;
         private TrackPlaybackPhase _phase;
         private string? _failureKey;
+        private string? _preparationCaption;
         public RadioStation Station { get; }
         public string Name => Station.Name;
         public string Url => Station.Url;
@@ -137,7 +138,7 @@ public sealed partial class MainViewModel
         public bool HasPlaybackError => _failureKey is not null;
         public bool HasPlaybackActivity => _phase is TrackPlaybackPhase.Preparing or TrackPlaybackPhase.Playing;
         public string PlayIcon => HasPlaybackError ? "refresh-cw" : _phase == TrackPlaybackPhase.Playing ? "pause" : "play";
-        public string StatusCaption => HasPlaybackError ? _owner.Text["RadioRetryHint"] : _phase == TrackPlaybackPhase.None ? Url : _owner.Text[IsPreparing ? "RadioBuffering" : _phase == TrackPlaybackPhase.Playing ? "Playing" : "Paused"];
+        public string StatusCaption => HasPlaybackError ? _owner.Text["RadioRetryHint"] : _phase == TrackPlaybackPhase.None ? Url : IsPreparing ? _owner.PreparationHeadline : _owner.Text[_phase == TrackPlaybackPhase.Playing ? "Playing" : "Paused"];
         public string CaptionTooltip => _failureKey is { } key ? _owner.Text[key] : Url;
         public string PlayLabel => string.Format(_owner.Text[HasPlaybackError ? "RadioRetryNamed" : IsPreparing ? "RadioPreparingNamed" : _phase == TrackPlaybackPhase.Playing ? "RadioPauseNamed" : "RadioPlayNamed"], Name);
         public string RemoveLabel => string.Format(_owner.Text["RadioRemoveNamed"], Name);
@@ -157,8 +158,9 @@ public sealed partial class MainViewModel
         {
             var phase = _owner.RadioPhase(Station);
             var failure = _owner._radioPlaybackErrors.GetValueOrDefault(Url);
-            if (_phase == phase && _failureKey == failure) return;
-            _phase = phase; _failureKey = failure;
+            var preparation = phase == TrackPlaybackPhase.Preparing ? _owner.PreparationHeadline : null;
+            if (_phase == phase && _failureKey == failure && _preparationCaption == preparation) return;
+            _phase = phase; _failureKey = failure; _preparationCaption = preparation;
             Raise(nameof(HasPlaybackError)); Raise(nameof(CaptionTooltip));
             Raise(nameof(IsPreparing)); Raise(nameof(HasPlaybackActivity)); Raise(nameof(PlayIcon));
             Raise(nameof(StatusCaption)); Raise(nameof(PlayLabel));

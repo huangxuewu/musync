@@ -199,7 +199,10 @@
   "RadioRetryHint": "Playback failed · Retry",
   "RadioPlaybackInterrupted": "Playback was interrupted. Check your connection and linked speakers, then retry.",
   "RadioRemoveNamed": "Remove station “{0}”",
-  "RadioBuffering": "Buffering radio and preparing linked speakers…",
+  "RadioLoadingTitle": "Loading station…",
+  "RadioLoadingDetail": "Reading the video or live stream details.",
+  "RadioBuffering": "Preparing audio…",
+  "RadioBufferingDetail": "Your speakers will connect after buffering.",
   "RadioToolsMissing": "Radio tools are unavailable. Prepare the radio dependencies, then try again.",
   "RadioPlaybackFailed": "The station could not load. Check your connection and the video's availability, then retry."
 }
