@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Linked speakers report Available, Connecting, Waiting for sync, Playing and Paused from the playback barrier's per-device readiness. Connection failures appear inline while other receivers prepare, and small windows expose more of the device list. A direct Rescan action and waiting wave let the normal link overview retry failed routes without opening configuration. Rediscovery updates status color and explanations; cancellation is no longer recorded as a failed receiver handshake.
 - Settings groups General, Audio and Spotify controls in a compact frosted panel with a fixed Save action. Unconnected Spotify actions open the setup section directly; closing settings restores keyboard focus without interrupting playback.
 - Music recognition and artwork caches have a configurable 500 MB default capacity, an atomic ownership index, background expiry/unused-file maintenance and least-recently-used eviction. Local tags survive restart and Spotify disconnection; source file size/timestamp changes invalidate their cached identification.
 - Local songs can be removed from playlists or the library using a Lucide minus action. Song/playlist removal cleans unreferenced cache files and retains shared covers; original audio files stay in place. Settings shows cache usage and the capacity control in all three languages.

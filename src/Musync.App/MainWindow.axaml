@@ -320,6 +320,7 @@
             <TextBlock Text="{Binding LinkPopoverTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
               <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding LinkOverview}">
+                <Button x:Name="OverviewRescanButton" Classes="ghost iconButton" Command="{Binding ScanCommand}" IsEnabled="{Binding CanRescan}" AutomationProperties.Name="{Binding Text[Rescan]}" ToolTip.Tip="{Binding Text[Rescan]}"><icons:LucideIcon Kind="refresh-cw"/></Button>
                 <Button Classes="ghost iconButton" Command="{Binding CreateLink}" IsVisible="{Binding HasActiveLink}" IsEnabled="{Binding CanConfigureLink}" AutomationProperties.Name="{Binding Text[CreateLink]}" ToolTip.Tip="{Binding Text[CreateLink]}"><icons:LucideIcon Kind="plus"/></Button>
                 <Button Classes="ghost iconButton" Command="{Binding EditLink}" IsVisible="{Binding HasActiveLink}" IsEnabled="{Binding CanEditLink}" AutomationProperties.Name="{Binding Text[ConfigureLink]}" ToolTip.Tip="{Binding Text[ConfigureLink]}"><icons:LucideIcon Kind="settings"/></Button>
               </StackPanel>
@@ -350,11 +351,11 @@
                 </StackPanel>
                 <Button Grid.Column="1" Classes="ghost" Content="{Binding Text[Rescan]}" Command="{Binding ScanCommand}" IsEnabled="{Binding !IsScanning}" FontSize="12" Padding="8,6" VerticalAlignment="Center"/>
               </Grid>
-              <Grid x:Name="NetworkScanNotice" ColumnDefinitions="24,*" ColumnSpacing="8" IsVisible="{Binding IsScanning}">
-                <icons:PreparationIndicator x:Name="NetworkScanWave" Width="24" Height="18" VerticalAlignment="Center" IsHitTestVisible="False"/>
-                <TextBlock x:Name="NetworkScanStatus" Grid.Column="1" Text="{Binding Text[Scanning]}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
-              </Grid>
             </StackPanel>
+            <Grid x:Name="NetworkScanNotice" ColumnDefinitions="24,*" ColumnSpacing="8" IsVisible="{Binding IsScanning}">
+              <icons:PreparationIndicator x:Name="NetworkScanWave" Width="24" Height="18" VerticalAlignment="Center" IsHitTestVisible="False"/>
+              <TextBlock x:Name="NetworkScanStatus" Grid.Column="1" Text="{Binding Text[Scanning]}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+            </Grid>
           </StackPanel>
           <Grid Grid.Row="2">
             <ScrollViewer x:Name="LinkDeviceList" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
@@ -372,9 +373,10 @@
                               <TextBlock Grid.Column="1" Text="{Binding Transport}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="10" VerticalAlignment="Center"/>
                               <Grid Grid.Column="2" ColumnDefinitions="5,*" ColumnSpacing="5" VerticalAlignment="Center">
                                 <Ellipse Width="5" Height="5" Fill="{Binding StatusColor}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="10" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Details}"/>
+                                <TextBlock Classes="speakerStatus" Grid.Column="1" Text="{Binding Status}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" ToolTip.Tip="{Binding Details}" AutomationProperties.LiveSetting="Polite"/>
                               </Grid>
                             </Grid>
+                            <TextBlock Classes="speakerIssue" Text="{Binding Details}" IsVisible="{Binding HasIssue}" Foreground="#FFC970" FontSize="11" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Details}"/>
                           </StackPanel>
                           <Button Grid.Column="1" Classes="ghost iconButton" IsVisible="{Binding ControlsVisible}" Command="{Binding MuteCommand}" AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}" VerticalAlignment="Top"><icons:LucideIcon Kind="{Binding MuteIcon}"/></Button>
                         </Grid>
@@ -414,11 +416,11 @@
             </Border>
             <StackPanel IsVisible="{Binding LinkOverview}" Spacing="10">
               <StackPanel IsVisible="{Binding HasActiveLink}" Spacing="10">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Text="{Binding Text[MasterVolume]}" FontWeight="SemiBold" FontSize="12"/>
-                  <TextBlock Grid.Column="1" Text="{Binding MasterVolume, StringFormat={}{0:0}%}" Classes="muted" FontSize="12"/>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                  <TextBlock Text="{Binding Text[MasterVolume]}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                  <Slider Grid.Column="1" Value="{Binding MasterVolume}" Minimum="0" Maximum="100" AutomationProperties.Name="{Binding Text[MasterVolume]}"/>
+                  <TextBlock Grid.Column="2" Text="{Binding MasterVolume, StringFormat={}{0:0}%}" Classes="muted" FontSize="12" VerticalAlignment="Center"/>
                 </Grid>
-                <Slider Value="{Binding MasterVolume}" Minimum="0" Maximum="100"/>
                 <Button Classes="primary" Content="{Binding Text[PlayLink]}" Command="{Binding PlayEverywhere}" IsEnabled="{Binding CanPlayLink}" HorizontalAlignment="Stretch" FontSize="12" Padding="10,12"/>
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsEnabled="{Binding CanPlayLink}">
                   <Button Classes="ghost" Content="{Binding Text[Calibrate]}" Command="{Binding CalibrateCommand}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationInfo]}"/>

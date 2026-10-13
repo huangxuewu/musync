@@ -14,20 +14,21 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private readonly AudioHub _hub = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, IAudioOutput> _outputs = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _outputErrors = new();
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _preparedOutputs = new();
     private CancellationTokenSource? _sourceLifetime;
     private Task? _sourceTask;
     private volatile bool _paused;
     private volatile bool _sourceFailed;
     private volatile bool _sourceEnded;
     private volatile bool _preparing;
-    private int _readyOutputs;
     private int _preparingOutputs;
     private int _stopVersion;
     private sealed record ControlFailure(IAudioOutput Output, string Message);
     private sealed record ErrorState(CancellationTokenSource? Session, string? PlaybackError, ControlFailure[] Controls);
     private ErrorState _errors = new(null, null, []);
     public bool IsPreparing => _preparing;
-    public int ReadyOutputs => Volatile.Read(ref _readyOutputs);
+    public int ReadyOutputs => _preparedOutputs.Count;
+    public bool IsOutputPrepared(string id) => _preparedOutputs.ContainsKey(id);
     public int PreparingOutputs => Volatile.Read(ref _preparingOutputs);
     public void CancelPreparation()
     {
@@ -77,7 +78,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             _outputErrors.Clear(); IsCapture = capture; _paused = paused; _sourceFailed = false;
             _sourceLifetime = new();
             Volatile.Write(ref _errors, new(_sourceLifetime, null, []));
-            _preparing = true; _readyOutputs = 0;
+            _preparing = true; _preparedOutputs.Clear();
             var token = _sourceLifetime.Token;
             if (startVersion != Volatile.Read(ref _stopVersion)) _sourceLifetime.Cancel();
             token.ThrowIfCancellationRequested();
@@ -113,16 +114,21 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
                 {
                     await output.StartAsync(token);
                     if (paused) await output.SetPausedAsync(true);
-                    Interlocked.Increment(ref _readyOutputs);
+                    token.ThrowIfCancellationRequested();
+                    _preparedOutputs[output.Device.Id] = 0;
                     return (output, Error: (string?)null);
                 }
-                catch (Exception ex) { return (output, Error: ex.Message); }
+                catch (Exception ex)
+                {
+                    if (!token.IsCancellationRequested) RecordError(output.Device, ex.Message);
+                    return (output, Error: ex.Message);
+                }
             });
             foreach (var result in await Task.WhenAll(starts))
             {
                 if (result.Error is null) continue;
-                RecordError(result.output.Device, result.Error);
                 _outputs.TryRemove(result.output.Device.Id, out _);
+                _preparedOutputs.TryRemove(result.output.Device.Id, out _);
                 await DisposeOutput(result.output);
             }
             token.ThrowIfCancellationRequested();
@@ -179,6 +185,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
         {
             RecordError(result.output.Device, result.Error!);
             _outputs.TryRemove(result.output.Device.Id, out _);
+            _preparedOutputs.TryRemove(result.output.Device.Id, out _);
             await DisposeOutput(result.output);
         }
         _hub.SetOutputs(_outputs.Values.Where(o => o.ReceivesPcm).Select(o => o.Buffer));
@@ -265,7 +272,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
         try
         {
             if (_sourceLifetime is null || _outputs.IsEmpty || _paused == paused) return;
-            if (!paused) { _preparing = true; _readyOutputs = 0; _preparingOutputs = _outputs.Count; }
+            if (!paused) { _preparing = true; _preparedOutputs.Clear(); _preparingOutputs = _outputs.Count; }
             if (paused)
             {
                 // File publication and Pause share the backend's reader lock.
@@ -278,16 +285,25 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
                 try
                 {
                     if (paused) await output.SetPausedAsync(true);
-                    else { await output.PrepareResumeAsync(_sourceLifetime.Token); Interlocked.Increment(ref _readyOutputs); }
+                    else
+                    {
+                        await output.PrepareResumeAsync(_sourceLifetime.Token);
+                        _sourceLifetime.Token.ThrowIfCancellationRequested();
+                        _preparedOutputs[output.Device.Id] = 0;
+                    }
                     return (output, Error: (string?)null);
                 }
-                catch (Exception ex) { return (output, Error: ex.Message); }
+                catch (Exception ex)
+                {
+                    if (!_sourceLifetime.Token.IsCancellationRequested) RecordError(output.Device, ex.Message);
+                    return (output, Error: ex.Message);
+                }
             }));
             foreach (var result in results)
             {
                 if (result.Error is null) continue;
-                RecordError(result.output.Device, result.Error);
                 _outputs.TryRemove(result.output.Device.Id, out _);
+                _preparedOutputs.TryRemove(result.output.Device.Id, out _);
                 await DisposeOutput(result.output);
             }
             _sourceLifetime.Token.ThrowIfCancellationRequested();
@@ -332,6 +348,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             {
                 RecordError(output.Device, output.Error!);
                 _outputs.TryRemove(output.Device.Id, out _);
+                _preparedOutputs.TryRemove(output.Device.Id, out _);
             }
             // Detach failed buffers before awaiting network shutdown, so the
             // producer keeps feeding only the receivers that still work.
@@ -361,10 +378,10 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
         await backend.ReleasePreparedSourceAsync();
         _hub.Clear();
         _hub.SetOutputs([]);
-        var outputs = _outputs.Values.ToArray(); _outputs.Clear();
+        var outputs = _outputs.Values.ToArray(); _outputs.Clear(); _preparedOutputs.Clear();
         await Task.WhenAll(outputs.Select(DisposeOutput));
         _sourceLifetime?.Dispose(); _sourceLifetime = null;
-        _readyOutputs = 0; _preparingOutputs = 0;
+        _preparingOutputs = 0;
         lock (_tailGate) { _paused = false; _sourceEnded = false; _tailClock.Reset(); }
     }
     private async Task DisposeOutput(IAudioOutput output)

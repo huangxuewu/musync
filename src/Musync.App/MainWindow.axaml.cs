@@ -301,12 +301,12 @@ public partial class MainWindow : Window
         FullPreparationWave.Active = active && !IsMiniPlayer;
         MiniPreparationWave.Active = active && IsMiniPlayer;
         NetworkScanWave.Active = visible && !IsMiniPlayer && SpeakerPopover.IsOpen
-            && _linkModel is { IsScanning: true, IsLinkEditing: true };
+            && _linkModel is { IsScanning: true };
         MusicSourceWave.Active = visible && !IsMiniPlayer && _linkModel?.IsSwitchingSource == true;
     }
     private void UpdateSpeakerPanelSize()
     {
-        var maximum = Math.Clamp(Bounds.Height - 216, 360, 640);
+        var maximum = Math.Clamp(Bounds.Height - 152, 360, 640);
         SpeakerPanel.Width = _linkModel?.IsLinkEditing == true ? 440 : 336;
         SpeakerPanel.MaxHeight = maximum;
         var content = _linkModel is null || _linkModel.IsLinkEditing ? 640

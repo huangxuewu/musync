@@ -37,7 +37,7 @@ public sealed partial class SpotifyPlaybackTests
         try
         {
             using var initial = window.CaptureRenderedFrame();
-            var rescan = window.GetVisualDescendants().OfType<Button>().Single(b => b.Command == model.ScanCommand);
+            var rescan = window.GetVisualDescendants().OfType<Button>().Single(b => b.Command == model.ScanCommand && b.IsEffectivelyVisible);
             Assert.True(rescan.IsEffectivelyVisible); Assert.True(rescan.IsEnabled);
             var point = rescan.TranslatePoint(new Point(rescan.Bounds.Width / 2, rescan.Bounds.Height / 2), window)!.Value;
             fail = true;

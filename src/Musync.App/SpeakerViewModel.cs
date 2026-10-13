@@ -4,12 +4,14 @@ using System.Windows.Input;
 
 namespace Musync.App;
 
+public enum SpeakerPlaybackPhase { Available, Connecting, WaitingForSync, Playing, Paused }
+
 public sealed class SpeakerViewModel : ObservableObject
 {
     private readonly Localizer _text;
     private readonly Action<SpeakerViewModel, bool> _changed;
     private string? _error;
-    private bool _playing;
+    private SpeakerPlaybackPhase _phase;
     public SpeakerViewModel(SpeakerDevice device, SpeakerPreferences preferences, Localizer text, Action<SpeakerViewModel, bool> changed, bool selectionVisible = false)
     {
         Device = device; Preferences = preferences; _text = text; _changed = changed;
@@ -40,9 +42,18 @@ public sealed class SpeakerViewModel : ObservableObject
     public string MuteLabel => _text[Muted ? "Unmute" : "Mute"];
     public string DecreaseDelayLabel => _text["DecreaseDelay"];
     public string IncreaseDelayLabel => _text["IncreaseDelay"];
-    public string Status => _error is not null ? _text["DeviceError"] : Device.UnsupportedReason is not null ? _text[Device.UnsupportedReason] : _playing ? _text["Playing"] : _text["Ready"];
-    public string StatusColor => _error is not null || Device.UnsupportedReason is not null ? "#C48C33" : _playing ? "#14B875" : "#A4ACB6";
-    public string Details => _error ?? (Device.UnsupportedReason is null ? _text["Ready"] : _text[Device.UnsupportedReason]);
+    public string Status => _error is not null ? _text["DeviceError"] : Device.UnsupportedReason is not null ? _text[Device.UnsupportedReason] : _text[_phase switch
+    {
+        SpeakerPlaybackPhase.Connecting => "SpeakerConnecting",
+        SpeakerPlaybackPhase.WaitingForSync => "SpeakerWaitingForSync",
+        SpeakerPlaybackPhase.Playing => "Playing",
+        SpeakerPlaybackPhase.Paused => "Paused",
+        _ => "SpeakerAvailable"
+    }];
+    public bool HasIssue => _error is not null || Device.UnsupportedReason is not null;
+    public string StatusColor => HasIssue ? "#FFC970" : _phase == SpeakerPlaybackPhase.Playing ? "#64E8AD"
+        : _phase is SpeakerPlaybackPhase.Connecting or SpeakerPlaybackPhase.WaitingForSync ? "#FF91A5" : "#CABFD4";
+    public string Details => _error ?? Status;
     public ObservableCollection<Choice> Rooms { get; } = new();
     public Choice? Room
     {
@@ -59,11 +70,17 @@ public sealed class SpeakerViewModel : ObservableObject
         foreach (var name in new[] { nameof(VolumeLabel), nameof(DelayLabel), nameof(RoomLabel), nameof(MuteLabel), nameof(DecreaseDelayLabel), nameof(IncreaseDelayLabel), nameof(Status), nameof(Details), nameof(Room) }) Raise(name);
     }
     public void UpdateStatus(bool playing, string? error)
+        => UpdateStatus(playing ? SpeakerPlaybackPhase.Playing : SpeakerPlaybackPhase.Available, error);
+    public void UpdateStatus(SpeakerPlaybackPhase phase, string? error)
     {
-        if (_playing == playing && _error == error) return;
-        _playing = playing; _error = error;
-        Raise(nameof(Status)); Raise(nameof(StatusColor)); Raise(nameof(Details));
+        if (_phase == phase && _error == error) return;
+        _phase = phase; _error = error;
+        Raise(nameof(Status)); Raise(nameof(StatusColor)); Raise(nameof(Details)); Raise(nameof(HasIssue));
     }
-    public void UpdateDevice(SpeakerDevice device) { Device = device; Raise(nameof(Name)); Raise(nameof(Transport)); Raise(nameof(Icon)); Raise(nameof(Available)); Raise(nameof(Status)); }
+    public void UpdateDevice(SpeakerDevice device)
+    {
+        Device = device;
+        foreach (var name in new[] { nameof(Name), nameof(Transport), nameof(Icon), nameof(Available), nameof(Status), nameof(StatusColor), nameof(Details), nameof(HasIssue) }) Raise(name);
+    }
     public void Detach() => _text.Changed -= RefreshText;
 }

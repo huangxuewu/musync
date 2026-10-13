@@ -24,7 +24,7 @@ public sealed partial class MainViewModel
     private void RefreshBusyProperties()
     {
         foreach (var name in new[] { nameof(CanPlayLink), nameof(CanConfigureLink), nameof(CanEditLink),
-            nameof(CanSaveLink), nameof(CanManagePlaylists), nameof(PlayEnabled), nameof(Seekable) }) Raise(name);
+            nameof(CanSaveLink), nameof(CanRescan), nameof(CanManagePlaylists), nameof(PlayEnabled), nameof(Seekable) }) Raise(name);
         foreach (var playlist in Playlists) playlist.RefreshAvailability();
         foreach (var track in Tracks) track.RefreshAvailability();
         foreach (var station in RadioStations) station.RefreshAvailability();

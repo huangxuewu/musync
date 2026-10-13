@@ -172,6 +172,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         && SpeakerLinks.Resolve(ActiveLinkProfile!, Speakers.Select(s => s.Device)).Count > 0;
     public bool CanConfigureLink => !Busy;
     public bool CanEditLink => HasActiveLink && !Busy;
+    public bool CanRescan => !Busy && !IsScanning;
     public bool CanSaveLink => !Busy && IsLinkEditing;
     public ICommand CreateLink { get; }
     public ICommand EditLink { get; }
@@ -272,7 +273,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             RefreshBusyProperties();
         }
     }
-    public bool IsScanning { get => _scanning; private set => Set(ref _scanning, value); }
+    public bool IsScanning { get => _scanning; private set { if (Set(ref _scanning, value)) Raise(nameof(CanRescan)); } }
     public bool SettingsOpen
     {
         get => _settingsOpen;
@@ -301,6 +302,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (!Set(ref _preparingPlayback, value)) return;
             Raise(nameof(PlayLabel)); Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); Raise(nameof(PreparationDetail));
+            RefreshSpeakerPlaybackStatus();
         }
     }
     public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);
@@ -857,6 +859,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 await _player.PauseAsync(wasPlaying);
                 if (!OwnsSource(sourceVersion)) return;
                 IsPlaying = _player.IsPlaying;
+                RefreshSpeakerPlaybackStatus();
             }
             ShowPlaybackStatus();
         }
@@ -883,7 +886,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ClearReportedPlayerError();
         if (resetStatus) Status = Text["Idle"];
         _activeSource = null;
-        foreach (var speaker in Speakers) speaker.UpdateStatus(false, null);
+        foreach (var speaker in Speakers.Concat(LinkedSpeakers.Where(s => !Speakers.Contains(s)))) speaker.UpdateStatus(false, null);
     }
     private async Task NextAsync(int direction)
     {
@@ -1046,6 +1049,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task TickAsync()
     {
         if (_disposed || _ending) return;
+        if (IsPreparingPlayback) { Raise(nameof(PreparationDetail)); RefreshSpeakerPlaybackStatus(); return; }
         if (_tickRunning)
         {
             // A failed receiver may take seconds to close. Healthy outputs
@@ -1055,7 +1059,6 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 RefreshLocalProgress();
             return;
         }
-        if (IsPreparingPlayback) { Raise(nameof(PreparationDetail)); return; }
         if (SpotifyMode)
         {
             AdvanceSpotifyProgress();
@@ -1105,10 +1108,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private void RefreshSpeakerPlaybackStatus()
     {
-        foreach (var speaker in Speakers)
+        foreach (var speaker in Speakers.Concat(LinkedSpeakers.Where(s => !Speakers.Contains(s))))
         {
             _player.Outputs.TryGetValue(speaker.Id, out var output);
-            speaker.UpdateStatus(IsPlaying && output is not null, output?.Error ?? _player.OutputErrors.GetValueOrDefault(speaker.Id));
+            var phase = SpotifyMode || output is null ? SpeakerPlaybackPhase.Available
+                : IsPreparingPlayback ? _player.IsOutputPrepared(speaker.Id) ? SpeakerPlaybackPhase.WaitingForSync : SpeakerPlaybackPhase.Connecting
+                : !_session ? SpeakerPlaybackPhase.Available : IsPlaying ? SpeakerPlaybackPhase.Playing : SpeakerPlaybackPhase.Paused;
+            speaker.UpdateStatus(phase, SpotifyMode ? null : output?.Error ?? _player.OutputErrors.GetValueOrDefault(speaker.Id));
         }
     }
     private void SaveSoon()

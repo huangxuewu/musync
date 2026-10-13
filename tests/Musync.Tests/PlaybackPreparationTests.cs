@@ -47,6 +47,7 @@ public sealed class PlaybackPreparationTests
         await using var player = new PlaybackCoordinator(backend, (d, source) => { received = source; return d.Id == "pc" ? pc : cast; });
         var start = player.StartAsync("song.flac", false, [(pc.Device, new()), (cast.Device, new())], 100, 12);
         Assert.True(player.IsPreparing); Assert.False(player.IsPlaying); Assert.Equal(1, player.ReadyOutputs); Assert.Equal(2, player.PreparingOutputs);
+        Assert.True(player.IsOutputPrepared("pc")); Assert.False(player.IsOutputPrepared("cast"));
         Assert.False(backend.Started.Task.IsCompleted); Assert.Equal(0, pc.Releases + cast.Releases);
         Assert.Equal(new PlaybackSource("song.flac", false, 12), received);
         cast.Prepared.SetResult(); await start.WaitAsync(TimeSpan.FromSeconds(2)); await backend.Started.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -62,6 +63,7 @@ public sealed class PlaybackPreparationTests
         await player.StopAsync().WaitAsync(TimeSpan.FromSeconds(2));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => start);
         Assert.False(backend.Started.Task.IsCompleted); Assert.False(player.IsPreparing); Assert.Empty(player.Outputs); Assert.Equal(1, output.Disposals);
+        Assert.False(player.IsOutputPrepared("cast")); Assert.Empty(player.OutputErrors);
     }
     [Fact]
     public async Task StopDuringPreviousSongCleanupCancelsTheQueuedNewPreparation()
@@ -107,5 +109,25 @@ public sealed class PlaybackPreparationTests
         await player.StartAsync("song.flac", false, [(pc.Device, new()), (cast.Device, new())], 100);
         Assert.True(player.IsPlaying); Assert.Equal(1, pc.Releases); Assert.Equal(0, cast.Releases); Assert.Single(player.Outputs);
         Assert.Equal("Preload rejected", player.OutputErrors["cast"]); Assert.Equal(1, cast.Disposals);
+    }
+    [Fact]
+    public async Task FailedReceiverReportsItsReasonBeforeOtherReceiversFinishPreparing()
+    {
+        var backend = new Backend(); var pc = new Output("pc"); var cast = new Output("cast", false); var slow = new Output("slow", false);
+        pc.Prepared.SetResult(); cast.Prepared.SetException(new IOException("Receiver unavailable"));
+        await using var player = new PlaybackCoordinator(backend, d => d.Id == "pc" ? pc : d.Id == "cast" ? cast : slow);
+        var start = player.StartAsync("song.flac", false, [(pc.Device, new()), (cast.Device, new()), (slow.Device, new())], 100);
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            while (!player.OutputErrors.ContainsKey("cast")) await Task.Delay(10, timeout.Token);
+            Assert.Equal("Receiver unavailable", player.OutputErrors["cast"]);
+            Assert.True(player.IsOutputPrepared("pc")); Assert.False(player.IsOutputPrepared("cast")); Assert.False(player.IsOutputPrepared("slow"));
+            Assert.True(player.IsPreparing); Assert.False(backend.Started.Task.IsCompleted); Assert.Equal(0, pc.Releases + cast.Releases + slow.Releases);
+            slow.Prepared.SetResult(); await start.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.Equal(2, player.ReadyOutputs); Assert.True(player.IsPlaying); Assert.Equal(1, pc.Releases); Assert.Equal(1, slow.Releases);
+            await player.StopAsync(); Assert.Equal(0, player.ReadyOutputs); Assert.False(player.IsOutputPrepared("pc"));
+        }
+        finally { slow.Prepared.TrySetResult(); await start; }
     }
 }

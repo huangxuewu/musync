@@ -51,6 +51,8 @@ Playback supports pause/resume, volume, and next/previous saved stations. Seekin
 
 Open Links using the bottom-right link icon, create a link, select its devices, then save it. Select Local music or Windows audio using the adjacent source icon. Press Play to route to the selected link.
 
+In the current source and Debug preview, each speaker shows whether it is available, connecting, waiting for synchronized start, playing or paused. Receiver errors remain visible in that speaker's row. The link overview's Rescan icon searches again and retries failed routes at the current track position using the existing preparation barrier; its waiting wave respects reduced motion. Volume and delay preferences remain saved.
+
 Network receivers must be reachable from the PC on the same network. If Windows requests firewall access, allow it for the private network used by your speakers. Musync does not change firewall rules automatically.
 
 A positive per-speaker delay holds that speaker back; add delay to outputs that sound earlier. Chromecast and AirPlay buffering varies by receiver and network. Synchronization is manually adjustable and is not guaranteed to be sample accurate. AirPlay devices that require PIN/password pairing are not currently supported. HomePod and Onkyo compatibility depends on model, firmware and network configuration.
