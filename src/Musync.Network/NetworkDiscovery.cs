@@ -57,9 +57,7 @@ public sealed class NetworkDiscovery
             var properties = text.GetValueOrDefault(name) ?? new();
             var displayName = properties.GetValueOrDefault("fn") ?? name.Split("._")[0];
             if (!cast && displayName.Contains('@')) displayName = displayName.Split('@', 2)[1];
-            displayName = System.Text.RegularExpressions.Regex.Replace(displayName, @"\\(\d+)", match =>
-                int.TryParse(match.Groups[1].Value, out var code) && code is > 0 and <= 0x10ffff
-                    ? char.ConvertFromUtf32(code) : match.Value);
+            displayName = DecodeDisplayName(displayName);
             string? unsupported = null;
             if (modern)
             {
@@ -85,4 +83,11 @@ public sealed class NetworkDiscovery
         return devices.GroupBy(d => (d.Transport, d.Host)).Select(g =>
             g.OrderByDescending(d => d.Properties?.GetValueOrDefault("ap2") == "true").First()).ToArray();
     }
+
+    internal static string DecodeDisplayName(string displayName) =>
+        System.Text.RegularExpressions.Regex.Replace(displayName, @"\\(\d+)", match =>
+            // Surrogate code points are within the numeric range but are not
+            // Unicode scalars. Preserve them instead of failing the whole scan.
+            int.TryParse(match.Groups[1].Value, out var code) && code > 0 && System.Text.Rune.IsValid(code)
+                ? char.ConvertFromUtf32(code) : match.Value);
 }
