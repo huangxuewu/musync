@@ -64,6 +64,30 @@ public sealed record RadioTools(string YtDlp, string Ffmpeg, string Node)
         }
         return result.ToString();
     }
+    internal static async Task<string> ReadDiagnosticTailAsync(StreamReader reader, CancellationToken token)
+    {
+        // Long-lived stderr must keep draining, even when a helper repeats an
+        // error. A fixed ring retains the latest diagnostics without allowing
+        // an output-size exception to leave the native pipe undrained.
+        var tail = new char[65536]; var buffer = new char[2048];
+        var offset = 0; var stored = 0; int read;
+        while ((read = await reader.ReadAsync(buffer.AsMemory(), token)) != 0)
+        {
+            var first = Math.Min(read, tail.Length - offset);
+            buffer.AsSpan(0, first).CopyTo(tail.AsSpan(offset));
+            buffer.AsSpan(first, read - first).CopyTo(tail);
+            offset = (offset + read) % tail.Length;
+            stored = Math.Min(tail.Length, stored + read);
+        }
+        var result = new char[stored];
+        var oldest = stored == tail.Length ? offset : 0;
+        var count = Math.Min(stored, tail.Length - oldest);
+        tail.AsSpan(oldest, count).CopyTo(result);
+        tail.AsSpan(0, stored - count).CopyTo(result.AsSpan(count));
+        // Do not expose half a UTF-16 pair if eviction cuts through an emoji.
+        var skip = stored > 0 && char.IsLowSurrogate(result[0]) ? 1 : 0;
+        return new string(result, skip, stored - skip);
+    }
 }
 
 public sealed class YtDlpRadioResolver(RadioTools tools) : IYouTubeResolver

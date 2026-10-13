@@ -35,8 +35,8 @@ public sealed class FfmpegRadioDecoder(RadioTools tools) : IRadioPcmDecoder
         public void Start()
         {
             _decode.Start(); _download.Start();
-            _downloadDiagnostics = RadioTools.ReadLimitedAsync(_download.StandardError, _lifetime.Token);
-            _decodeDiagnostics = RadioTools.ReadLimitedAsync(_decode.StandardError, _lifetime.Token);
+            _downloadDiagnostics = RadioTools.ReadDiagnosticTailAsync(_download.StandardError, _lifetime.Token);
+            _decodeDiagnostics = RadioTools.ReadDiagnosticTailAsync(_decode.StandardError, _lifetime.Token);
             _pump = PumpAsync(); _producer = ProduceAsync();
         }
         public async Task WaitUntilReadyAsync(CancellationToken token)
