@@ -166,7 +166,7 @@
                       <StackPanel Margin="24" Spacing="10">
                         <TextBlock Text="{Binding Title}" FontSize="38" FontWeight="Bold" LineHeight="43" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" Foreground="#251A35"/>
                         <TextBlock Text="{Binding HeroNote}" TextTrimming="CharacterEllipsis" Foreground="#58374A" FontSize="12"/>
-                        <Grid x:Name="HeroLyrics" RowDefinitions="28,42,28" Margin="0,14,0,0">
+                        <Grid x:Name="HeroLyrics" RowDefinitions="28,42,28" Margin="0,14,0,0" ClipToBounds="True">
                           <TextBlock x:Name="PreviousLyric" Text="{Binding LyricPrevious}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricPrevious}"/>
                           <TextBlock x:Name="CurrentLyric" Grid.Row="1" Text="{Binding LyricCurrent}" FontSize="22" FontWeight="SemiBold" Foreground="#251A35" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricCurrent}"/>
                           <TextBlock x:Name="NextLyric" Grid.Row="2" Text="{Binding LyricNext}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricNext}"/>

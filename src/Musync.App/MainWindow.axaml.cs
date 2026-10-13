@@ -26,16 +26,18 @@ public partial class MainWindow : Window
         AddHandler(KeyDownEvent, MiniVolumeKeyDown, RoutingStrategies.Tunnel);
         UpdateWindowFrame();
         InitializePosterRotation();
+        HeroScene.EffectiveViewportChanged += (_, _) => UpdateLyricMotionState();
         SizeChanged += (_, _) => { UpdateSpeakerPanelSize(); TrackFullPlayerBounds(); };
         PositionChanged += (_, _) => TrackFullPlayerBounds();
         Opened += (_, _) => { UpdateSpeakerPanelSize(); TrackFullPlayerBounds(); AnimatePosterLayers(); };
         PropertyChanged += (_, e) =>
         {
             if (e.Property == IsVisibleProperty || e.Property == IsMiniPlayerProperty)
-            { UpdatePreparationMotion(); UpdatePosterRotation(); }
+            { UpdatePreparationMotion(); UpdatePosterRotation(); UpdateLyricMotionState(); }
             if (e.Property != WindowStateProperty) return;
             UpdatePreparationMotion();
             UpdatePosterRotation();
+            UpdateLyricMotionState();
             if (IsMiniPlayer && WindowState == WindowState.Maximized && !_changingPlayerMode) RestoreFullPlayer(returnFocus: false);
             UpdateWindowFrame();
             SpeakerToggle.IsChecked = false;
@@ -50,6 +52,7 @@ public partial class MainWindow : Window
                 _linkModel.ImportFolders = ImportFoldersAsync;
                 _linkModel.PropertyChanged += LinkLayoutChanged;
             }
+            SettleLyricRows(); _lyricCursor = _linkModel?.LyricCursor;
             UpdatePlaylistDisclosure(animate: false);
             UpdatePreparationMotion();
             UpdatePosterRotation();
@@ -93,11 +96,12 @@ public partial class MainWindow : Window
         if (!enabled) UpdatePlaylistDisclosure(animate: false);
         UpdatePreparationMotion();
         UpdatePosterRotation();
+        UpdateLyricMotionState();
         if (!enabled)
         {
             SettlePosterLayers();
             foreach (var control in _reveals.Keys.ToArray()) SettleReveal(control);
-            foreach (var control in new Control[] { CurrentLyric, SpeakerPanel, MiniVolumePanel, SettingsPanel, PlaylistPanel }) SettleReveal(control);
+            foreach (var control in new Control[] { SpeakerPanel, MiniVolumePanel, SettingsPanel, PlaylistPanel }) SettleReveal(control);
         }
     }
     private void WireSeekSlider(PlaybackSlider slider)
@@ -216,8 +220,11 @@ public partial class MainWindow : Window
             or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen)
             or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.Busy)
             or nameof(MainViewModel.IsPreparingPlayback)) UpdatePosterRotation();
-        if (e.PropertyName == nameof(MainViewModel.LyricCurrent))
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => RevealPanel(CurrentLyric, 4, 180));
+        if (e.PropertyName == nameof(MainViewModel.HasSyncedLyrics))
+            Avalonia.Threading.Dispatcher.UIThread.Post(AdvanceLyricRows, Avalonia.Threading.DispatcherPriority.Loaded);
+        if (e.PropertyName is nameof(MainViewModel.IsPlaying) or nameof(MainViewModel.ShowHero)
+            or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen)
+            or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsPreparingPlayback)) UpdateLyricMotionState();
         if (e.PropertyName == nameof(MainViewModel.SettingsOpen) && _linkModel?.SettingsOpen == true)
         {
             _settingsReturnFocus = FocusManager?.GetFocusedElement() as Control;

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Adjacent local lyric lines move through the existing three-line viewport in 220 ms, carrying the next line into the center highlight and the current line into its previous-line role. Large jumps, paused seeks and source replacement settle immediately. Reduced motion, hidden/minimized windows, the mini player and open overlays cancel the movement; repeated lyric text still follows its timestamp index.
 - Chromecast media-status errors follow the playback session returned by the active LOAD. Delayed errors and replies from earlier playback no longer fail the new music; matching errors received before the LOAD response are retained until that response identifies the session. Stopping prevents late replies from rearming feedback.
 - The bottom-right link icon retains a localized device-attention indicator after the five-second toast disappears. Opening the overview brings the first affected speaker into view, including its volume and delay controls; reconnecting clears the indicator. Only devices in the active routed link contribute, and Spotify mode keeps its existing playback controls.
 - Speaker volume, mute and delay edits share one update loop per receiver and playback session. A slow response retains only the latest pending edit instead of queuing every slider event; a stopped or replaced session drops its pending edits. Failed updates retain the existing error/retry behavior while other receivers remain independently controllable.

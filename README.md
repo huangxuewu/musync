@@ -24,6 +24,8 @@ YouTube radio uses an unmodified [FFmpeg](https://ffmpeg.org/) LGPL v3 shared bu
 - Pinned favorites, editable playlists, a mini player, smooth progress feedback and occasional layered portrait transitions.
 - English, Simplified Chinese and Japanese; choose the language in Settings. Simplified Chinese uses embedded Noto Sans SC.
 
+In the unreleased UI, adjacent local lyric lines smoothly move into the center highlight and then into the previous-line role. Large jumps and paused seeks show the latest text immediately. The movement follows the Windows animation preference and settles when the poster is hidden or the mini player is open.
+
 ## Spotify setup
 
 1. Use your own Spotify Developer app and a Spotify Premium account.

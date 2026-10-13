@@ -25,6 +25,7 @@ public sealed partial class MainViewModel
         : _lyrics.Lines.Count == 0 ? Text["NoSyncedLyrics"] : _lyricWindow.Current;
     public string LyricNext => _lyricWindow.Next;
     public bool HasSyncedLyrics => _lyrics.Lines.Count > 0;
+    internal (string? Track, int Index) LyricCursor => (_presentationKey, _lyricWindow.Index);
     public FontFamily InterfaceFont => Text.Language == "zh-Hans" ? InterfaceTypography.Chinese : InterfaceTypography.Default;
     public double InterfaceFontSize => Text.Language == "zh-Hans" ? 14 : 13;
 
