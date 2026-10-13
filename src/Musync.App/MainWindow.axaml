@@ -206,7 +206,8 @@
                           <TextBlock Text="{Binding Artist}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                         <Button Grid.Column="2" Classes="ghost" Command="{Binding OpenArtworkSource}" IsVisible="{Binding HasArtwork}" Width="48" Height="48" Padding="12" AutomationProperties.Name="{Binding ArtworkSourceLabel}" ToolTip.Tip="{Binding ArtworkSourceLabel}">
-                          <Image Source="avares://Musync/Assets/Spotify/icon-black.png" Width="24" Height="24" Stretch="Uniform"/>
+                          <Image Source="avares://Musync/Assets/Spotify/icon-black.png" Width="24" Height="24" Stretch="Uniform"
+                                 RenderOptions.BitmapInterpolationMode="HighQuality"/>
                         </Button>
                         <TextBlock Grid.Column="3" Text="{Binding Duration}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
                         <Button Grid.Column="4" Classes="ghost iconButton" Command="{Binding LikeCommand}" Foreground="#D83855" AutomationProperties.Name="{Binding LikeLabel}" ToolTip.Tip="{Binding LikeLabel}"><icons:LucideIcon Kind="heart" Filled="{Binding Liked}"/></Button>
