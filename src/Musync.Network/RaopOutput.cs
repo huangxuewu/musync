@@ -128,7 +128,7 @@ public sealed class RaopOutput : IAudioOutput
         long packets = 0;
         while (!token.IsCancellationRequested)
         {
-            Buffer.SetDelay(Control.DelayMs);
+            Buffer.SetDelay(Control.EffectiveDelayMs);
             Buffer.Read(samples, Control.Gain);
             var encoded = RaopProtocol.EncodeAlac(PcmEncoding.ToInt16(samples));
             var packet = RaopProtocol.AudioPacket(encoded, sequence, timestamp, ssrc, packets == 0);

@@ -21,6 +21,7 @@ public sealed class AppSettings
     public bool PlaylistsExpanded { get; set; } = true;
     public Dictionary<string, string> ImportedPlaylistFolders { get; set; } = new();
     public HashSet<string> LikedTracks { get; set; } = [];
+    public List<RadioStation> RadioStations { get; set; } = [];
 }
 
 public sealed class SettingsStore

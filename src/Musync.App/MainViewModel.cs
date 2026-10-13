@@ -105,7 +105,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         MuteCommand = new AsyncCommand(_ => { TogglePlayerMute(); return WaitForVolumeAsync(); }, ShowError);
         ResetDelays = new AsyncCommand(_ => { foreach (var speaker in LinkedSpeakers) speaker.DelayMs = 0; return Task.CompletedTask; }, ShowError);
         CalibrateCommand = new AsyncCommand(_ => CalibrateAsync(), ShowError);
-        LikeCurrent = new AsyncCommand(_ => { if (_current is not null) ToggleLike(_current.Id); return Task.CompletedTask; }, ShowError);
+        LikeCurrent = new AsyncCommand(_ => { if (CanLikeCurrent) ToggleLike(_current!.Id); return Task.CompletedTask; }, ShowError);
         TogglePlaylists = new AsyncCommand(_ => { PlaylistsExpanded = !PlaylistsExpanded; return Task.CompletedTask; }, ShowError);
         NewPlaylist = new AsyncCommand(_ => { OpenPlaylist(null); return Task.CompletedTask; }, ShowError, () => CanManagePlaylists);
         SavePlaylist = new AsyncCommand(_ => { CreatePlaylist(); return Task.CompletedTask; }, ShowError, () => CanManagePlaylists);
@@ -117,6 +117,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         RefreshLinks();
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, async (_, _) => await TickAsync());
         _timer.Start();
+        InitializeRadio();
         RefreshPresentation();
     }
     public Localizer Text { get; }
@@ -201,6 +202,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             _source = value;
             var version = ++_sourceVersion;
             _sourceLookup?.Cancel();
+            _radioRequest?.Cancel();
             IsSwitchingSource = true;
             _player.CancelPreparation();
             _session = false; IsPlaying = false; Position = 0;
@@ -210,8 +212,10 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             InvalidateSearch(); _artworkRequest?.Cancel(); SpotifyArtwork = null;
             if (value.Id == "local") { _current = _library.FirstOrDefault(); Duration = _current?.DurationSeconds ?? 0; }
             if (value.Id == "spotify") { _current = null; Duration = 0; }
+            if (value.Id == "youtube") { _current = null; Duration = 0; }
+            if (value.Id == "youtube") { _view = "radio"; _playlistFilter = null; Raise(nameof(IsRadioPage)); Raise(nameof(IsMusicView)); }
             if (value.Id == "capture") Duration = 0;
-            Raise(); RefreshTracks(); Raise(nameof(SpotifyMode)); Raise(nameof(IsLocal)); Raise(nameof(RoutingAvailable)); RefreshCurrent();
+            Raise(); RefreshTracks(); Raise(nameof(SpotifyMode)); Raise(nameof(YouTubeMode)); Raise(nameof(IsLocal)); Raise(nameof(RoutingAvailable)); RefreshCurrent();
             Raise(nameof(PlaybackTargetLabel)); Raise(nameof(CanPlayLink));
             _sourceTransition = SwitchSourceAsync(version);
         }
@@ -219,7 +223,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool SpotifyMode => Source?.Id == "spotify";
     public bool IsLocal => Source?.Id == "local";
     public bool RoutingAvailable => !SpotifyMode;
-    public bool IsMusicView => _view != "playlists";
+    public bool IsMusicView => _view is not ("playlists" or "radio");
     public bool IsHomePage => !SettingsOpen && _playlistFilter is null && _view == "home";
     public bool IsLibraryPage => !SettingsOpen && _playlistFilter is null && _view == "library";
     public bool IsLikedPage => !SettingsOpen && _playlistFilter is null && _view == "liked";
@@ -296,14 +300,15 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             Raise(nameof(PlayLabel)); Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); Raise(nameof(PreparationDetail));
         }
     }
-    public bool PlayEnabled => !Busy && !IsPreparingPlayback;
-    public string PreparationDetail => string.Format(Text["SpeakerPreparationProgress"],
+    public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);
+    public string PreparationDetail => RadioLoading ? Text["RadioBuffering"] : string.Format(Text["SpeakerPreparationProgress"],
         _player.IsPreparing ? _player.ReadyOutputs : 0, _player.IsPreparing ? _player.PreparingOutputs : _preparationTotal);
     public ICommand CancelPreparation { get; }
     private async Task CancelPreparationAsync()
     {
         if (!IsPreparingPlayback) return;
         _preparationCancelled = true;
+        _radioRequest?.Cancel();
         _player.CancelPreparation();
         await _player.StopAsync();
         _session = false; _activeSource = null; IsPlaying = false; Status = Text["Idle"]; RefreshCurrent();
@@ -314,6 +319,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         : string.IsNullOrWhiteSpace(_current.Artist) && IsLocal ? Text["Local"] : _current.Artist;
     public string HeroNote => _current?.IsDemo == true ? Text["Demo"] : Artist;
     public bool CurrentLiked => _current is not null && IsLiked(_current.Id);
+    public bool CanLikeCurrent => _current is not null && !YouTubeMode;
     public string LikeCurrentLabel => Text[CurrentLiked ? "Unlike" : "Like"];
     public Bitmap? SpotifyArtwork
     {
@@ -331,7 +337,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public double Duration { get => _duration; private set { if (Set(ref _duration, value)) { Raise(nameof(DurationText)); Raise(nameof(Seekable)); } } }
     public string PositionText => TimeSpan.FromSeconds(Math.Max(0, Position)).ToString(@"m\:ss");
     public string DurationText => Duration > 0 ? TimeSpan.FromSeconds(Duration).ToString(@"m\:ss") : Source?.Id == "capture" ? "LIVE" : "0:00";
-    public bool Seekable => _session && !Busy && !IsPreparingPlayback && Source?.Id != "capture" && Duration > 0;
+    public bool Seekable => _session && !Busy && !IsPreparingPlayback && !YouTubeMode && Source?.Id != "capture" && Duration > 0;
     public bool IsSeeking { get; set; }
     public string SelectedCount => $"{Speakers.Count(s => s.Selected && s.Available)} {Text["Selected"]}";
     public string AvailableCount => $"{Speakers.Count} {Text["OutputCount"]}";
@@ -488,6 +494,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Raise(nameof(InterfaceFont)); Raise(nameof(InterfaceFontSize));
         Sources.Clear();
         Sources.Add(new("local", Text["Local"])); Sources.Add(new("capture", Text["Capture"])); Sources.Add(new("spotify", "Spotify"));
+        Sources.Add(new("youtube", Text["Radio"]));
         _source = Sources.First(c => c.Id == id); Raise(nameof(Source));
         foreach (var name in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(PlayLabel), nameof(MusicSourceHint), nameof(PreparationDetail), nameof(LikeCurrentLabel), nameof(SelectedCount), nameof(AvailableCount), nameof(SpotifyStatus), nameof(LinkSelectionSummary) }) Raise(name);
         RefreshSearchState();
@@ -498,6 +505,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         RefreshLyricWindow(force: true);
         Raise(nameof(PlaylistSectionLabel)); Raise(nameof(PlaylistDialogTitle)); PlaylistError = "";
         foreach (var playlist in Playlists) playlist.RefreshText();
+        RefreshRadioText();
         if (!_session) Status = Text[IsSwitchingSource ? "SwitchingSource" : "Idle"];
     }
     private void RefreshTracks()
@@ -514,7 +522,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         RefreshNavigationState(); RefreshPoster();
         RefreshSearchState();
     }
-    private void Navigate(string view) { _view = view; _playlistFilter = null; RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); }
+    private void Navigate(string view) { _view = view; _playlistFilter = null; RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); Raise(nameof(IsRadioPage)); }
     private void RefreshPlaylists()
     {
         Playlists.Clear();
@@ -532,7 +540,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         Source = Sources.First(s => s.Id == "local");
         _playlistFilter = name; _view = "home"; Search = "";
-        RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero));
+        RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); Raise(nameof(IsRadioPage));
     }
     private void UpdatePlaylistSelection()
     {
@@ -541,7 +549,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private void RefreshNavigationState()
     {
-        foreach (var property in new[] { nameof(IsHomePage), nameof(IsLibraryPage), nameof(IsLikedPage), nameof(IsPlaylistsPage) }) Raise(property);
+        foreach (var property in new[] { nameof(IsHomePage), nameof(IsLibraryPage), nameof(IsLikedPage), nameof(IsPlaylistsPage), nameof(IsRadioNav) }) Raise(property);
     }
     public bool IsLiked(string id) => _settings.LikedTracks.Contains(id);
     public void ToggleLike(string id)
@@ -603,7 +611,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             Source = Sources.First(s => s.Id == "local");
             _view = "home"; _playlistFilter = result.ImportedPlaylists.FirstOrDefault(); Search = "";
             RefreshTracks(); RefreshPlaylists(); SaveSoon();
-            Raise(nameof(IsMusicView)); Raise(nameof(ShowHero));
+            Raise(nameof(IsMusicView)); Raise(nameof(ShowHero)); Raise(nameof(IsRadioPage));
             var message = string.Format(Text["FoldersImported"], result.Tracks.Count, result.ImportedPlaylists.Count)
                 + (result.Skipped > 0 ? " · " + string.Format(Text["ImportSkipped"], result.Skipped) : "");
             Set(ref _status, message, nameof(Status));
@@ -717,6 +725,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public async Task PlayTrackAsync(MusicTrack? track, double resumePosition = 0, bool startPaused = false)
     {
         if (_disposed || Busy) return;
+        if (YouTubeMode && track?.FilePath is { } localPath && !YouTubeAddress.TryParse(localPath, out _))
+        { Source = Sources.First(s => s.Id == "local"); await _sourceTransition; }
         var sourceVersion = _sourceVersion;
         if (!SpotifyMode && !HasActiveLink)
         {
@@ -750,6 +760,20 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 if (!capture && track?.FilePath is null) throw new InvalidOperationException(Text["NoTracks"]);
                 var selected = SpeakerLinks.Resolve(ActiveLinkProfile!, Speakers.Select(s => s.Device));
                 if (selected.Count == 0) { await _player.StopAsync(); throw new InvalidOperationException(Text["LinkOffline"]); }
+                if (YouTubeMode)
+                {
+                    resumePosition = 0;
+                    if (_backend is not IYouTubeRadioBackend radio || !YouTubeAddress.TryParse(track!.FilePath, out var address))
+                        throw new InvalidOperationException(Text["RadioToolsMissing"]);
+                    _current = track; Duration = 0; RefreshCurrent();
+                    IsPreparingPlayback = true; RadioLoading = true;
+                    using var request = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+                    _radioRequest = request;
+                    try { track = await radio.ResolveRadioAsync(address!, request.Token); }
+                    finally { if (ReferenceEquals(_radioRequest, request)) _radioRequest = null; }
+                    if (!OwnsSource(sourceVersion)) return;
+                    RefreshRadioName(track);
+                }
                 _current = track;
                 IsPlaying = false; Position = resumePosition; Duration = capture ? 0 : track!.DurationSeconds;
                 _preparationTotal = selected.Count; IsPreparingPlayback = true; RefreshCurrent();
@@ -772,19 +796,30 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             _session = false; IsPlaying = false; Status = Text["Idle"]; RefreshCurrent();
         }
-        catch
+        catch (Exception ex)
         {
             _session = false; IsPlaying = false; RefreshCurrent();
             foreach (var speaker in Speakers) speaker.UpdateStatus(false, _player.OutputErrors.GetValueOrDefault(speaker.Id));
+            if (YouTubeMode)
+            {
+                RadioError = Text[ex is FileNotFoundException ? "RadioToolsMissing" : "RadioPlaybackFailed"];
+                ShowError(ex, RadioError); return;
+            }
             throw;
         }
-        finally { IsPreparingPlayback = false; _startingPlayback = false; Busy = false; _playGate.Release(); }
+        finally { RadioLoading = false; IsPreparingPlayback = false; _startingPlayback = false; Busy = false; _playGate.Release(); }
     }
     private async Task TogglePlayback()
     {
         if (_disposed || Busy) return;
         var sourceVersion = _sourceVersion;
-        if (!_session) { await PlayTrackAsync(_current); return; }
+        if (!_session)
+        {
+            if (YouTubeMode && _current is null && _settings.RadioStations.FirstOrDefault() is { } station)
+                await PlayRadioAsync(station);
+            else await PlayTrackAsync(_current);
+            return;
+        }
         await _playGate.WaitAsync(_lifetime.Token);
         try
         {
@@ -845,6 +880,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task NextAsync(int direction)
     {
         if (_disposed || Busy) return;
+        if (YouTubeMode)
+        {
+            var stations = _settings.RadioStations;
+            if (stations.Count == 0) return;
+            var radioIndex = stations.FindIndex(s => s.Url == _current?.FilePath);
+            var radioNext = Shuffle ? Random.Shared.Next(stations.Count) : (Math.Max(0, radioIndex) + direction + stations.Count) % stations.Count;
+            await PlayRadioAsync(stations[radioNext]); return;
+        }
         if (SpotifyMode)
         {
             if (!_spotify.Connected) { SettingsOpen = true; return; }
@@ -893,8 +936,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private void RefreshCurrent()
     {
+        RefreshRadioSelection();
         RefreshPresentation();
-        foreach (var property in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(CurrentLiked), nameof(LikeCurrentLabel), nameof(Seekable), nameof(HasSpotifyArtwork), nameof(ShowArtist) }) Raise(property);
+        foreach (var property in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(CurrentLiked), nameof(CanLikeCurrent), nameof(LikeCurrentLabel), nameof(PlayEnabled), nameof(Seekable), nameof(HasSpotifyArtwork), nameof(ShowArtist) }) Raise(property);
     }
     private async Task SearchAsync()
     {
@@ -911,7 +955,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (request.IsCancellationRequested || version != _searchVersion || !SpotifyMode) return;
             _spotifyResults = results.ToList(); _searchedQuery = query;
             _view = "home"; _playlistFilter = null;
-            RefreshTracks(); Raise(nameof(IsMusicView));
+            RefreshTracks(); Raise(nameof(IsMusicView)); Raise(nameof(IsRadioPage));
         }
         catch (OperationCanceledException) when (request.IsCancellationRequested) { }
         catch (Exception ex)
@@ -1100,10 +1144,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         _disposed = true; _timer.Stop(); _toastTimer.Stop(); ToastMessage = "";
         _lifetime.Cancel(); _saveDelay?.Cancel(); _routeDelay?.Cancel();
         _searchRequest?.Cancel(); _artworkRequest?.Cancel(); _lyricsRequest?.Cancel();
+        _radioRequest?.Cancel();
+        _player.CancelPreparation();
         foreach (var row in Tracks) row.Dispose();
         _listArtwork.ReleaseMemory();
         ResetSpotifyVolume();
         await _sourceTransition;
+        await _playGate.WaitAsync(); _playGate.Release();
         await _store.SaveAsync(_settings);
         foreach (var speaker in Speakers) speaker.Detach();
         foreach (var speaker in LinkedSpeakers.Where(s => !Speakers.Contains(s))) speaker.Detach();

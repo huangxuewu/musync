@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icons="using:Musync.App.Controls" x:Class="Musync.App.RadioView">
+  <UserControl.Styles>
+    <Style Selector="Button.radioRow">
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="MinHeight" Value="76"/>
+      <Setter Property="Padding" Value="12"/>
+      <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+    <Style Selector="Button.radioRow.active /template/ ContentPresenter">
+      <Setter Property="Background" Value="#FDE8EC"/>
+      <Setter Property="Foreground" Value="#251A35"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <Grid x:Name="RadioScene" ColumnDefinitions="1.618*,*" MinHeight="206" ClipToBounds="False">
+      <icons:PosterBackdrop x:Name="RadioBackdrop" Grid.ColumnSpan="2" Palette="{Binding PosterPalette}" Margin="0,16,0,0"/>
+      <Border Grid.Column="0" Margin="18,34,-24,18" VerticalAlignment="Center" CornerRadius="16">
+        <Grid>
+          <icons:FrostedPosterGlass Backdrop="{Binding #RadioBackdrop}" IsHitTestVisible="False"/>
+          <StackPanel Spacing="10" Margin="20">
+            <TextBlock Text="{Binding Text[Radio]}" FontSize="30" FontWeight="Bold" Foreground="#251A35"/>
+            <TextBlock Text="{Binding RadioHeadline}" FontSize="15" FontWeight="Medium" Foreground="#58374A"
+                       TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+      <icons:CrossfadeImage x:Name="RadioPortrait" Grid.Column="1" Source="{Binding PosterArtwork}" Width="206" Height="206"
+                           Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Bottom" IsHitTestVisible="False"/>
+    </Grid>
+    <Grid Grid.Row="1" ColumnDefinitions="*,180,Auto" ColumnSpacing="10" Margin="0,24,0,0">
+      <TextBox x:Name="RadioUrlInput" Text="{Binding RadioUrl, Mode=TwoWay}" PlaceholderText="{Binding Text[RadioUrlPlaceholder]}"
+               PlaceholderForeground="#716877"
+               AutomationProperties.Name="{Binding Text[RadioUrlLabel]}" MaxLength="2048" MinHeight="44" KeyDown="InputKeyDown"/>
+      <TextBox x:Name="RadioNameInput" Grid.Column="1" Text="{Binding RadioName, Mode=TwoWay}" PlaceholderText="{Binding Text[RadioNamePlaceholder]}"
+               PlaceholderForeground="#716877"
+               AutomationProperties.Name="{Binding Text[RadioNameLabel]}" MaxLength="80" MinHeight="44" KeyDown="InputKeyDown"/>
+      <Button x:Name="SaveRadioButton" Grid.Column="2" Command="{Binding SaveRadio}" IsEnabled="{Binding !Busy}" MinHeight="44"
+              AutomationProperties.Name="{Binding Text[RadioAdd]}" Padding="16,10">
+        <StackPanel Orientation="Horizontal" Spacing="8"><icons:LucideIcon Kind="plus" Width="18" Height="18"/><TextBlock Text="{Binding Text[RadioAdd]}"/></StackPanel>
+      </Button>
+    </Grid>
+    <TextBlock x:Name="RadioValidation" Grid.Row="2" Text="{Binding RadioError}" IsVisible="{Binding HasRadioError}" Foreground="#B52C47"
+               TextWrapping="Wrap" Margin="4,8,0,0" AutomationProperties.LiveSetting="Polite"/>
+    <Grid Grid.Row="3" Margin="0,20,0,0">
+      <StackPanel IsVisible="{Binding NoRadioStations}" Margin="4,20" Spacing="8">
+        <TextBlock Text="{Binding Text[RadioEmpty]}" FontSize="18" FontWeight="SemiBold" Foreground="#251A35"/>
+        <TextBlock Text="{Binding Text[RadioEmptyHint]}" Foreground="#716877" TextWrapping="Wrap" MaxWidth="520" HorizontalAlignment="Left"/>
+      </StackPanel>
+      <ScrollViewer x:Name="RadioScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+        <ItemsControl x:Name="RadioList" ItemsSource="{Binding RadioStations}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,36" Margin="0,0,0,6">
+                <Button Classes="nav radioRow" Classes.active="{Binding IsActive}" Command="{Binding Play}" IsEnabled="{Binding CanEdit}"
+                        AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding PlayLabel}">
+                  <Grid ColumnDefinitions="44,*" ColumnSpacing="14">
+                    <Border Background="#FDE8EC" CornerRadius="12" Width="44" Height="44" VerticalAlignment="Center">
+                      <icons:LucideIcon Kind="radio" Foreground="#B52C47" Width="22" Height="22"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Url}" Foreground="#716877" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                  </Grid>
+                </Button>
+                <Button Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding Remove}" IsEnabled="{Binding CanEdit}"
+                        Width="36" Height="36" VerticalAlignment="Center" AutomationProperties.Name="{Binding RemoveLabel}" ToolTip.Tip="{Binding RemoveLabel}">
+                  <icons:LucideIcon Kind="minus"/>
+                </Button>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

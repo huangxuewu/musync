@@ -59,7 +59,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     public double Position => IsCapture ? _captureClock.Elapsed.TotalSeconds : backend.Position;
     public double Duration => IsCapture ? 0 : backend.Duration;
     public bool Finished => !IsCapture && _sourceEnded;
-    public TimeSpan RequiredTail => _outputs.Values.Select(o => o.EstimatedLatency + TimeSpan.FromMilliseconds(o.Control.DelayMs))
+    public TimeSpan RequiredTail => _outputs.Values.Select(o => o.EstimatedLatency + TimeSpan.FromMilliseconds(o.Control.EffectiveDelayMs))
         .DefaultIfEmpty(TimeSpan.Zero).Max();
     public bool TailComplete { get { lock (_tailGate) return Finished && _tailClock.Elapsed >= RequiredTail; } }
     public IReadOnlyDictionary<string, IAudioOutput> Outputs => _outputs;
@@ -81,6 +81,10 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             var token = _sourceLifetime.Token;
             if (startVersion != Volatile.Read(ref _stopVersion)) _sourceLifetime.Cancel();
             token.ThrowIfCancellationRequested();
+            // Streaming sources fill their bounded decode queue before any
+            // receiver is released. Every output consumes this same timeline.
+            if (!capture) await backend.PrepareSourceAsync(source, token);
+            token.ThrowIfCancellationRequested();
             var eligible = devices.Where(d => !capture || d.Device.Id != source).ToArray();
             foreach (var unavailable in eligible.Where(d => d.Device.UnsupportedReason is not null))
                 RecordError(unavailable.Device, unavailable.Device.UnsupportedReason!);
@@ -88,7 +92,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             {
                 try
                 {
-                    var output = factory(device, new(source, capture, position));
+                    var output = factory(device, new(source, capture, position, backend.IsStreamingSource(source)));
                     Apply(output, preferences, masterVolume);
                     _outputs[device.Id] = output;
                 }
@@ -124,6 +128,18 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             token.ThrowIfCancellationRequested();
             _hub.SetOutputs(_outputs.Values.Where(o => o.ReceivesPcm).Select(o => o.Buffer));
             if (_outputs.Count == 0) { await StopInternal(); throw new IOException(Error ?? "NoOutputs"); }
+            if (!capture && backend.IsStreamingSource(source))
+            {
+                // Network streaming receivers buffer the same PCM by different
+                // amounts. Hold faster outputs to the slowest estimate; the
+                // existing manual delay remains available for model calibration.
+                var maximum = _outputs.Values.Max(o => o.EstimatedLatency.TotalMilliseconds);
+                foreach (var output in _outputs.Values)
+                {
+                    output.Control.AlignmentDelayMs = (int)Math.Clamp(maximum - output.EstimatedLatency.TotalMilliseconds, 0, 5000);
+                    output.Buffer.SetDelay(output.Control.EffectiveDelayMs);
+                }
+            }
             // Prepare every receiver before supplying the first music frame.
             // Slow handshakes must not consume the beginning of a track.
             _hub.Clear(); _captureClock.Restart();
@@ -342,6 +358,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
         IsPlaying = false; _captureClock.Stop(); _hub.SetPaused(true); _sourceLifetime?.Cancel();
         if (_sourceTask is not null) await _sourceTask;
         _sourceTask = null;
+        await backend.ReleasePreparedSourceAsync();
         _hub.Clear();
         _hub.SetOutputs([]);
         var outputs = _outputs.Values.ToArray(); _outputs.Clear();

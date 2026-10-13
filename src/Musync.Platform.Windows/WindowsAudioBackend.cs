@@ -173,7 +173,7 @@ public sealed class WindowsOutput : IAudioOutput, ISampleProvider
     public WaveFormat WaveFormat { get; } = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, AudioFormat.Channels);
     public int Read(Span<float> buffer)
     {
-        Buffer.SetDelay(Control.DelayMs);
+        Buffer.SetDelay(Control.EffectiveDelayMs);
         Buffer.Read(buffer, Control.Gain);
         return buffer.Length;
     }

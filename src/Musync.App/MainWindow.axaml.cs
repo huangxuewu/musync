@@ -86,6 +86,7 @@ public partial class MainWindow : Window
         Classes.Set("motionEnabled", enabled);
         SeekSlider.MotionEnabled = MiniSeekSlider.MotionEnabled = enabled;
         HeroSurface.MotionEnabled = HeroArtwork.MotionEnabled = HeroSpotifyArtwork.MotionEnabled = enabled;
+        RadioPage.ApplyMotionPreference(enabled);
         PlayerArtwork.MotionEnabled = MiniPlayerArtwork.MotionEnabled = enabled;
         FullPreparationWave.MotionEnabled = MiniPreparationWave.MotionEnabled = NetworkScanWave.MotionEnabled = MusicSourceWave.MotionEnabled = enabled;
         if (!enabled) UpdatePlaylistDisclosure(animate: false);

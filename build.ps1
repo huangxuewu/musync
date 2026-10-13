@@ -58,6 +58,8 @@ try {
         Copy-Item -LiteralPath 'src\Musync.AirPlayBridge\node_modules' -Destination $bridgeDestination -Recurse -Force
         Copy-Item -LiteralPath $node -Destination $bridgeDestination -Force
         Copy-Item -LiteralPath (Join-Path $nodeDirectory 'LICENSE') -Destination (Join-Path $bridgeDestination 'NODE-LICENSE.txt') -Force
+        & (Join-Path $taskRoot 'tools/Prepare-RadioTools.ps1')
+        & (Join-Path $taskRoot 'tools/Copy-RadioTools.ps1') -Destination $destination
         Copy-Item -LiteralPath 'THIRD-PARTY-NOTICES.txt','README.md','CHANGELOG.md' -Destination $destination -Force
         Copy-Item -LiteralPath 'docs' -Destination $destination -Recurse -Force
         if (Test-Path -LiteralPath 'release-validation.json') { Copy-Item -LiteralPath 'release-validation.json' -Destination $destination -Force }

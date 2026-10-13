@@ -233,7 +233,7 @@ public sealed class AirPlay2Output : IAudioOutput
                 {
                     var wait = packet * 352.0 / AudioFormat.SampleRate - clock.Elapsed.TotalSeconds;
                     if (wait > 0) await Task.Delay(TimeSpan.FromSeconds(wait), lifetime.Token);
-                    Buffer.SetDelay(Control.DelayMs);
+                    Buffer.SetDelay(Control.EffectiveDelayMs);
                     Buffer.Read(samples, Control.Gain == 0 ? 0 : 1);
                     await _bridge.SendAsync(Device.Id, PcmEncoding.ToInt16(samples), lifetime.Token);
                     packet++;

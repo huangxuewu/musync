@@ -17,7 +17,8 @@ public sealed partial class App : Application
             var data = Environment.GetEnvironmentVariable("MUSYNC_DATA_DIR") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Musync");
             Directory.CreateDirectory(data);
             var store = new SettingsStore(Path.Combine(data, "settings.json"));
-            var backend = new WindowsAudioBackend();
+            var radioTools = RadioTools.Locate();
+            var backend = new YouTubeAudioBackend(new WindowsAudioBackend(), new YtDlpRadioResolver(radioTools), new FfmpegRadioDecoder(radioTools));
             var server = new LocalStreamServer();
             var encoder = new Mp3StreamEncoder();
             var preparedMusic = new WindowsCastMediaPreparer(Path.Combine(data, "cast-cache"));
@@ -32,7 +33,7 @@ public sealed partial class App : Application
             var bridge = new AirPlayBridge(bridgeDirectory, File.Exists(bundledNode) ? bundledNode : "node");
             var player = new PlaybackCoordinator(backend, (device, source) => device.Transport switch
             {
-                SpeakerTransport.Chromecast when !source.IsCapture => new FileCastOutput(device, source, server, preparedMusic),
+                SpeakerTransport.Chromecast when !source.IsCapture && !source.IsStreaming => new FileCastOutput(device, source, server, preparedMusic),
                 SpeakerTransport.Chromecast => new CastOutput(device, server, encoder),
                 SpeakerTransport.AirPlay when device.Properties?.GetValueOrDefault("ap2") == "true" => new AirPlay2Output(device, bridge),
                 SpeakerTransport.AirPlay => new RaopOutput(device),

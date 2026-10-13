@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REVISION = "440a1e1dfb1e712505308da46bead3c28b1f1398"
 ICONS = (
-    "house", "library", "music-2", "heart", "list-music", "settings", "search",
+    "house", "library", "radio", "music-2", "heart", "list-music", "settings", "search",
     "speaker", "volume-2", "volume-x", "bluetooth", "airplay", "cast", "monitor",
     "play", "pause", "skip-back", "skip-forward", "shuffle", "repeat", "square",
     "plus", "minus", "x", "refresh-cw", "chevron-down", "check", "copy", "maximize", "link-2", "picture-in-picture-2",

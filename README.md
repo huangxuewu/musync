@@ -29,6 +29,16 @@ The executable is currently unsigned. Settings, playlists and cached artwork are
 
 Spotify plays through its selected Connect device. Spotify audio is not passed into Musync's local multi-speaker engine. Developer access and account eligibility are controlled by Spotify.
 
+## YouTube radio (current source and Debug preview)
+
+Open **Radio** in the sidebar, paste a YouTube video or live URL, optionally name it, and select **Add**. Select a saved station to play through the active speaker link. Saved addresses survive restart and can be removed. English, Simplified Chinese and Japanese are supported. Browsing Radio alone leaves existing music playing.
+
+This feature is not included in the existing 1.0.0 release download. For a source build, run `./tools/Prepare-RadioTools.ps1` once; it prepares checksum-pinned yt-dlp and an LGPL shared FFmpeg build in `.tools/radio`. Node.js 22+ is also required; the project build already prepares Node.js 24.21.0. Keep FFmpeg's shared libraries beside its executable.
+
+yt-dlp supplies the encoded stream to FFmpeg through a pipe. FFmpeg produces one 44.1 kHz stereo PCM timeline for Windows/Bluetooth, AirPlay and streaming Chromecast. A bounded queue prebuffers about three seconds before preparing the receivers. Faster outputs receive an initial delay based on each transport's estimated latency; the link's manual delay controls remain available for speaker calibration. Hardware synchronization still requires listening tests and is not sample accurate.
+
+Playback supports pause/resume, volume, and next/previous saved stations. Seeking is currently disabled for radio recordings and live streams. Videos requiring sign-in, private access or geographic access may fail; Musync does not import browser cookies. A YouTube playlist page cannot be added, but a single long music video containing a playlist can. No audio file is added to the local library; station URLs are saved and the stream queue stays in memory. This uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org/), rather than the official YouTube IFrame API. Only play content you are permitted to access and use.
+
 ## Speaker setup
 
 Open Links using the bottom-right link icon, create a link, select its devices, then save it. Select Local music or Windows audio using the adjacent source icon. Press Play to route to the selected link.

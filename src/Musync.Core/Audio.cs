@@ -28,6 +28,7 @@ public sealed class OutputControl
 {
     private float _gain = .65f;
     private int _delayMs;
+    private int _alignmentDelayMs;
     public float Gain
     {
         get => Volatile.Read(ref _gain);
@@ -38,6 +39,13 @@ public sealed class OutputControl
         get => Volatile.Read(ref _delayMs);
         set => Volatile.Write(ref _delayMs, Math.Clamp(value, 0, 10000));
     }
+    // Session-owned compensation is separate from the user's speaker tuning.
+    public int AlignmentDelayMs
+    {
+        get => Volatile.Read(ref _alignmentDelayMs);
+        set => Volatile.Write(ref _alignmentDelayMs, Math.Clamp(value, 0, 5000));
+    }
+    public int EffectiveDelayMs => DelayMs + AlignmentDelayMs;
 }
 
 public sealed class AudioRingBuffer
@@ -65,7 +73,7 @@ public sealed class AudioRingBuffer
 
     public void SetDelay(int milliseconds, int baseBufferMs = 300)
     {
-        var target = Math.Clamp((int)((long)(Math.Clamp(milliseconds, 0, 10000) + baseBufferMs)
+        var target = Math.Clamp((int)((long)(Math.Clamp(milliseconds, 0, 15000) + baseBufferMs)
             * AudioFormat.SamplesPerSecond / 1000), 0, _samples.Length - 2);
         target -= target % 2;
         lock (_gate)
@@ -233,7 +241,7 @@ public interface IAudioOutput : IAsyncDisposable
     Task UpdateControlsAsync() => Task.CompletedTask;
 }
 
-public sealed record PlaybackSource(string Path, bool IsCapture, double Position);
+public sealed record PlaybackSource(string Path, bool IsCapture, double Position, bool IsStreaming = false);
 
 public interface IAudioFilePreparer
 {
@@ -250,6 +258,9 @@ public sealed class PreparedAudioFile(string path, double duration, Func<ValueTa
 
 public interface IAudioBackend : IAsyncDisposable
 {
+    bool IsStreamingSource(string source) => false;
+    Task PrepareSourceAsync(string source, CancellationToken cancellationToken) => Task.CompletedTask;
+    Task ReleasePreparedSourceAsync() => Task.CompletedTask;
     IReadOnlyList<SpeakerDevice> GetDevices();
     string? DefaultDeviceId { get; }
     IAudioOutput CreateOutput(SpeakerDevice device);

@@ -125,7 +125,7 @@ public sealed class CastOutput : IAudioOutput
                 var starved = Stopwatch.StartNew();
                 while (!token.IsCancellationRequested)
                 {
-                    Buffer.SetDelay(Control.DelayMs);
+                    Buffer.SetDelay(Control.EffectiveDelayMs);
                     var count = Buffer.Read(samples, requireFullBuffer: true);
                     if (count > 0)
                     {
