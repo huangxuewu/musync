@@ -59,6 +59,8 @@ Playback supports pause/resume, volume, and next/previous saved stations. Seekin
 
 The current source and Debug preview additionally let the current station row pause/resume its existing stream without another metadata lookup. Rows show preparation, playing and paused states with contextual controls; their activity stops for reduced motion or hidden views. Failed stations retain a Retry action after the five-second toast expires; selecting Retry starts a fresh stream. A volume-control error on a receiver that is still playing does not offer a stream restart. These refinements are listed under Unreleased and are not included in the 1.0.1 download.
 
+The unreleased decoder bounds a complete PCM block read to 35 seconds, so a connected helper that stops producing audio cannot leave that read waiting indefinitely. Partial bytes do not restart the deadline. Paused-consumer queue waits occur outside it, while user cancellation remains distinct from a timeout. Helper completion after audio EOF has the same waiting limit. A stream that fails offers Retry on its saved station.
+
 ## Speaker setup
 
 Open Links using the bottom-right link icon, create a link, select its devices, then save it. Select Local music or Windows audio using the adjacent source icon. Press Play to route to the selected link.

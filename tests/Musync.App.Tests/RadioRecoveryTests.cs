@@ -12,10 +12,10 @@ namespace Musync.Tests;
 
 public sealed partial class SpotifyPlaybackTests
 {
-    private static async Task InterruptRadio(RadioFixture fixture)
+    private static async Task InterruptRadio(RadioFixture fixture, Exception? failure = null)
     {
         await fixture.Backend.StreamStarted.Task.WaitAsync(TimeSpan.FromSeconds(3));
-        fixture.Backend.StreamFailure!.TrySetException(new IOException("Synthetic decoder connection lost"));
+        fixture.Backend.StreamFailure!.TrySetException(failure ?? new IOException("Synthetic decoder connection lost"));
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         while (fixture.Player.IsPlaying) await Task.Delay(5, deadline.Token);
         await PollPlayback(fixture.Model);
@@ -177,5 +177,27 @@ public sealed partial class SpotifyPlaybackTests
             Assert.False(model.HasRadioError); Assert.False(model.IsPlaying);
         }
         finally { output.CleanupReady.TrySetResult(); await poll; await SourceTransitionSettled(model); }
+    }
+
+    [AvaloniaFact]
+    public async Task DecoderReadTimeoutOffersRetryWithoutChangingSourceOrRemovingTheSavedStation()
+    {
+        await using var fixture = new RadioFixture("zh-Hans"); var model = fixture.Model; SaveStation(model);
+        var station = model.RadioStations[0]; var saved = station.Station;
+        fixture.Backend.StreamFailure = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        await model.PlayRadioAsync(saved);
+        await InterruptRadio(fixture, new TimeoutException("Synthetic decoder frame deadline"));
+        Assert.Equal("youtube", model.Source!.Id); Assert.Equal(saved, Assert.Single(model.RadioStations).Station);
+        Assert.Empty(fixture.Player.Outputs); Assert.False(model.IsPlaying);
+        Assert.Equal(model.Text["RadioRetryHint"], station.StatusCaption);
+        Assert.Equal(model.Text["RadioPlaybackInterrupted"], model.ToastMessage);
+        Assert.False(model.HasRadioError);
+        fixture.Backend.StreamFailure = null;
+        station.Play.Execute(null); await CommandFinished(station.Play);
+        await fixture.Backend.StreamStarted.Task;
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        while (fixture.Backend.Plays != 2) await Task.Delay(5, deadline.Token);
+        Assert.Equal(2, fixture.Backend.Lookups); Assert.True(model.IsPlaying);
+        Assert.False(station.HasPlaybackError); Assert.False(model.HasToast);
     }
 }
