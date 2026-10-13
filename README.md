@@ -63,6 +63,8 @@ The unreleased decoder bounds a complete PCM block read to 35 seconds, so a conn
 
 ## Speaker setup
 
+The unreleased source coalesces volume, mute and delay edits independently for each receiver. While a control response is pending, only the latest edit is kept for the next update; stopping or replacing playback discards that session's queued edits. This reduces repeated requests to slow or rejecting receivers without changing the audio timeline or the link's saved values.
+
 Open Links using the bottom-right link icon, create a link, select its devices, then save it. Select Local music or Windows audio using the adjacent source icon. Press Play to route to the selected link.
 
 Each speaker shows whether it is available, connecting, waiting for synchronized start, playing or paused. Receiver errors remain visible in that speaker's row. The link overview's Rescan icon searches again and retries failed routes at the current track position using the existing preparation barrier; its waiting wave respects reduced motion. Volume and delay preferences remain saved.

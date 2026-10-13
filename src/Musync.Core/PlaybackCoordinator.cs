@@ -26,6 +26,18 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private sealed record ControlFailure(IAudioOutput Output, string Message);
     private sealed record ErrorState(CancellationTokenSource? Session, string? PlaybackError, ControlFailure[] Controls);
     private ErrorState _errors = new(null, null, []);
+    private sealed class ControlUpdateState
+    {
+        public long Version;
+        public bool Running;
+    }
+    private sealed class ControlUpdateSession(CancellationTokenSource lifetime)
+    {
+        public CancellationTokenSource Lifetime { get; } = lifetime;
+        public System.Collections.Concurrent.ConcurrentDictionary<IAudioOutput, ControlUpdateState> Updates { get; }
+            = new(ReferenceEqualityComparer.Instance);
+    }
+    private ControlUpdateSession? _controlUpdateSession;
     public bool IsPreparing => _preparing;
     public int ReadyOutputs => _preparedOutputs.Count;
     public bool IsOutputPrepared(string id) => _preparedOutputs.ContainsKey(id);
@@ -78,6 +90,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             _outputErrors.Clear(); IsCapture = capture; _paused = paused; _sourceFailed = false;
             _sourceLifetime = new();
             Volatile.Write(ref _errors, new(_sourceLifetime, null, []));
+            Volatile.Write(ref _controlUpdateSession, new(_sourceLifetime));
             _preparing = true; _preparedOutputs.Clear();
             var token = _sourceLifetime.Token;
             if (startVersion != Volatile.Read(ref _stopVersion)) _sourceLifetime.Cancel();
@@ -223,22 +236,49 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     }
     public void Update(string id, SpeakerPreferences preferences, double master)
     {
-        if (_outputs.TryGetValue(id, out var output))
+        if (_outputs.TryGetValue(id, out var output) && Volatile.Read(ref _controlUpdateSession) is { } session)
         {
-            Apply(output, preferences, master);
-            _ = RefreshControls(output, _sourceLifetime);
+            var state = session.Updates.GetOrAdd(output, _ => new());
+            lock (state)
+            {
+                if (!OwnsControlUpdate(output, session)) return;
+                Apply(output, preferences, master);
+                state.Version++;
+                if (state.Running) return;
+                state.Running = true;
+            }
+            _ = RefreshControls(output, session, state);
         }
     }
-    private async Task RefreshControls(IAudioOutput output, CancellationTokenSource? lifetime)
+    private bool OwnsControlUpdate(IAudioOutput output, ControlUpdateSession session)
+        => ReferenceEquals(Volatile.Read(ref _controlUpdateSession), session)
+        && ReferenceEquals(Volatile.Read(ref _errors).Session, session.Lifetime)
+        && !session.Lifetime.IsCancellationRequested
+        && _outputs.TryGetValue(output.Device.Id, out var current) && ReferenceEquals(current, output);
+    private async Task RefreshControls(IAudioOutput output, ControlUpdateSession session, ControlUpdateState state)
     {
-        try
+        while (true)
         {
-            await output.UpdateControlsAsync();
-            UpdateControlError(output, lifetime, null);
-        }
-        catch (Exception ex)
-        {
-            UpdateControlError(output, lifetime, output.Device.Name + ": " + ex.Message);
+            long version;
+            lock (state) version = state.Version;
+            if (!OwnsControlUpdate(output, session)) { lock (state) state.Running = false; return; }
+            try
+            {
+                await output.UpdateControlsAsync();
+                UpdateControlError(output, session.Lifetime, null);
+            }
+            catch (Exception ex)
+            {
+                UpdateControlError(output, session.Lifetime, output.Device.Name + ": " + ex.Message);
+            }
+            lock (state)
+            {
+                // One in-flight call plus the latest edit replaces a backlog of
+                // slider events. Other receivers have independent update loops.
+                if (state.Version != version && OwnsControlUpdate(output, session)) continue;
+                state.Running = false;
+                return;
+            }
         }
     }
     private void UpdateControlError(IAudioOutput output, CancellationTokenSource? lifetime, string? message)
@@ -372,6 +412,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private async Task StopInternal()
     {
         EndControlSession();
+        Volatile.Write(ref _controlUpdateSession, null);
         IsPlaying = false; _captureClock.Stop(); _hub.SetPaused(true); _sourceLifetime?.Cancel();
         if (_sourceTask is not null) await _sourceTask;
         _sourceTask = null;

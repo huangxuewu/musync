@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Speaker volume, mute and delay edits share one update loop per receiver and playback session. A slow response retains only the latest pending edit instead of queuing every slider event; a stopped or replaced session drops its pending edits. Failed updates retain the existing error/retry behavior while other receivers remain independently controllable.
 - Radio startup reports loading the station, preparing audio and preparing speakers separately. Receiver preparation shows the actual ready/total count after metadata and buffering finish; the station row and mini player follow the same phase. Cancellation remains available throughout startup.
 - Radio PCM reads have a 35-second deadline for each complete block, including partial reads. Normal consumer backpressure and time between completed blocks do not use that deadline; cancellation stays cancellation. Waiting for helper completion after audio EOF is also bounded, and disposal observes the retained closing tasks. A terminated radio stream uses the station's existing Retry action.
 - Radio playback failures remain on the affected station with a localized Retry action after the five-second toast expires. Activating Retry starts a fresh stream; playback errors stay separate from Add-station validation. Volume-control errors on a surviving receiver do not offer a restart, and source changes reject late failures from the old session.
