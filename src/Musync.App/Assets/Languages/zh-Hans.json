@@ -3,6 +3,8 @@
   "Library": "音乐库",
   "Liked": "喜爱曲目",
   "Playlists": "播放列表",
+  "PlaylistTrackSingular": "首歌曲",
+  "PlaylistTrackPlural": "首歌曲",
   "Settings": "设置",
   "Import": "导入文件夹",
   "FoldersImported": "已添加 {0} 首歌曲 · {1} 个文件夹歌单",

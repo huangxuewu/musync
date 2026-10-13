@@ -1,0 +1,74 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Musync.App.Controls">
+  <Style Selector="Button.nav">
+    <Setter Property="MinHeight" Value="44"/>
+    <Setter Property="Foreground" Value="#51465F"/>
+    <Setter Property="CornerRadius" Value="12"/>
+  </Style>
+  <Style Selector="Button.sidebarPrimary">
+    <Setter Property="Height" Value="52"/>
+    <Setter Property="Padding" Value="16,12"/>
+    <Setter Property="FontSize" Value="14"/>
+  </Style>
+  <Style Selector="Button.sidebarSettings">
+    <Setter Property="Padding" Value="16,10"/>
+  </Style>
+  <Style Selector="Button.nav.active">
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="#B52C47"/>
+    <Setter Property="Background" Value="#FDE8EC"/>
+  </Style>
+  <Style Selector="Button.nav.active /template/ ContentPresenter">
+    <Setter Property="Foreground" Value="#B52C47"/>
+    <Setter Property="Background" Value="#FDE8EC"/>
+  </Style>
+  <Style Selector="Button.sidebarPrimary.active, Button.sidebarSettings.active">
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Background" Value="#251A35"/>
+  </Style>
+  <Style Selector="Button.sidebarPrimary.active /template/ ContentPresenter, Button.sidebarSettings.active /template/ ContentPresenter">
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Background" Value="#251A35"/>
+  </Style>
+  <Style Selector="Button.sidebarPrimary:pointerover /template/ ContentPresenter, Button.sidebarSettings:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#ECE6EF"/>
+    <Setter Property="Foreground" Value="#251A35"/>
+  </Style>
+  <Style Selector="Button.sidebarPrimary.active:pointerover /template/ ContentPresenter, Button.sidebarSettings.active:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#3D304D"/>
+    <Setter Property="Foreground" Value="White"/>
+  </Style>
+  <Style Selector="Button.playlistHeader">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Padding" Value="12,8"/>
+  </Style>
+  <Style Selector="Button.playlistNav">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="MinHeight" Value="56"/>
+    <Setter Property="Padding" Value="8"/>
+  </Style>
+  <Style Selector="Button.playlistNav.favorites"><Setter Property="Margin" Value="0,0,36,0"/></Style>
+  <Style Selector="Button.playlistNav.active:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#FDE8EC"/>
+    <Setter Property="Foreground" Value="#B52C47"/>
+  </Style>
+  <Style Selector="Border.playlistTile">
+    <Setter Property="Background" Value="White"/>
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+  <Style Selector="Border.playlistTile.favorites"><Setter Property="Background" Value="#FDE8EC"/></Style>
+  <Style Selector="icons|LucideIcon.playlistGlyph"><Setter Property="Kind" Value="list-music"/><Setter Property="Foreground" Value="#51465F"/></Style>
+  <Style Selector="icons|LucideIcon.playlistGlyph.favorites"><Setter Property="Kind" Value="heart"/><Setter Property="Filled" Value="True"/><Setter Property="Foreground" Value="#B52C47"/></Style>
+  <Style Selector="Button.playlistAction"><Setter Property="Foreground" Value="#51465F"/></Style>
+  <Style Selector="Button.playlistAction:pointerover /template/ ContentPresenter">
+    <Setter Property="Foreground" Value="#B52C47"/>
+    <Setter Property="Background" Value="#FDE8EC"/>
+  </Style>
+  <Style Selector="icons|LucideIcon.navGlyph"><Setter Property="RenderTransform" Value="translate(0px, 0px)"/></Style>
+  <Style Selector="Window.motionEnabled icons|LucideIcon.navGlyph">
+    <Setter Property="Transitions">
+      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="ExponentialEaseOut"/></Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Window.motionEnabled Button.nav:pointerover icons|LucideIcon.navGlyph"><Setter Property="RenderTransform" Value="translate(2px, 0px)"/></Style>
+</Styles>

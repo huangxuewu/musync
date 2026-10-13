@@ -45,9 +45,9 @@ public sealed partial class SpotifyPlaybackTests
             await Task.Delay(650); using var library = window.CaptureRenderedFrame();
             Assert.Same(nav[1], Assert.Single(nav, b => b.Classes.Contains("active")));
             var presenter = nav[1].GetVisualDescendants().OfType<ContentPresenter>().Single();
-            Assert.Equal(Color.Parse("#FDE8EC"), ((ISolidColorBrush)presenter.Background!).Color);
-            Assert.Equal(Color.Parse("#B52C47"), ((ISolidColorBrush)presenter.Foreground!).Color);
-            Assert.Equal(Color.Parse("#B52C47"), ((ISolidColorBrush)nav[1].GetVisualDescendants().OfType<LucideIcon>().Single().Foreground!).Color);
+            Assert.Equal(Color.Parse("#251A35"), ((ISolidColorBrush)presenter.Background!).Color);
+            Assert.Equal(Colors.White, ((ISolidColorBrush)presenter.Foreground!).Color);
+            Assert.Equal(Colors.White, ((ISolidColorBrush)nav[1].GetVisualDescendants().OfType<LucideIcon>().Single().Foreground!).Color);
             Assert.Equal(Color.Parse("#51465F"), ((ISolidColorBrush)nav[0].GetVisualDescendants().OfType<LucideIcon>().Single().Foreground!).Color);
             var search = window.FindControl<TextBox>("MusicSearchBox")!;
             var scene = window.FindControl<Grid>("HeroScene")!;

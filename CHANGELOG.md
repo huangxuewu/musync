@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The sidebar uses a larger wave wordmark, plum selection for primary navigation, compact playlist icons and localized track counts. Playlist creation and settings stay reachable while the song lists scroll, with restrained hover and disclosure motion.
 - Invalid Unicode character escapes in a receiver's friendly name remain visible instead of interrupting discovery for all speakers; valid Unicode names and supplementary characters still decode.
 - A translucent frosted panel separates the poster title and synchronized lyrics from the colorful geometry behind them; background colors remain visible through a bounded blur while text stays sharp.
 - Music-source changes wait for the previous Play/Pause and Stop to finish before allowing new playback. Late responses cannot restore an old source's track, progress or error state.

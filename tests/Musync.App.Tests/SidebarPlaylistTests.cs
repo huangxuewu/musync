@@ -42,6 +42,9 @@ public sealed partial class SpotifyPlaybackTests
             var label = button.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == childName);
             Assert.Equal(Avalonia.Media.TextTrimming.CharacterEllipsis, label.TextTrimming);
             Assert.True(label.Bounds.Right <= button.Bounds.Width);
+            // The redesigned rail keeps its header and settings fixed. At
+            // minimum height, scroll the target into the viewport before clicking.
+            button.BringIntoView(); using var reachable = window.CaptureRenderedFrame();
             var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
             window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
             Assert.Equal(childName, fixture.Model.ListTitle);
@@ -75,10 +78,20 @@ public sealed partial class SpotifyPlaybackTests
             Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
             Assert.DoesNotContain(scroll.GetVisualDescendants().OfType<ScrollBar>(), bar => bar.IsVisible);
             var list = window.FindControl<ItemsControl>("SidebarPlaylistList")!;
+            var settings = window.FindControl<Button>("SettingsNav")!;
+            var add = window.FindControl<Button>("SidebarAddPlaylistButton")!;
+            Assert.DoesNotContain(scroll, settings.GetVisualAncestors());
+            Assert.DoesNotContain(scroll, add.GetVisualAncestors());
+            var settingsY = settings.TranslatePoint(default, window)!.Value.Y;
+            var addY = add.TranslatePoint(default, window)!.Value.Y;
             var last = list.GetVisualDescendants().OfType<Button>().Last();
             last.Focus(); last.BringIntoView();
             using var scrolled = window.CaptureRenderedFrame();
-            Assert.True(scroll.Offset.Y > 0); SaveReviewFrame(scrolled, "sidebar-playlists-ja-many-1120.png");
+            Assert.True(scroll.Offset.Y > 0);
+            Assert.Equal(settingsY, settings.TranslatePoint(default, window)!.Value.Y);
+            Assert.Equal(addY, add.TranslatePoint(default, window)!.Value.Y);
+            Assert.True(settings.IsEffectivelyVisible);
+            SaveReviewFrame(scrolled, "sidebar-playlists-ja-many-1120.png");
         }
         finally { window.Close(); }
     }

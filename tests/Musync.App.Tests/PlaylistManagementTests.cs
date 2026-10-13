@@ -18,6 +18,7 @@ public sealed partial class SpotifyPlaybackTests
 {
     private static void ClickPlaylistControl(MainWindow window, Button button)
     {
+        button.BringIntoView(); using var reachable = window.CaptureRenderedFrame();
         var point = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value;
         window.MouseDown(point, MouseButton.Left); window.MouseUp(point, MouseButton.Left);
     }
@@ -52,7 +53,7 @@ public sealed partial class SpotifyPlaybackTests
             Assert.False(list.IsVisible); Assert.False(model.PlaylistsExpanded);
             Assert.Equal(model.Text["ExpandPlaylists"], AutomationProperties.GetName(header));
             using var collapsed = window.CaptureRenderedFrame();
-            Assert.True(settings.TranslatePoint(default, window)!.Value.Y < expandedSettingsTop);
+            Assert.Equal(expandedSettingsTop, settings.TranslatePoint(default, window)!.Value.Y);
             SaveReviewFrame(collapsed, $"playlist-controls-{language}-{width}-collapsed.png");
 
             ClickPlaylistControl(window, add); await Task.Delay(250);

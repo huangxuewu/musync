@@ -108,13 +108,14 @@ public sealed class PlaylistViewModel(string name, int count, ICommand openComma
     private int _count = count;
     public bool IsFavorites { get; } = isFavorites;
     public string Name => IsFavorites ? owner.Text["Liked"] : name;
-    public int Count { get => _count; private set => Set(ref _count, value); }
+    public int Count { get => _count; private set { if (Set(ref _count, value)) Raise(nameof(CountUnit)); } }
+    public string CountUnit => owner.Text[Count == 1 ? "PlaylistTrackSingular" : "PlaylistTrackPlural"];
     public ICommand OpenCommand { get; } = openCommand;
     public ICommand RemoveCommand { get; } = removeCommand;
     public string RemoveLabel => string.Format(owner.Text["RemovePlaylistNamed"], Name);
     public bool CanRemove => !IsFavorites && owner.CanManagePlaylists;
     public bool IsActive { get => _isActive; set => Set(ref _isActive, value); }
-    public void RefreshText() { Raise(nameof(Name)); Raise(nameof(RemoveLabel)); }
+    public void RefreshText() { Raise(nameof(Name)); Raise(nameof(RemoveLabel)); Raise(nameof(CountUnit)); }
     public void RefreshCount(int count) => Count = count;
     public void RefreshAvailability() => Raise(nameof(CanRemove));
 }

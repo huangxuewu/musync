@@ -3,6 +3,8 @@
   "Library": "ライブラリ",
   "Liked": "お気に入り",
   "Playlists": "プレイリスト",
+  "PlaylistTrackSingular": "曲",
+  "PlaylistTrackPlural": "曲",
   "Settings": "設定",
   "Import": "フォルダーを追加",
   "FoldersImported": "{0} 曲を追加 · フォルダー別プレイリスト {1} 件",

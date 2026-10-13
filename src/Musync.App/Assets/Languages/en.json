@@ -3,6 +3,8 @@
   "Library": "Library",
   "Liked": "Liked tracks",
   "Playlists": "Playlists",
+  "PlaylistTrackSingular": "track",
+  "PlaylistTrackPlural": "tracks",
   "Settings": "Settings",
   "Import": "Import folders",
   "FoldersImported": "Added {0} songs · {1} folder playlists",

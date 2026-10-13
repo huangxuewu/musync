@@ -9,7 +9,7 @@
       </Transitions>
     </Setter>
   </Style>
-  <Style Selector="Window.motionEnabled Button.transport, Window.motionEnabled Button.playerPrimary, Window.motionEnabled Button.playerUtility, Window.motionEnabled ToggleButton.playerUtility, Window.motionEnabled ComboBox.playerUtility">
+  <Style Selector="Window.motionEnabled Button.transport, Window.motionEnabled Button.playerPrimary, Window.motionEnabled Button.playerUtility, Window.motionEnabled ToggleButton.playerUtility, Window.motionEnabled ComboBox.playerUtility, Window.motionEnabled Button.playlistAction">
     <Setter Property="icons:InteractionMotion.Enabled" Value="True"/>
   </Style>
 </Styles>

@@ -6,13 +6,7 @@
         Background="Transparent" TransparencyLevelHint="Transparent" WindowStartupLocation="CenterScreen"
         WindowDecorations="None" ExtendClientAreaToDecorationsHint="True" CanResize="True" ShowInTaskbar="True">
   <Window.Styles>
-    <Style Selector="Button.nav"><Setter Property="MinHeight" Value="44"/><Setter Property="Foreground" Value="#51465F"/></Style>
-    <Style Selector="Button.nav.playlistNav"><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
-    <Style Selector="Button.nav.playlistNav.favorites"><Setter Property="Margin" Value="0,0,12,0"/></Style>
-    <Style Selector="Button.playlistAction"><Setter Property="Foreground" Value="#51465F"/></Style>
-    <Style Selector="Button.playlistAction:pointerover /template/ ContentPresenter"><Setter Property="Foreground" Value="#B52C47"/></Style>
-    <Style Selector="Button.nav.active"><Setter Property="Foreground" Value="#B52C47"/><Setter Property="Background" Value="#FDE8EC"/></Style>
-    <Style Selector="Button.nav.active /template/ ContentPresenter"><Setter Property="Foreground" Value="#B52C47"/><Setter Property="Background" Value="#FDE8EC"/></Style>
+    <StyleInclude Source="avares://Musync/Styles/Musync.Sidebar.axaml"/>
     <StyleInclude Source="avares://Musync/Styles/Musync.Motion.axaml"/>
     <StyleInclude Source="avares://Musync/Styles/Musync.LinkSurface.axaml"/>
     <Style Selector="TextBlock.searchFeedback"><Setter Property="Foreground" Value="#716877"/></Style>
@@ -55,10 +49,17 @@
     <Grid x:Name="FullPlayerView" IsVisible="{Binding !IsMiniPlayer, ElementName=MusyncWindow}">
     <Grid RowDefinitions="*,96" ZIndex="30">
       <Grid x:Name="WorkspaceColumns" ColumnDefinitions="1*,4.236*" MaxWidth="1720" Background="White">
-        <Border ZIndex="10" Background="#F5F4F7" Padding="24,44,24,20">
-          <Grid RowDefinitions="Auto,*">
-            <Image x:Name="BrandWordmark" Width="148" Height="50" Stretch="Uniform"
-                   HorizontalAlignment="Left" Margin="24,0,0,28" AutomationProperties.Name="Musync"
+        <Border x:Name="SidebarSurface" ZIndex="10" Padding="16,28,16,18">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Color="#FFF1F3" Offset="0"/>
+              <GradientStop Color="#F5F4F7" Offset="0.5"/>
+              <GradientStop Color="#F5F4F7" Offset="1"/>
+            </LinearGradientBrush>
+          </Border.Background>
+          <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+            <Image x:Name="BrandWordmark" Width="164" Height="44" Stretch="Uniform"
+                   HorizontalAlignment="Left" Margin="8,0,0,26" AutomationProperties.Name="Musync"
                    RenderOptions.BitmapInterpolationMode="HighQuality"
                    chrome:WindowDecorationProperties.ElementRole="TitleBar">
               <Image.Source>
@@ -68,34 +69,40 @@
                                        SourceRect="285,265,1591,287"/>
               </Image.Source>
             </Image>
-            <ScrollViewer x:Name="SidebarScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
-              <StackPanel Spacing="12">
-                <TextBlock Text="{Binding Text[Library]}" Classes="eyebrow" Margin="12,0,0,0" />
-                <StackPanel Spacing="3">
-                  <Button x:Name="HomeNav" Classes="nav" Classes.active="{Binding IsHomePage}" Command="{Binding Navigation}" CommandParameter="home" AutomationProperties.Name="{Binding Text[Home]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="house"/><TextBlock Text="{Binding Text[Home]}" VerticalAlignment="Center"/></StackPanel></Button>
-                  <Button x:Name="LibraryNav" Classes="nav" Classes.active="{Binding IsLibraryPage}" Command="{Binding Navigation}" CommandParameter="library" AutomationProperties.Name="{Binding Text[Library]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="library"/><TextBlock Text="{Binding Text[Library]}" VerticalAlignment="Center"/></StackPanel></Button>
-                  <Grid ColumnDefinitions="*,36" Margin="0,0,-12,0">
-                    <Button x:Name="PlaylistsNav" Classes="nav playlistNav" Classes.active="{Binding IsPlaylistsPage}" Command="{Binding TogglePlaylists}"
+            <StackPanel Grid.Row="1" Spacing="8" Margin="0,0,0,24">
+              <Button x:Name="HomeNav" Classes="nav sidebarPrimary" Classes.active="{Binding IsHomePage}" Command="{Binding Navigation}" CommandParameter="home" AutomationProperties.Name="{Binding Text[Home]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="house" Classes="navGlyph"/><TextBlock Text="{Binding Text[Home]}" VerticalAlignment="Center"/></StackPanel></Button>
+              <Button x:Name="LibraryNav" Classes="nav sidebarPrimary" Classes.active="{Binding IsLibraryPage}" Command="{Binding Navigation}" CommandParameter="library" AutomationProperties.Name="{Binding Text[Library]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="library" Classes="navGlyph"/><TextBlock Text="{Binding Text[Library]}" VerticalAlignment="Center"/></StackPanel></Button>
+            </StackPanel>
+                  <Grid x:Name="SidebarPlaylistHeader" Grid.Row="2" ColumnDefinitions="*,36" Margin="0,0,0,8">
+                    <Button x:Name="PlaylistsNav" Classes="nav playlistHeader" Classes.active="{Binding IsPlaylistsPage}" Command="{Binding TogglePlaylists}"
                             AutomationProperties.Name="{Binding PlaylistSectionLabel}" ToolTip.Tip="{Binding PlaylistSectionLabel}">
-                      <Grid ColumnDefinitions="20,*" ColumnSpacing="12">
-                        <icons:LucideIcon x:Name="PlaylistChevron" Kind="chevron-down" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Text[Playlists]}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                      <Grid ColumnDefinitions="*,20" ColumnSpacing="8">
+                        <TextBlock Text="{Binding Text[Playlists]}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        <icons:LucideIcon x:Name="PlaylistChevron" Grid.Column="1" Kind="chevron-down" Width="16" Height="16" VerticalAlignment="Center"/>
                       </Grid>
                     </Button>
                     <Button x:Name="SidebarAddPlaylistButton" Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding NewPlaylist}"
                             IsEnabled="{Binding CanManagePlaylists}" VerticalAlignment="Center"
                             AutomationProperties.Name="{Binding Text[CreatePlaylist]}" ToolTip.Tip="{Binding Text[CreatePlaylist]}"><icons:LucideIcon Kind="plus"/></Button>
                   </Grid>
-                  <ItemsControl x:Name="SidebarPlaylistList" ItemsSource="{Binding Playlists}" IsVisible="{Binding PlaylistsExpanded}" Margin="32,0,-12,0">
+            <ScrollViewer x:Name="SidebarScroll" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+                  <ItemsControl x:Name="SidebarPlaylistList" ItemsSource="{Binding Playlists}" IsVisible="{Binding PlaylistsExpanded}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate DataType="local:PlaylistViewModel">
-                        <Grid ColumnDefinitions="*,Auto">
-                          <Button Classes="nav playlistNav" Classes.active="{Binding IsActive}" Classes.favorites="{Binding IsFavorites}" Command="{Binding OpenCommand}" Padding="4,12,8,12"
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                          <Button Classes="nav playlistNav" Classes.active="{Binding IsActive}" Classes.favorites="{Binding IsFavorites}" Command="{Binding OpenCommand}"
                                   AutomationProperties.Name="{Binding Name}" ToolTip.Tip="{Binding Name}">
-                            <Grid ColumnDefinitions="Auto,*,Auto">
-                              <icons:LucideIcon Kind="heart" Filled="True" Foreground="#B52C47" IsVisible="{Binding IsFavorites}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                              <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                              <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="11" Foreground="#5F5569" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <Grid ColumnDefinitions="32,*" ColumnSpacing="10">
+                              <Border Classes="playlistTile" Classes.favorites="{Binding IsFavorites}" Width="32" Height="32" VerticalAlignment="Center">
+                                <icons:LucideIcon Classes="playlistGlyph" Classes.favorites="{Binding IsFavorites}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                              </Border>
+                              <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                  <TextBlock Text="{Binding Count}" FontSize="11" Foreground="#5F5569"/>
+                                  <TextBlock Text="{Binding CountUnit}" FontSize="11" Foreground="#5F5569"/>
+                                </StackPanel>
+                              </StackPanel>
                             </Grid>
                           </Button>
                           <Button Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding RemoveCommand}" Click="PlaylistRemovedClicked"
@@ -104,10 +111,11 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
-                  <Button x:Name="SettingsNav" Classes="nav" Classes.active="{Binding SettingsOpen}" Command="{Binding SettingsCommand}" Margin="0,18,0,0" AutomationProperties.Name="{Binding Text[Settings]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="settings"/><TextBlock Text="{Binding Text[Settings]}" VerticalAlignment="Center"/></StackPanel></Button>
-                </StackPanel>
-              </StackPanel>
             </ScrollViewer>
+            <StackPanel Grid.Row="4" Spacing="12" Margin="0,16,0,0">
+              <Border Height="1" Background="#E5DFEA" Margin="12,0"/>
+              <Button x:Name="SettingsNav" Classes="nav sidebarSettings" Classes.active="{Binding SettingsOpen}" Command="{Binding SettingsCommand}" AutomationProperties.Name="{Binding Text[Settings]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="settings" Classes="navGlyph"/><TextBlock Text="{Binding Text[Settings]}" VerticalAlignment="Center"/></StackPanel></Button>
+            </StackPanel>
           </Grid>
         </Border>
         <Grid Grid.Column="1" ZIndex="30" RowDefinitions="Auto,*" Margin="32,32,28,12" MaxWidth="1240">
