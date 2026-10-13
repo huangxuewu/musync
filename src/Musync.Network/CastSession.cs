@@ -73,10 +73,10 @@ internal sealed class CastSession : ICastSession
     };
     public async Task LoadAsync(string url)
     {
-        _media.BeginLoad();
+        var load = _media.BeginLoad();
         var status = await _client.MediaChannel.LoadAsync(CreateMedia(url));
-        if (status is null) _media.Fail("Chromecast did not accept the audio stream.");
-        else _media.Observe(status);
+        if (status is null) _media.Fail(load, "Chromecast did not accept the audio stream.");
+        else _media.AcceptLoad(load, status);
         if (_media.Error is { } error) throw new IOException(error);
     }
     internal static Media CreateFileMedia(string url, double duration) => new()
@@ -87,9 +87,11 @@ internal sealed class CastSession : ICastSession
     };
     public async Task PrepareFileAsync(string url, double duration, double position, CancellationToken token)
     {
-        _media.BeginLoad();
+        var load = _media.BeginLoad();
         var status = await _client.MediaChannel.LoadAsync(CreateFileMedia(url, duration), autoPlay: false).WaitAsync(token);
         if (status is null) throw new IOException("Chromecast did not preload the music.");
+        _media.AcceptLoad(load, status);
+        if (_media.Error is { } loadError) throw new IOException(loadError);
         if (position > 0)
         {
             status = await _client.MediaChannel.SeekAsync(Math.Clamp(position, 0, duration)).WaitAsync(token)
@@ -170,16 +172,59 @@ internal sealed class CastConnectionFeedback
 
 internal sealed class CastMediaFeedback
 {
+    private const string StreamFailure = "Chromecast stopped playing because the audio stream failed.";
     private readonly object _gate = new();
     private bool _expectedMedia;
+    private long _loadVersion;
+    private long? _mediaSessionId;
+    private readonly HashSet<long?> _pendingFailures = [];
     private string? _error;
     public string? Error { get { lock (_gate) return _error; } }
-    public void BeginLoad() { lock (_gate) { _error = null; _expectedMedia = true; } }
-    public void ExpectStop() { lock (_gate) _expectedMedia = false; }
+    public long BeginLoad()
+    {
+        lock (_gate)
+        {
+            _error = null; _expectedMedia = true; _mediaSessionId = null; _pendingFailures.Clear();
+            return ++_loadVersion;
+        }
+    }
+    public void ExpectStop() { lock (_gate) { _expectedMedia = false; _pendingFailures.Clear(); } }
     public void Fail(string message) { lock (_gate) { if (_expectedMedia) _error = message; } }
+    public void Fail(long load, string message)
+    { lock (_gate) { if (_expectedMedia && load == _loadVersion) _error = message; } }
+    public void AcceptLoad(long load, MediaStatus status)
+    {
+        lock (_gate)
+        {
+            if (!_expectedMedia || load != _loadVersion) return;
+            // Bind to the response to our LOAD, never an unsolicited broadcast
+            // that can still describe a previous playback during this wait.
+            _mediaSessionId = status.MediaSessionId;
+            if (_pendingFailures.Contains(_mediaSessionId)) _error ??= StreamFailure;
+            _pendingFailures.Clear();
+            ObserveError(status);
+        }
+    }
     public void Observe(MediaStatus status)
     {
-        if (status.PlayerState == PlayerStateType.Idle && string.Equals(status.IdleReason, "ERROR", StringComparison.OrdinalIgnoreCase))
-            Fail("Chromecast stopped playing because the audio stream failed.");
+        lock (_gate)
+        {
+            if (!_expectedMedia) return;
+            if (_mediaSessionId is null)
+            {
+                // An actual failure can precede its LOAD response. Keep only
+                // its session ID until the response identifies our playback.
+                if (IsFailure(status)) _pendingFailures.Add(status.MediaSessionId);
+                return;
+            }
+            if (status.MediaSessionId != _mediaSessionId) return;
+            ObserveError(status);
+        }
     }
+    private void ObserveError(MediaStatus status)
+    {
+        if (IsFailure(status)) _error = StreamFailure;
+    }
+    private static bool IsFailure(MediaStatus status) => status.PlayerState == PlayerStateType.Idle
+        && string.Equals(status.IdleReason, "ERROR", StringComparison.OrdinalIgnoreCase);
 }

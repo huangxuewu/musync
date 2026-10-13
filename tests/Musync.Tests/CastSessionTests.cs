@@ -75,8 +75,8 @@ public sealed class CastSessionTests
     public void RuntimeReceiverFailureRemainsVisibleAfterALoadWasAccepted()
     {
         var feedback = new CastMediaFeedback();
-        feedback.BeginLoad();
-        feedback.Observe(new() { PlayerState = PlayerStateType.Buffering });
+        var load = feedback.BeginLoad();
+        feedback.AcceptLoad(load, new() { PlayerState = PlayerStateType.Buffering });
         Assert.Null(feedback.Error);
         feedback.Observe(new() { PlayerState = PlayerStateType.Idle, IdleReason = "ERROR" });
         Assert.Contains("audio stream failed", feedback.Error);
