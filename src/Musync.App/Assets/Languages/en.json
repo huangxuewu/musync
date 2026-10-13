@@ -45,6 +45,8 @@
   "HeroCaption": "Your music. Every room.",
   "Play": "Play",
   "Pause": "Pause",
+  "PlayTrack": "Play “{0}”",
+  "PauseTrack": "Pause “{0}”",
   "Paused": "Paused",
   "Stop": "Stop",
   "NoOutputs": "Select at least one available speaker.",

@@ -12,4 +12,10 @@
   <Style Selector="Window.motionEnabled Button.transport, Window.motionEnabled Button.playerPrimary, Window.motionEnabled Button.playerUtility, Window.motionEnabled ToggleButton.playerUtility, Window.motionEnabled ComboBox.playerUtility, Window.motionEnabled Button.playlistAction">
     <Setter Property="icons:InteractionMotion.Enabled" Value="True"/>
   </Style>
+  <Style Selector="Window.motionEnabled TextBlock.trackTitle">
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Foreground" Duration="0:0:0.14"/></Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motionEnabled Border.trackPlayOverlay">
+    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.14"/></Transitions></Setter>
+  </Style>
 </Styles>

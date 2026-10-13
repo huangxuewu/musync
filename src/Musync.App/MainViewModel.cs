@@ -303,7 +303,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         set { if (_settings.PlaylistsExpanded == value) return; _settings.PlaylistsExpanded = value; Raise(); Raise(nameof(PlaylistSectionLabel)); SaveSoon(); }
     }
     public string ListTitle { get => _listTitle; private set => Set(ref _listTitle, value); }
-    public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); } } }
+    public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); RefreshTrackPlayback(); } } }
     public string PlayIcon => IsPlaying ? "pause" : "play";
     public string PlayLabel => Text[IsSwitchingSource ? "SwitchingSource" : IsPreparingPlayback ? "PreparingSpeakers" : IsPlaying ? "Pause" : "Play"];
     public bool IsPreparingPlayback
@@ -314,6 +314,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (!Set(ref _preparingPlayback, value)) return;
             Raise(nameof(PlayLabel)); Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); Raise(nameof(PreparationDetail));
             RefreshSpeakerPlaybackStatus();
+            RefreshTrackPlayback();
         }
     }
     public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);
@@ -967,6 +968,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private void RefreshCurrent()
     {
+        RefreshTrackPlayback();
         RefreshRadioSelection();
         RefreshPresentation();
         foreach (var property in new[] { nameof(Title), nameof(Artist), nameof(HeroNote), nameof(CurrentLiked), nameof(CanLikeCurrent), nameof(LikeCurrentLabel), nameof(PlayEnabled), nameof(Seekable), nameof(HasSpotifyArtwork), nameof(ShowArtist) }) Raise(property);

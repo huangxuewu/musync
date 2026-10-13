@@ -194,7 +194,7 @@ public partial class MainWindow : Window
     }
     private void LinkLayoutChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsSwitchingSource))
+        if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsSwitchingSource) or nameof(MainViewModel.IsMusicView))
             UpdatePreparationMotion();
         if (e.PropertyName == nameof(MainViewModel.IsPreparingPlayback))
         {
@@ -297,6 +297,7 @@ public partial class MainWindow : Window
     private void UpdatePreparationMotion()
     {
         var visible = !_closing && IsVisible && WindowState != WindowState.Minimized;
+        Classes.Set("trackPlaybackVisible", visible && !IsMiniPlayer && _linkModel?.IsMusicView == true);
         var active = visible && _linkModel?.IsPreparingPlayback == true;
         FullPreparationWave.Active = active && !IsMiniPlayer;
         MiniPreparationWave.Active = active && IsMiniPlayer;

@@ -12,6 +12,11 @@
     <StyleInclude Source="avares://Musync/Styles/Musync.Settings.axaml"/>
     <Style Selector="TextBlock.searchFeedback"><Setter Property="Foreground" Value="#716877"/></Style>
     <Style Selector="TextBlock.searchFeedback.error"><Setter Property="Foreground" Value="#B83850"/></Style>
+    <Style Selector="TextBlock.trackTitle.current"><Setter Property="Foreground" Value="#B52C47"/></Style>
+    <Style Selector="Button.trackPlay Border.trackPlayOverlay"><Setter Property="Opacity" Value="0"/></Style>
+    <Style Selector="Button.trackPlay:pointerover Border.trackPlayOverlay, Button.trackPlay:focus-visible Border.trackPlayOverlay"><Setter Property="Opacity" Value="1"/></Style>
+    <Style Selector="icons|PreparationIndicator.trackActivity"><Setter Property="MotionEnabled" Value="False"/></Style>
+    <Style Selector="Window.motionEnabled.trackPlaybackVisible icons|PreparationIndicator.trackActivity"><Setter Property="MotionEnabled" Value="True"/></Style>
     <Style Selector="Border.statusToast">
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Margin" Value="24,0,28,112"/>
@@ -196,21 +201,30 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="local:TrackViewModel">
                       <Grid ColumnDefinitions="48,*,Auto,Auto,Auto,Auto,Auto" Margin="0,0,0,13" ColumnSpacing="12">
-                        <Button Command="{Binding PlayCommand}" Padding="0" Width="48" Height="48" Background="{Binding Color}" CornerRadius="9" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding Title}">
+                        <Button Classes="trackPlay" Command="{Binding PlayCommand}" IsEnabled="{Binding CanPlay}" Padding="0" Width="48" Height="48" Background="{Binding Color}" CornerRadius="9" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding PlayLabel}">
                           <Grid Width="48" Height="48">
                             <icons:LucideIcon Kind="music-2" Classes="large" Foreground="White" IsVisible="{Binding !HasArtwork}"/>
                             <icons:TrackArtworkImage Classes="trackArtwork" Source="{Binding Artwork}" Stretch="Uniform" AutomationProperties.Name="{Binding Title}"/>
+                            <Border Classes="trackPlayOverlay" Background="#BC251A35" CornerRadius="9">
+                              <icons:LucideIcon Kind="{Binding PlayIcon}" Classes="large" Foreground="White"/>
+                            </Border>
                           </Grid>
                         </Button>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="5">
-                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                          <TextBlock Classes="trackTitle" Classes.current="{Binding IsCurrentTrack}" Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                           <TextBlock Text="{Binding Artist}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                         <Button Grid.Column="2" Classes="ghost" Command="{Binding OpenArtworkSource}" IsVisible="{Binding HasArtwork}" Width="48" Height="48" Padding="12" AutomationProperties.Name="{Binding ArtworkSourceLabel}" ToolTip.Tip="{Binding ArtworkSourceLabel}">
                           <Image Source="avares://Musync/Assets/Spotify/icon-black.png" Width="24" Height="24" Stretch="Uniform"
                                  RenderOptions.BitmapInterpolationMode="HighQuality"/>
                         </Button>
-                        <TextBlock Grid.Column="3" Text="{Binding Duration}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <Grid Width="24" Height="20" ToolTip.Tip="{Binding PlaybackStatus}">
+                            <icons:PreparationIndicator Classes="trackActivity" Width="24" Height="16" Foreground="#B52C47" Active="{Binding HasPlaybackActivity}" IsVisible="{Binding HasPlaybackActivity}" IsHitTestVisible="False" AutomationProperties.Name="{Binding PlaybackStatus}"/>
+                            <icons:LucideIcon Kind="pause" Width="18" Height="18" Foreground="#B52C47" IsVisible="{Binding IsRowPaused}" AutomationProperties.Name="{Binding PlaybackStatus}"/>
+                          </Grid>
+                          <TextBlock Text="{Binding Duration}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <Button Grid.Column="4" Classes="ghost iconButton" Command="{Binding LikeCommand}" Foreground="#D83855" AutomationProperties.Name="{Binding LikeLabel}" ToolTip.Tip="{Binding LikeLabel}"><icons:LucideIcon Kind="heart" Filled="{Binding Liked}"/></Button>
                         <Button Grid.Column="5" Classes="ghost iconButton" Command="{Binding AddCommand}" AutomationProperties.Name="{Binding AddPlaylistLabel}" ToolTip.Tip="{Binding AddPlaylistLabel}"><icons:LucideIcon Kind="plus"/></Button>
                         <Button Grid.Column="6" Classes="ghost iconButton" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}" AutomationProperties.Name="{Binding RemoveLabel}" ToolTip.Tip="{Binding RemoveLabel}"><icons:LucideIcon Kind="minus"/></Button>

@@ -45,6 +45,8 @@
   "HeroCaption": "音楽を、すべての部屋へ。",
   "Play": "再生",
   "Pause": "一時停止",
+  "PlayTrack": "「{0}」を再生",
+  "PauseTrack": "「{0}」を一時停止",
   "Paused": "一時停止中",
   "Stop": "停止",
   "NoOutputs": "使用可能なスピーカーを選択してください。",

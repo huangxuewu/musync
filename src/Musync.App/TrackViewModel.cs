@@ -12,10 +12,12 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     private Task? _loading;
     private bool _disposed, _attempted, _visible;
     private string? _artworkSpotifyUri;
+    private TrackPlaybackPhase _phase;
     public TrackViewModel(MusicTrack track, MainViewModel owner)
     {
         Track = track; _owner = owner;
-        PlayCommand = new AsyncCommand(_ => owner.PlayTrackAsync(Track), owner.ShowError);
+        _phase = owner.TrackPhase(track);
+        PlayCommand = new AsyncCommand(_ => owner.ActivateTrackAsync(Track), owner.ShowError, () => CanPlay);
         LikeCommand = new AsyncCommand(_ => { owner.ToggleLike(track.Id); return Task.CompletedTask; }, owner.ShowError);
         AddCommand = new AsyncCommand(_ => { owner.OpenPlaylist(track); return Task.CompletedTask; }, owner.ShowError);
         RemoveCommand = new AsyncCommand(_ => owner.RemoveTrackAsync(Track), owner.ShowError, () => owner.CanRemoveTrack(Track));
@@ -31,7 +33,14 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public string Duration => TimeSpan.FromSeconds(Track.DurationSeconds).ToString(@"m\:ss");
     public bool Liked => _owner.IsLiked(Track.Id);
     public string LikeLabel => _owner.Text[Liked ? "Unlike" : "Like"];
-    public string PlayLabel => _owner.Text["Play"];
+    public string PlayLabel => string.Format(_owner.Text[_phase == TrackPlaybackPhase.Playing ? "PauseTrack" : "PlayTrack"], Title);
+    public string PlayIcon => IsRowPlaying ? "pause" : "play";
+    public bool CanPlay => !_owner.Busy;
+    public bool IsCurrentTrack => _phase != TrackPlaybackPhase.None;
+    public bool IsRowPlaying => _phase == TrackPlaybackPhase.Playing;
+    public bool IsRowPaused => _phase == TrackPlaybackPhase.Paused;
+    public bool HasPlaybackActivity => _phase is TrackPlaybackPhase.Preparing or TrackPlaybackPhase.Playing;
+    public string PlaybackStatus => _phase == TrackPlaybackPhase.None ? "" : _owner.Text[_phase == TrackPlaybackPhase.Preparing ? "PreparingSpeakers" : IsRowPlaying ? "Playing" : "Paused"];
     public string AddPlaylistLabel => _owner.Text["AddPlaylist"];
     public string ArtworkSourceLabel => _owner.Text["ArtworkSourceSpotify"];
     public string RemoveLabel => _owner.TrackRemoveLabel(Track);
@@ -41,7 +50,7 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public ICommand OpenArtworkSource { get; }
     internal void UpdateMetadata(MusicTrack metadata)
     {
-        Track = metadata; Raise(nameof(Title)); Raise(nameof(Artist)); Raise(nameof(RemoveLabel));
+        Track = metadata; Raise(nameof(Title)); Raise(nameof(Artist)); Raise(nameof(RemoveLabel)); Raise(nameof(PlayLabel));
     }
     internal void SetArtworkVisible(bool visible)
     {
@@ -104,7 +113,14 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public ICommand LikeCommand { get; }
     public ICommand AddCommand { get; }
     public ICommand RemoveCommand { get; }
-    internal void RefreshAvailability() => Raise(nameof(CanRemove));
+    internal void RefreshAvailability() { Raise(nameof(CanRemove)); Raise(nameof(CanPlay)); }
+    internal void RefreshPlayback()
+    {
+        var phase = _owner.TrackPhase(Track);
+        if (_phase == phase) return;
+        _phase = phase;
+        foreach (var property in new[] { nameof(PlayLabel), nameof(PlayIcon), nameof(IsCurrentTrack), nameof(IsRowPlaying), nameof(IsRowPaused), nameof(HasPlaybackActivity), nameof(PlaybackStatus) }) Raise(property);
+    }
 }
 
 public sealed class PlaylistViewModel(string name, int count, ICommand openCommand, ICommand removeCommand, MainViewModel owner, bool isFavorites = false) : ObservableObject

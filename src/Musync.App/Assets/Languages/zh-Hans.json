@@ -45,6 +45,8 @@
   "HeroCaption": "让音乐充满每个房间。",
   "Play": "播放",
   "Pause": "暂停",
+  "PlayTrack": "播放“{0}”",
+  "PauseTrack": "暂停“{0}”",
   "Paused": "已暂停",
   "Stop": "停止",
   "NoOutputs": "请至少选择一个可用扬声器。",
