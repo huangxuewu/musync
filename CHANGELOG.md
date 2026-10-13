@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Search identifies the active playlist or favorites collection, preserves its scope when cleared, and tolerates surrounding spaces. Searching from the playlist overview reveals library song results instead of leaving them hidden. Empty playlists and favorites offer a localized library action; empty searches offer Clear search with focus restored to the search field, without interrupting playback.
 - Chromecast local-file preparation validates MP3 frames and serves the original MP3 bytes through a shared read lease, avoiding another lossy encoding pass. Other formats retain the existing compatible MP3 encoding path. File routes now support HEAD and ranged probes; source preparation displays the selected receiver count before handshakes start.
 - Cache hits persist last-use timestamps immediately, including covers reused from memory, so restarting before background maintenance preserves the correct eviction order when capacity is reduced.
 - Linked speakers report Available, Connecting, Waiting for sync, Playing and Paused from the playback barrier's per-device readiness. Connection failures appear inline while other receivers prepare, and small windows expose more of the device list. A direct Rescan action and waiting wave let the normal link overview retry failed routes without opening configuration. Rediscovery updates status color and explanations; cancellation is no longer recorded as a failed receiver handshake.

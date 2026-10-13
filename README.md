@@ -29,6 +29,10 @@ The executable is currently unsigned. Settings, playlists and cached artwork are
 
 Spotify plays through its selected Connect device. Spotify audio is not passed into Musync's local multi-speaker engine. Developer access and account eligibility are controlled by Spotify.
 
+## Library browsing (current source and Debug preview)
+
+The current source and Debug preview display the search scope beside the search field: the library, a selected playlist, favorites, or Spotify. Local searches ignore surrounding spaces. Searching from the playlist overview opens library results; clearing a playlist search retains that playlist. Empty playlists and favorites include a Browse library action, and searches with no songs include Clear search. These browsing actions leave playback and its position unchanged.
+
 ## Music recognition cache (current source and Debug preview)
 
 **Settings → General** provides a **Music recognition & artwork cache** limit, initially **500 MB**, with current disk usage and file count. The limit is adjustable from 50 to 10,000 MB. A background task maintains `artwork-cache/cache-index.json`, tracks file ownership and last use, and cleans expired, missing and least recently used files within the configured capacity. The index also counts toward disk usage. Local tag results remain reusable until the source file's size or modification time changes; Spotify matching results and covers remain temporary (up to one hour), with shorter retry periods for misses and failures. Disconnecting Spotify removes Spotify data while retaining independent local tag results.

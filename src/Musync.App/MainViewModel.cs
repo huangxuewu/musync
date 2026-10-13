@@ -93,6 +93,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ScanCommand = new AsyncCommand(_ => ScanAsync(), ShowError);
         SearchCommand = new AsyncCommand(_ => SearchAsync(), ShowError);
         ClearSearch = new AsyncCommand(_ => { Search = ""; return Task.CompletedTask; }, ShowError);
+        BrowseLibrary = new AsyncCommand(_ => { Search = ""; Navigate("library"); return Task.CompletedTask; }, ShowError);
         ImportCommand = new AsyncCommand(async _ => { if (ImportFolders is not null) await ImportFolders(); }, ShowError);
         Navigation = new AsyncCommand(p => { Navigate(p?.ToString() ?? "home"); return Task.CompletedTask; }, ShowError);
         SettingsCommand = new AsyncCommand(_ => { SettingsOpen = true; return Task.CompletedTask; }, ShowError);
@@ -235,7 +236,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public string Search
     {
         get => _search;
-        set { if (Set(ref _search, value)) { InvalidateSearch(); RefreshTracks(); } }
+        set
+        {
+            if (!Set(ref _search, value)) return;
+            // The collection overview has no song rows. A library search must
+            // reveal its results while named playlists retain their own scope.
+            if (IsLocal && HasSearchQuery && _view == "playlists") _view = "library";
+            InvalidateSearch(); RefreshTracks(); Raise(nameof(IsMusicView));
+        }
     }
     public bool HasSearchQuery => !string.IsNullOrWhiteSpace(Search);
     public bool IsSearching { get => _searching; private set { if (Set(ref _searching, value)) RefreshSearchState(); } }
@@ -243,12 +251,15 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool HasSearchFeedback => HasSearchError || IsSearching
         || HasSearchQuery && (!SpotifyMode || _searchedQuery == Search.Trim());
     public string SearchPlaceholder => Text[SpotifyMode ? "SearchSpotify" : "Search"];
-    public string SearchScope => SpotifyMode ? "Spotify" : Text["Library"];
+    public string SearchScope => SpotifyMode ? "Spotify" : _playlistFilter ?? Text[_view == "liked" ? "Liked" : "Library"];
     public string SearchNote => HasSearchError ? _searchError : IsSearching ? Text["Searching"]
         : HasSearchQuery && (!SpotifyMode || _searchedQuery == Search.Trim())
             ? string.Format(Text["SearchResultCount"], Tracks.Count) : Text[SpotifyMode ? "SearchSpotifyHint" : "SearchLibraryHint"];
-    public bool NoSearchResults => HasSearchQuery && !IsSearching && !HasSearchError && Tracks.Count == 0
+    public bool NoSearchResults => IsMusicView && HasSearchQuery && !IsSearching && !HasSearchError && Tracks.Count == 0
         && (!SpotifyMode || _searchedQuery == Search.Trim());
+    public bool IsEmptyCollection => IsLocal && IsMusicView && !HasSearchQuery && Tracks.Count == 0 && (_playlistFilter is not null || _view == "liked");
+    public string EmptyCollectionTitle => Text[_view == "liked" ? "EmptyLikedTitle" : "EmptyPlaylistTitle"];
+    public string EmptyCollectionHint => Text[_view == "liked" ? "EmptyLikedHint" : "EmptyPlaylistHint"];
     public bool ShowHero => IsMusicView && !HasSearchQuery;
     public bool ShowPlaylists => !HasSearchQuery;
     public string Status
@@ -381,6 +392,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand ScanCommand { get; }
     public ICommand SearchCommand { get; }
     public ICommand ClearSearch { get; }
+    public ICommand BrowseLibrary { get; }
     public ICommand ImportCommand { get; }
     public ICommand Navigation { get; }
     public ICommand SettingsCommand { get; }
@@ -528,7 +540,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         if (_view == "liked") available = available.Where(t => IsLiked(t.Id));
         if (_playlistFilter is not null && _settings.Playlists.TryGetValue(_playlistFilter, out var ids)) available = available.Where(t => ids.Contains(t.Id));
         if (!string.IsNullOrWhiteSpace(Search) && !SpotifyMode) available = available.Where(t =>
-            (t.Title + " " + t.Artist).Contains(Search, StringComparison.CurrentCultureIgnoreCase));
+            (t.Title + " " + t.Artist).Contains(Search.Trim(), StringComparison.CurrentCultureIgnoreCase));
         foreach (var row in Tracks) row.Dispose();
         Tracks.Clear(); foreach (var track in available) Tracks.Add(new(track, this));
         ListTitle = HasSearchQuery ? Text["SearchResults"] : _playlistFilter ?? Text[_view == "liked" ? "Liked" : _view == "playlists" ? "Playlists" : "Recent"];
@@ -995,7 +1007,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void RefreshSearchState()
     {
         foreach (var name in new[] { nameof(HasSearchQuery), nameof(HasSearchError), nameof(HasSearchFeedback), nameof(SearchNote), nameof(SearchPlaceholder),
-            nameof(SearchScope), nameof(NoSearchResults), nameof(ShowHero), nameof(ShowPlaylists) }) Raise(name);
+            nameof(SearchScope), nameof(NoSearchResults), nameof(IsEmptyCollection), nameof(EmptyCollectionTitle), nameof(EmptyCollectionHint), nameof(ShowHero), nameof(ShowPlaylists) }) Raise(name);
     }
     private async Task SaveSettings()
     {

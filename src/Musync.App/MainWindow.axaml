@@ -141,7 +141,7 @@
                   </Button>
                   <Border Width="1" Height="16" Background="#DDD5E1" VerticalAlignment="Center"/>
                   <TextBlock Text="{Binding SearchScope}" FontSize="11" Foreground="#716877" VerticalAlignment="Center"
-                             MaxWidth="110" TextTrimming="CharacterEllipsis"/>
+                             MaxWidth="110" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding SearchScope}"/>
                 </StackPanel>
               </TextBox.InnerRightContent>
             </TextBox>
@@ -218,9 +218,17 @@
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <StackPanel Spacing="6" Margin="0,8,0,16" IsVisible="{Binding NoSearchResults}">
+                <Grid x:Name="EmptyCollectionState" ColumnDefinitions="*,Auto" ColumnSpacing="24" Margin="0,2,0,8" IsVisible="{Binding IsEmptyCollection}">
+                  <StackPanel Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding EmptyCollectionTitle}" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding EmptyCollectionHint}" FontSize="12" Foreground="#5F5569" TextWrapping="Wrap"/>
+                  </StackPanel>
+                  <Button x:Name="BrowseLibraryButton" Grid.Column="1" Command="{Binding BrowseLibrary}" Content="{Binding Text[BrowseLibrary]}" Height="44" VerticalAlignment="Center" AutomationProperties.Name="{Binding Text[BrowseLibrary]}"/>
+                </Grid>
+                <StackPanel x:Name="EmptySearchState" Spacing="6" Margin="0,8,0,16" IsVisible="{Binding NoSearchResults}">
                   <TextBlock Text="{Binding Text[NoSearchResults]}" FontSize="16" FontWeight="SemiBold"/>
                   <TextBlock Text="{Binding Text[SearchTryAnother]}" FontSize="12" Foreground="#716877" TextWrapping="Wrap"/>
+                  <Button x:Name="EmptySearchClearButton" Command="{Binding ClearSearch}" Click="ClearSearchClicked" Content="{Binding Text[ClearSearch]}" Height="44" HorizontalAlignment="Left" Margin="0,8,0,0" AutomationProperties.Name="{Binding Text[ClearSearch]}"/>
                 </StackPanel>
               </StackPanel>
               <StackPanel Spacing="14" IsVisible="{Binding ShowPlaylists}">
