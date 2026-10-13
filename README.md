@@ -75,6 +75,8 @@ In the unreleased source, the bottom-right link icon also retains an amber atten
 
 The unreleased source keeps Chromecast status errors attached to the loaded music. When a stream reloads, delayed status errors from its previous playback are ignored, while failures of the new playback remain visible even if they arrive before the load reply.
 
+Chromecast request rejections in the unreleased source also belong to their requesting operation. Late replies cannot fail a newer song, and a rejected playback control can be retried without marking a healthy stream as failed. Media controls retain the accepted playback ID and receiver transport instead of following the last broadcast; position reads select that playback from multi-session replies. Loading completion uses fresh cancelable status requests. These paths are verified with a local TLS receiver, without sending audio to physical speakers; current Onkyo startup and synchronization timing have not been remeasured.
+
 For finite local files sent to Chromecast, validated MP3 files use their original bytes without re-encoding. Multiple receivers share a read lease that keeps the source intact until playback stops. Other file formats retain the compatible MP3 preparation path. The local file server supports GET, HEAD and byte-range probes. The waiting indicator includes the selected receivers while the source is being prepared; actual receiver startup time and remaining latency still require hardware testing.
 
 Network receivers must be reachable from the PC on the same network. If Windows requests firewall access, allow it for the private network used by your speakers. Musync does not change firewall rules automatically.

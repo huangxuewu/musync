@@ -24,7 +24,7 @@ internal interface ICastSession : IAsyncDisposable
     Task DisconnectAsync();
 }
 
-internal sealed class CastSession : ICastSession
+internal sealed partial class CastSession : ICastSession
 {
     private readonly ChromecastClient _client = new();
     private readonly CastConnectionFeedback _connection = new();
@@ -34,14 +34,8 @@ internal sealed class CastSession : ICastSession
     public CastSession()
     {
         _client.Disconnected += OnDisconnected;
-        _client.MediaChannel.LoadFailed += OnLoadFailed;
-        _client.MediaChannel.InvalidRequest += OnInvalidRequest;
-        _client.MediaChannel.ErrorHappened += OnMediaError;
         _client.MediaChannel.StatusChanged += OnMediaStatus;
     }
-    private void OnLoadFailed(object? sender, LoadFailedMessage message) => _media.Fail("Chromecast could not load the audio stream.");
-    private void OnInvalidRequest(object? sender, InvalidRequestMessage message) => _media.Fail("Chromecast rejected the audio request: " + message.Reason);
-    private void OnMediaError(object? sender, ErrorMessage message) => _media.Fail($"Chromecast media error ({message.DetailedErrorCode}).");
     private void OnMediaStatus(object? sender, MediaStatus status) => _media.Observe(status);
     private void OnDisconnected(object? sender, EventArgs args)
     {
@@ -73,11 +67,7 @@ internal sealed class CastSession : ICastSession
     };
     public async Task LoadAsync(string url)
     {
-        var load = _media.BeginLoad();
-        var status = await _client.MediaChannel.LoadAsync(CreateMedia(url));
-        if (status is null) _media.Fail(load, "Chromecast did not accept the audio stream.");
-        else _media.AcceptLoad(load, status);
-        if (_media.Error is { } error) throw new IOException(error);
+        await LoadMediaAsync(CreateMedia(url), autoPlay: true, CancellationToken.None);
     }
     internal static Media CreateFileMedia(string url, double duration) => new()
     {
@@ -87,16 +77,14 @@ internal sealed class CastSession : ICastSession
     };
     public async Task PrepareFileAsync(string url, double duration, double position, CancellationToken token)
     {
-        var load = _media.BeginLoad();
-        var status = await _client.MediaChannel.LoadAsync(CreateFileMedia(url, duration), autoPlay: false).WaitAsync(token);
-        if (status is null) throw new IOException("Chromecast did not preload the music.");
-        _media.AcceptLoad(load, status);
-        if (_media.Error is { } loadError) throw new IOException(loadError);
+        var (binding, status) = await LoadMediaAsync(CreateFileMedia(url, duration), autoPlay: false, token);
         if (position > 0)
         {
-            status = await _client.MediaChannel.SeekAsync(Math.Clamp(position, 0, duration)).WaitAsync(token)
+            status = await SendOwnedMediaAsync(binding, new SeekMessage { MediaSessionId = binding.Session, CurrentTime = Math.Clamp(position, 0, duration) },
+                Sharpcaster.Extensions.SharpcasteSerializationContext.Default.SeekMessage, token)
                 ?? throw new IOException("Chromecast rejected the start position.");
-            status = await _client.MediaChannel.PauseAsync().WaitAsync(token)
+            status = await SendOwnedMediaAsync(binding, new PauseMessage { MediaSessionId = binding.Session },
+                Sharpcaster.Extensions.SharpcasteSerializationContext.Default.PauseMessage, token)
                 ?? throw new IOException("Chromecast could not hold the prepared music.");
         }
         while (true)
@@ -106,45 +94,50 @@ internal sealed class CastSession : ICastSession
             if (status.PlayerState == PlayerStateType.Paused) return;
             token.ThrowIfCancellationRequested();
             await Task.Delay(100, token);
-            status = await _client.MediaChannel.GetMediaStatusAsync().WaitAsync(token)
+            status = await ReadOwnedStatusAsync(binding, token)
                 ?? throw new IOException("Chromecast lost the prepared music.");
         }
     }
     public async Task PlayPreparedAsync()
     {
-        var status = await _client.MediaChannel.PlayAsync();
+        var binding = RequireMediaBinding();
+        var status = await SendOwnedMediaAsync(binding, new PlayMessage { MediaSessionId = binding.Session },
+            Sharpcaster.Extensions.SharpcasteSerializationContext.Default.PlayMessage);
         if (status is null) throw new IOException("Chromecast rejected Play.");
         _media.Observe(status);
         if (_media.Error is { } error) throw new IOException(error);
     }
     public async Task PausePreparedAsync()
     {
-        var status = await _client.MediaChannel.PauseAsync();
+        var binding = RequireMediaBinding();
+        var status = await SendOwnedMediaAsync(binding, new PauseMessage { MediaSessionId = binding.Session },
+            Sharpcaster.Extensions.SharpcasteSerializationContext.Default.PauseMessage);
         if (status is null) throw new IOException("Chromecast rejected Pause.");
         _media.Observe(status);
         if (_media.Error is { } error) throw new IOException(error);
     }
-    public async Task<double?> ReadPositionAsync() => (await _client.MediaChannel.GetMediaStatusAsync())?.CurrentTime;
+    public async Task<double?> ReadPositionAsync() => (await ReadOwnedStatusAsync(RequireMediaBinding()))?.CurrentTime;
     public async Task SeekPreparedAsync(double seconds)
     {
-        var status = await _client.MediaChannel.SeekAsync(seconds);
+        var binding = RequireMediaBinding();
+        var status = await SendOwnedMediaAsync(binding, new SeekMessage { MediaSessionId = binding.Session, CurrentTime = seconds },
+            Sharpcaster.Extensions.SharpcasteSerializationContext.Default.SeekMessage);
         if (status is null) throw new IOException("Chromecast rejected the synchronization adjustment.");
         _media.Observe(status);
         if (_media.Error is { } error) throw new IOException(error);
     }
     public async Task StopMediaAsync()
     {
-        _media.ExpectStop();
-        await _client.MediaChannel.StopAsync();
+        var binding = _media.StopBinding();
+        if (binding is { } owned)
+            await SendOwnedMediaAsync(owned, new StopMediaMessage { MediaSessionId = owned.Session },
+                Sharpcaster.Extensions.SharpcasteSerializationContext.Default.StopMediaMessage, observe: false);
     }
     public Task DisconnectAsync() { _connection.ExpectDisconnect(); _media.ExpectStop(); return _client.DisconnectAsync(); }
     public async ValueTask DisposeAsync()
     {
         _connection.ExpectDisconnect(); _media.ExpectStop();
         _client.Disconnected -= OnDisconnected;
-        _client.MediaChannel.LoadFailed -= OnLoadFailed;
-        _client.MediaChannel.InvalidRequest -= OnInvalidRequest;
-        _client.MediaChannel.ErrorHappened -= OnMediaError;
         _client.MediaChannel.StatusChanged -= OnMediaStatus;
         // Disconnect also cancels pending requests and stops the heartbeat.
         // This is needed after an incomplete Connect, before an output could
@@ -177,18 +170,30 @@ internal sealed class CastMediaFeedback
     private bool _expectedMedia;
     private long _loadVersion;
     private long? _mediaSessionId;
+    private string? _transportId;
     private readonly HashSet<long?> _pendingFailures = [];
     private string? _error;
     public string? Error { get { lock (_gate) return _error; } }
-    public long BeginLoad()
+    public CastMediaBinding? Binding { get { lock (_gate) return CurrentBinding(); } }
+    private CastMediaBinding? CurrentBinding() => _expectedMedia && _mediaSessionId is { } session && _transportId is { } transport
+        ? new(_loadVersion, session, transport) : null;
+    public bool IsCurrent(long load) { lock (_gate) return _expectedMedia && _loadVersion == load; }
+    public long BeginLoad(string? transportId = null)
     {
         lock (_gate)
         {
-            _error = null; _expectedMedia = true; _mediaSessionId = null; _pendingFailures.Clear();
+            _error = null; _expectedMedia = true; _mediaSessionId = null; _transportId = transportId; _pendingFailures.Clear();
             return ++_loadVersion;
         }
     }
     public void ExpectStop() { lock (_gate) { _expectedMedia = false; _pendingFailures.Clear(); } }
+    public CastMediaBinding? StopBinding()
+    {
+        lock (_gate)
+        {
+            var binding = CurrentBinding(); _expectedMedia = false; _pendingFailures.Clear(); return binding;
+        }
+    }
     public void Fail(string message) { lock (_gate) { if (_expectedMedia) _error = message; } }
     public void Fail(long load, string message)
     { lock (_gate) { if (_expectedMedia && load == _loadVersion) _error = message; } }
