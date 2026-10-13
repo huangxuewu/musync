@@ -1,0 +1,184 @@
+{
+  "version": "1.0.0",
+  "date": "2026-10-13",
+  "platform": "Windows x64",
+  "configuration": "Release",
+  "build": {
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": [
+    {
+      "project": "Musync.Tests",
+      "configuration": "Release",
+      "total": 235,
+      "passed": 235,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "tests/Musync.Tests/TestResults/control-recovery-core-final.trx"
+    },
+    {
+      "project": "Musync.App.Tests",
+      "configuration": "Release",
+      "total": 167,
+      "passed": 167,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "tests/Musync.App.Tests/TestResults/network-wait-app-confirmed.trx"
+    },
+    {
+      "project": "Musync.AirPlayBridge",
+      "runtime": "Node.js 24.21.0",
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "lastRun": "2026-10-13 initial Release validation; AirPlay helper source unchanged"
+    }
+  ],
+  "automatedTotal": 412,
+  "portableStartup": {
+    "Version": "1.0.0.0",
+    "ProductVersion": "1.0.0",
+    "PortableMainWindow": "Musync",
+    "Responding": true,
+    "IsolatedFreshProfile": true,
+    "GlobalDotnetRootRequired": false,
+    "StartupExceptionLog": false,
+    "PlaybackStarted": false
+  },
+  "package": {
+    "selfContained": true,
+    "signed": false,
+    "dotnetRuntime": "10.0.12",
+    "nodeRuntime": "24.21.0",
+    "licenseInventoryIncluded": true,
+    "localProfilesAndTokensIncluded": false
+  },
+  "uiReview": {
+    "method": "Avalonia Skia headless rendering of portrait/typography, scan failure, link preparation and recovered full/mini playback states",
+    "framesReviewed": 20,
+    "languages": [
+      "en",
+      "zh-Hans",
+      "ja"
+    ],
+    "widths": [
+      1280,
+      1120
+    ],
+    "coverage": [
+      "Both approved portrait subjects",
+      "Chinese default and minimum layouts",
+      "Chinese settings",
+      "Japanese minimum layout",
+      "Scan failure toast clear of link popup in all three languages at 1120x720",
+      "Disabled link selection during speaker preparation in all three languages at 1120x720",
+      "Recovered playback with no stale error toast in all three languages, full and mini player",
+      "Localized waiting state in the link editor at 1120x720; superseded scan toast removed"
+    ]
+  },
+  "hardwareEvidence": {
+    "Onkyo": "User confirmed continuous local-music playback and satisfactory coordinated startup in development testing; a fixed small offset remained manually adjustable",
+    "releaseHardwareRetest": false,
+    "homePodReleaseRetest": false,
+    "sampleAccurateSynchronizationClaimed": false
+  },
+  "limits": [
+    "Spotify Connect plays through its selected device; Spotify audio is not rebroadcast by the local routing engine",
+    "AirPlay PIN/password pairing is not implemented",
+    "macOS is not included",
+    "Release executable is unsigned"
+  ],
+  "sourceSelection": {
+    "developmentOutputsExcluded": true,
+    "sensitivePatternFindings": 0
+  },
+  "networkControlsRegression": {
+    "newCases": 8,
+    "missingOrInvalidPositionRetried": true,
+    "latestRequestedDelayUsed": true,
+    "undoAvoidsSeek": true,
+    "stopCancelsPendingAdjustment": true,
+    "previousAppliedDelayPreservedOnFailure": true,
+    "realSpeakerRetest": false
+  },
+  "binaryHashes": {
+    "Musync.dll": "3f5e16fe04341bcaece2c85526c69d97439ac81a6ec7c424c2d267ecbfba4ea5",
+    "Musync.Core.dll": "e7bbf7aa45c4fc52b87907287c6d4a46e1baf8610cfd912beaf4be24d35a0a32",
+    "Musync.Network.dll": "6561175a8cd1c265ac96f631019729655ba53823d0f6424ca5e7c293b3dc3c12",
+    "Musync.Platform.Windows.dll": "df0c1a965c3f1fbf36cbcf62ccfe26c1b995135d6e8e5530d2b3b7bc0c524fbe"
+  },
+  "libraryVirtualization": {
+    "firstScreenRowsFor1000Tracks": 16,
+    "regressionCases": 2,
+    "filterAfterBottomScrollVerified": true,
+    "recycledSongActionVerified": true,
+    "nativeScrollingVerified": false,
+    "headlessFirstLayoutAndRenderMs": {
+      "unvirtualized": 2970.2849,
+      "virtualized": 110.2427
+    },
+    "benchmarkScope": "Same-process synthetic 1000-track headless layout with warm-up; not native FPS or hardware playback latency"
+  },
+  "controlLifecycleRegression": {
+    "newCases": 4,
+    "stoppedReceiverErrorsIgnored": true,
+    "replacedSessionErrorsIgnored": true,
+    "stopCancellationIgnored": true,
+    "currentReceiverFailuresReported": true,
+    "realSpeakerRetest": false
+  },
+  "networkScanRecovery": {
+    "newCases": 11,
+    "airPlayAndChromecast": true,
+    "failedScanKeepsKnownDevices": true,
+    "healthyOutputsNotRestarted": true,
+    "successfulEmptyScanMarksOffline": true,
+    "retryPreservesDraftEdits": true,
+    "toastClearOfSpeakerPopup": true,
+    "languages": [
+      "en",
+      "zh-Hans",
+      "ja"
+    ],
+    "realSpeakerRetest": false
+  },
+  "linkPreparationRegression": {
+    "newCases": 3,
+    "keyboardSelectionCannotDriftFromActiveLink": true,
+    "selectorDisabledWhileBusy": true,
+    "cancellationRestoresSelection": true,
+    "languages": [
+      "en",
+      "zh-Hans",
+      "ja"
+    ],
+    "realSpeakerRetest": false
+  },
+  "controlErrorRecovery": {
+    "newCases": 9,
+    "perReceiverErrorOwnership": true,
+    "successfulRetryClearsOwnError": true,
+    "otherReceiverAndDecoderErrorsPreserved": true,
+    "stoppedSessionResponsesIgnored": true,
+    "playingAndPausedStatusRestored": true,
+    "newerNotificationsPreserved": true,
+    "spotifyDoesNotInheritLocalError": true,
+    "realSpeakerRetest": false
+  },
+  "networkScanResponsiveness": {
+    "newCases": 7,
+    "progressAndLyricsContinue": true,
+    "pauseResumeAndSeekContinue": true,
+    "spotifyRefreshContinues": true,
+    "scanCommitSerializedWithPlayback": true,
+    "scanDoesNotClearPlaybackBusyState": true,
+    "shutdownCancelsWaitingDiscovery": true,
+    "lateResultIgnored": true,
+    "supersededScanToastCleared": true,
+    "newerUnrelatedToastPreservedAtScanStart": true,
+    "waitingMotionStopsWhenHiddenMinimizedOrReducedMotionEnabled": true,
+    "realSpeakerRetest": false
+  }
+}

@@ -1,0 +1,31 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <ControlTheme x:Key="MusyncScrollViewer" TargetType="ScrollViewer">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="VerticalScrollBarVisibility" Value="Hidden"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <!-- Avalonia 12.1.4 permits omitted scrollbar parts. The presenter retains
+               offset, wheel, focus and gesture scrolling without rails or gutters. -->
+          <ScrollContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                                  HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                  VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
+                                  HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                                  VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                                  Padding="{TemplateBinding Padding}" ClipToBounds="True"
+                                  ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+            <ScrollContentPresenter.GestureRecognizers>
+              <ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                       CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                       IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}"
+                                       Offset="{Binding Offset, ElementName=PART_ContentPresenter}"
+                                       Viewport="{Binding Viewport, ElementName=PART_ContentPresenter}"
+                                       Extent="{Binding Extent, ElementName=PART_ContentPresenter}"/>
+            </ScrollContentPresenter.GestureRecognizers>
+          </ScrollContentPresenter>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </Styles.Resources>
+  <Style Selector="ScrollViewer"><Setter Property="Theme" Value="{StaticResource MusyncScrollViewer}"/></Style>
+</Styles>

@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup><InternalsVisibleTo Include="Musync.Tests" /><InternalsVisibleTo Include="Musync.App.Tests" /></ItemGroup>
+  <ItemGroup><PackageReference Include="TagLibSharp" Version="2.3.0" /></ItemGroup>
+</Project>

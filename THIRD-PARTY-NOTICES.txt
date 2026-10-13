@@ -1,0 +1,70 @@
+Musync dependency notices
+
+Avalonia 12.1.4 — MIT
+https://github.com/AvaloniaUI/Avalonia/blob/master/licence.md
+Musync.Controls.axaml and Musync.Scrolling.axaml use adapted template-part bindings from the Avalonia
+12.1.4 Fluent control templates, with Musync's own visual layout and styling.
+https://github.com/AvaloniaUI/Avalonia/tree/12.1.4/src/Avalonia.Themes.Fluent/Controls
+
+NAudio 3.1.0 — MIT
+https://github.com/naudio/NAudio/blob/v3.1.0/LICENSE
+
+TagLibSharp 2.3.0 — LGPL-2.1
+https://github.com/mono/taglib-sharp
+Unmodified separate TagLibSharp.dll reads local song tags. The full license is
+retained in licenses/TagLibSharp-LGPL-2.1.txt and copied to the Debug output.
+Package and source links: https://www.nuget.org/packages/TagLibSharp/2.3.0
+
+Spotify icon — Spotify brand asset, used for attribution and links to catalog songs.
+Unmodified black RGB PNG/SVG from the official icon download are retained in
+src/Musync.App/Assets/Spotify. They are not covered by Musync's own license.
+https://developer.spotify.com/documentation/design
+https://developer.spotify.com/images/guidelines/design/2024-spotify-logo-icon.zip
+
+SharpCaster 3.0.0 — MIT
+https://github.com/Tapanila/SharpCaster/blob/d04aa95f8a518c6b0434012e3feee7ce3f36ef61/LICENSE.txt
+
+Makaretu.Dns.Multicast 0.27.0 — MIT
+https://github.com/richardschneider/net-mdns
+
+@sonn-audio/node-airplay 0.1.2 — Apache License 2.0, as distributed by its publisher
+Copyright 2026 Rudy Berends
+https://github.com/sonn-audio/node-airplay
+The package's complete LICENSE and NOTICE are retained in
+AirPlayBridge/node_modules/@sonn-audio/node-airplay.
+
+The classic RAOP uncompressed ALAC frame layout in Musync was independently
+implemented against the published protocol layout and the above package's
+Apache-licensed encoder. The protocol documentation and helper attribute
+AirPlay 2 measurements and ported logic to Music Assistant contributors:
+Copyright 2024-2026 Music Assistant Contributors.
+The original upstream NOTICE is retained without modification.
+
+Node.js 24.21.0 and bundled components:
+Complete copyright and license text in AirPlayBridge/NODE-LICENSE.txt.
+
+.NET 10 and Microsoft libraries:
+License and third-party notices are included in the self-contained runtime.
+https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
+
+Inter font — SIL Open Font License 1.1
+https://github.com/rsms/inter/blob/master/LICENSE.txt
+
+Noto Sans SC — SIL Open Font License 1.1
+Copyright 2014-2021 Adobe, with Reserved Font Name 'Source'.
+https://github.com/google/fonts/tree/main/ofl/notosanssc
+The 400, 600 and 700 static instances are generated from the official variable
+font with FontTools, retaining the Noto Sans SC family name and full character set.
+The complete copyright/license is embedded in Assets/Fonts/NotoSansSC-OFL.txt
+and copied into the Debug output's licenses directory.
+
+Lucide icon subset — ISC, with MIT notices for icons derived from Feather
+Copyright (c) Lucide Contributors; Copyright (c) Cole Bemis (Feather).
+https://github.com/lucide-icons/lucide/tree/440a1e1dfb1e712505308da46bead3c28b1f1398
+Unmodified SVG originals and the complete upstream license are retained in
+src/Musync.App/Assets/Icons/Lucide. LucideGeometry.cs derives drawing paths from
+those SVGs. The full license is embedded alongside these application assets.
+
+This list identifies principal dependencies. Full license texts shipped with
+NuGet packages, the .NET runtime and AirPlay helper apply to their individual
+components. No proprietary MultiRoom Audio code or assets are included.

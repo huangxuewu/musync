@@ -1,0 +1,54 @@
+<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Musync.App.App"
+             RequestedThemeVariant="Light">
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Light" Accent="#F34A64" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <StyleInclude Source="avares://Musync/Styles/Musync.Controls.axaml" />
+    <StyleInclude Source="avares://Musync/Styles/Musync.Scrolling.axaml" />
+    <Style Selector="Window">
+      <Setter Property="FontFamily" Value="Inter, Segoe UI, Microsoft YaHei UI, Yu Gothic UI" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="#241E2E" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Padding" Value="13,8" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#F34A64" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="CornerRadius" Value="22" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#DA3550" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.ghost">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#757180" />
+    </Style>
+    <Style Selector="Button.nav">
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="12,12" />
+    </Style>
+    <Style Selector="Button.transport">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#F8F5FC" />
+      <Setter Property="FontSize" Value="19" />
+      <Setter Property="Padding" Value="9,5" />
+    </Style>
+    <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="#8B8695" /></Style>
+    <Style Selector="TextBlock.eyebrow"><Setter Property="FontSize" Value="10" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Foreground" Value="#9992A2" /><Setter Property="LetterSpacing" Value="1.5" /></Style>
+    <Style Selector="TextBox"><Setter Property="CornerRadius" Value="8" /><Setter Property="BorderBrush" Value="#E5E1E8" /></Style>
+    <Style Selector="ComboBox"><Setter Property="CornerRadius" Value="6" /><Setter Property="FontSize" Value="12" /></Style>
+    <StyleInclude Source="avares://Musync/Styles/Musync.Icons.axaml" />
+  </Application.Styles>
+</Application>

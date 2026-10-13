@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Musync.Network/Musync.Network.csproj" />
+    <ProjectReference Include="../../src/Musync.Platform.Windows/Musync.Platform.Windows.csproj" />
+  </ItemGroup>
+</Project>

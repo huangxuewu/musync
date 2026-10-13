@@ -1,0 +1,605 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Musync.App" xmlns:chrome="using:Avalonia.Controls.Chrome" xmlns:icons="using:Musync.App.Controls"
+        xmlns:imaging="using:Avalonia.Media.Imaging" x:Class="Musync.App.MainWindow" x:Name="MusyncWindow"
+        Title="Musync" Width="1280" Height="940" MinWidth="1120" MinHeight="720"
+        FontFamily="{Binding InterfaceFont}" FontSize="{Binding InterfaceFontSize}"
+        Background="Transparent" TransparencyLevelHint="Transparent" WindowStartupLocation="CenterScreen"
+        WindowDecorations="None" ExtendClientAreaToDecorationsHint="True" CanResize="True" ShowInTaskbar="True">
+  <Window.Styles>
+    <Style Selector="Button.nav"><Setter Property="MinHeight" Value="44"/><Setter Property="Foreground" Value="#51465F"/></Style>
+    <Style Selector="Button.nav.playlistNav"><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+    <Style Selector="Button.nav.playlistNav.favorites"><Setter Property="Margin" Value="0,0,12,0"/></Style>
+    <Style Selector="Button.playlistAction"><Setter Property="Foreground" Value="#51465F"/></Style>
+    <Style Selector="Button.playlistAction:pointerover /template/ ContentPresenter"><Setter Property="Foreground" Value="#B52C47"/></Style>
+    <Style Selector="Button.nav.active"><Setter Property="Foreground" Value="#B52C47"/><Setter Property="Background" Value="#FDE8EC"/></Style>
+    <Style Selector="Button.nav.active /template/ ContentPresenter"><Setter Property="Foreground" Value="#B52C47"/><Setter Property="Background" Value="#FDE8EC"/></Style>
+    <StyleInclude Source="avares://Musync/Styles/Musync.Motion.axaml"/>
+    <StyleInclude Source="avares://Musync/Styles/Musync.LinkSurface.axaml"/>
+    <Style Selector="TextBlock.searchFeedback"><Setter Property="Foreground" Value="#716877"/></Style>
+    <Style Selector="TextBlock.searchFeedback.error"><Setter Property="Foreground" Value="#B83850"/></Style>
+    <Style Selector="Border.statusToast">
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="Margin" Value="24,0,28,112"/>
+    </Style>
+    <Style Selector="Border.statusToast.linkVisible">
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="Margin" Value="28,0,24,112"/>
+    </Style>
+    <Style Selector="Slider">
+      <Setter Property="Height" Value="32" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style Selector="Button.windowControl">
+      <Setter Property="Width" Value="42" />
+      <Setter Property="Height" Value="32" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#757180" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.windowControl:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#EDEAF1" />
+    </Style>
+    <Style Selector="Button.windowControl.closeWindow:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#F34A64" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+  </Window.Styles>
+  <Grid x:Name="WindowRoot">
+    <Border x:Name="ShellFrame" Background="#251A35" CornerRadius="16" Margin="8" ClipToBounds="True" BoxShadow="0 8 24 0 #20251A35">
+    <Grid x:Name="LayerRoot">
+    <Border ZIndex="0" Background="#251A35" IsHitTestVisible="False" />
+    <Grid x:Name="FullPlayerView" IsVisible="{Binding !IsMiniPlayer, ElementName=MusyncWindow}">
+    <Grid RowDefinitions="*,96" ZIndex="30">
+      <Grid x:Name="WorkspaceColumns" ColumnDefinitions="1*,4.236*" MaxWidth="1720" Background="White">
+        <Border ZIndex="10" Background="#F5F4F7" Padding="24,44,24,20">
+          <Grid RowDefinitions="Auto,*">
+            <Image x:Name="BrandWordmark" Width="148" Height="50" Stretch="Uniform"
+                   HorizontalAlignment="Left" Margin="24,0,0,28" AutomationProperties.Name="Musync"
+                   RenderOptions.BitmapInterpolationMode="HighQuality"
+                   chrome:WindowDecorationProperties.ElementRole="TitleBar">
+              <Image.Source>
+                <!-- Fit the approved artwork, excluding its large transparent canvas.
+                     The measured artwork bounds retain a 12 px source safety inset. -->
+                <imaging:CroppedBitmap Source="/Assets/Brand/musync-wordmark-wave-v1.png"
+                                       SourceRect="285,265,1591,287"/>
+              </Image.Source>
+            </Image>
+            <ScrollViewer x:Name="SidebarScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+              <StackPanel Spacing="12">
+                <TextBlock Text="{Binding Text[Library]}" Classes="eyebrow" Margin="12,0,0,0" />
+                <StackPanel Spacing="3">
+                  <Button x:Name="HomeNav" Classes="nav" Classes.active="{Binding IsHomePage}" Command="{Binding Navigation}" CommandParameter="home" AutomationProperties.Name="{Binding Text[Home]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="house"/><TextBlock Text="{Binding Text[Home]}" VerticalAlignment="Center"/></StackPanel></Button>
+                  <Button x:Name="LibraryNav" Classes="nav" Classes.active="{Binding IsLibraryPage}" Command="{Binding Navigation}" CommandParameter="library" AutomationProperties.Name="{Binding Text[Library]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="library"/><TextBlock Text="{Binding Text[Library]}" VerticalAlignment="Center"/></StackPanel></Button>
+                  <Grid ColumnDefinitions="*,36" Margin="0,0,-12,0">
+                    <Button x:Name="PlaylistsNav" Classes="nav playlistNav" Classes.active="{Binding IsPlaylistsPage}" Command="{Binding TogglePlaylists}"
+                            AutomationProperties.Name="{Binding PlaylistSectionLabel}" ToolTip.Tip="{Binding PlaylistSectionLabel}">
+                      <Grid ColumnDefinitions="20,*" ColumnSpacing="12">
+                        <icons:LucideIcon x:Name="PlaylistChevron" Kind="chevron-down" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Text[Playlists]}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                      </Grid>
+                    </Button>
+                    <Button x:Name="SidebarAddPlaylistButton" Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding NewPlaylist}"
+                            IsEnabled="{Binding CanManagePlaylists}" VerticalAlignment="Center"
+                            AutomationProperties.Name="{Binding Text[CreatePlaylist]}" ToolTip.Tip="{Binding Text[CreatePlaylist]}"><icons:LucideIcon Kind="plus"/></Button>
+                  </Grid>
+                  <ItemsControl x:Name="SidebarPlaylistList" ItemsSource="{Binding Playlists}" IsVisible="{Binding PlaylistsExpanded}" Margin="32,0,-12,0">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="local:PlaylistViewModel">
+                        <Grid ColumnDefinitions="*,Auto">
+                          <Button Classes="nav playlistNav" Classes.active="{Binding IsActive}" Classes.favorites="{Binding IsFavorites}" Command="{Binding OpenCommand}" Padding="4,12,8,12"
+                                  AutomationProperties.Name="{Binding Name}" ToolTip.Tip="{Binding Name}">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                              <icons:LucideIcon Kind="heart" Filled="True" Foreground="#B52C47" IsVisible="{Binding IsFavorites}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                              <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                              <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="11" Foreground="#5F5569" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                          </Button>
+                          <Button Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding RemoveCommand}" Click="PlaylistRemovedClicked"
+                                  IsVisible="{Binding !IsFavorites}" IsEnabled="{Binding CanRemove}" Width="36" VerticalAlignment="Center" AutomationProperties.Name="{Binding RemoveLabel}" ToolTip.Tip="{Binding RemoveLabel}"><icons:LucideIcon Kind="minus"/></Button>
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Button x:Name="SettingsNav" Classes="nav" Classes.active="{Binding SettingsOpen}" Command="{Binding SettingsCommand}" Margin="0,18,0,0" AutomationProperties.Name="{Binding Text[Settings]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="settings"/><TextBlock Text="{Binding Text[Settings]}" VerticalAlignment="Center"/></StackPanel></Button>
+                </StackPanel>
+              </StackPanel>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+        <Grid Grid.Column="1" ZIndex="30" RowDefinitions="Auto,*" Margin="32,32,28,12" MaxWidth="1240">
+          <Grid RowDefinitions="Auto,Auto" Margin="0,0,0,16">
+            <TextBox x:Name="MusicSearchBox" Theme="{StaticResource MusyncSearchBox}"
+                     Text="{Binding Search, Mode=TwoWay}" PlaceholderText="{Binding SearchPlaceholder}"
+                     AutomationProperties.Name="{Binding SearchPlaceholder}" KeyDown="SearchKeyDown">
+              <TextBox.InnerLeftContent>
+                <Button Classes="ghost" Command="{Binding SearchCommand}" IsEnabled="{Binding !IsSearching}"
+                        Width="44" Height="44" MinHeight="0" Padding="0" CornerRadius="10"
+                        AutomationProperties.Name="{Binding Text[SearchAction]}" ToolTip.Tip="{Binding Text[SearchAction]}">
+                  <icons:LucideIcon Kind="search" Width="18" Height="18" Foreground="#716877"/>
+                </Button>
+              </TextBox.InnerLeftContent>
+              <TextBox.InnerRightContent>
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,12,0" VerticalAlignment="Center">
+                  <Button Classes="ghost" Command="{Binding ClearSearch}" Click="ClearSearchClicked" IsVisible="{Binding HasSearchQuery}"
+                          Width="32" Height="32" MinHeight="0" Padding="0" CornerRadius="8"
+                          AutomationProperties.Name="{Binding Text[ClearSearch]}" ToolTip.Tip="{Binding Text[ClearSearch]}">
+                    <icons:LucideIcon Kind="x" Width="16" Height="16"/>
+                  </Button>
+                  <Border Width="1" Height="16" Background="#DDD5E1" VerticalAlignment="Center"/>
+                  <TextBlock Text="{Binding SearchScope}" FontSize="11" Foreground="#716877" VerticalAlignment="Center"
+                             MaxWidth="110" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+              </TextBox.InnerRightContent>
+            </TextBox>
+            <Border Height="2" Background="#D83855" CornerRadius="1" VerticalAlignment="Bottom" Margin="12,0" IsVisible="{Binding IsSearching}"/>
+            <TextBlock x:Name="SearchFeedback" Grid.Row="1" Text="{Binding SearchNote}" IsVisible="{Binding HasSearchFeedback}" Classes="searchFeedback" Classes.error="{Binding HasSearchError}" FontSize="11" TextWrapping="Wrap" Margin="4,8,0,0"
+                       AutomationProperties.LiveSetting="Polite"/>
+          </Grid>
+          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Spacing="24">
+              <Grid x:Name="HeroScene" ColumnDefinitions="1.618*,*" MinHeight="330" ClipToBounds="False" IsVisible="{Binding ShowHero}">
+                  <icons:PosterBackdrop x:Name="HeroSurface" Grid.ColumnSpan="2" ZIndex="10" Palette="{Binding PosterPalette}" Margin="0,24,0,0" IsHitTestVisible="False"/>
+                  <StackPanel Grid.Column="0" ZIndex="30" VerticalAlignment="Center" Margin="26,50,18,24" Spacing="10">
+                    <TextBlock Text="{Binding Title}" FontSize="38" FontWeight="Bold" LineHeight="43" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" Foreground="#251A35"/>
+                    <TextBlock Text="{Binding HeroNote}" TextTrimming="CharacterEllipsis" Foreground="#58374A" FontSize="12"/>
+                    <Grid x:Name="HeroLyrics" RowDefinitions="28,42,28" Margin="0,14,0,0">
+                      <TextBlock x:Name="PreviousLyric" Text="{Binding LyricPrevious}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricPrevious}"/>
+                      <TextBlock x:Name="CurrentLyric" Grid.Row="1" Text="{Binding LyricCurrent}" FontSize="22" FontWeight="SemiBold" Foreground="#251A35" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricCurrent}"/>
+                      <TextBlock x:Name="NextLyric" Grid.Row="2" Text="{Binding LyricNext}" FontSize="14" Foreground="#58374A" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding LyricNext}"/>
+                    </Grid>
+                  </StackPanel>
+                  <icons:CrossfadeImage x:Name="HeroArtwork" Grid.Column="1" ZIndex="20" Source="{Binding PosterArtwork}" IsVisible="{Binding ShowArtist}" MaxWidth="330" Height="330" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,0,8,0" IsHitTestVisible="False"/>
+                  <Border Grid.Column="1" ZIndex="20" IsVisible="{Binding SpotifyMode}" Background="#F3EBF1" MaxWidth="245" Height="245" HorizontalAlignment="Stretch" VerticalAlignment="Center" CornerRadius="12" ClipToBounds="True" Margin="0,34,16,24" IsHitTestVisible="False">
+                    <Grid>
+                      <icons:LucideIcon Kind="music-2" Width="48" Height="48" Foreground="#A8859C" IsVisible="{Binding !HasSpotifyArtwork}"/>
+                      <icons:CrossfadeImage x:Name="HeroSpotifyArtwork" Source="{Binding SpotifyArtwork}" Stretch="Uniform"/>
+                    </Grid>
+                  </Border>
+              </Grid>
+              <Border IsVisible="{Binding SpotifyMode}" Background="#F7F5F9" CornerRadius="10" Padding="14">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="{Binding Text[SpotifyBoundary]}" Classes="muted" FontSize="11" TextWrapping="Wrap"/>
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <ComboBox ItemsSource="{Binding SpotifyDevices}" SelectedItem="{Binding SpotifyDevice, Mode=TwoWay}" HorizontalAlignment="Stretch" PlaceholderText="{Binding Text[SpotifyDevice]}" AutomationProperties.Name="{Binding Text[SpotifyDevice]}"/>
+                    <Button Grid.Column="1" Classes="iconButton" Command="{Binding RefreshSpotifyDevices}" AutomationProperties.Name="{Binding Text[RefreshDevices]}" ToolTip.Tip="{Binding Text[RefreshDevices]}"><icons:LucideIcon Kind="refresh-cw"/></Button>
+                  </Grid>
+                </StackPanel>
+              </Border>
+              <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding ListTitle}" FontSize="21" FontWeight="Bold" VerticalAlignment="Center" IsVisible="{Binding IsMusicView}"/>
+                  <Button Grid.Column="1" Classes="ghost" Content="{Binding Text[Import]}" Command="{Binding ImportCommand}" FontSize="11"/>
+                </Grid>
+                <ItemsControl x:Name="TrackList" ItemsSource="{Binding Tracks}" IsVisible="{Binding IsMusicView}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><VirtualizingStackPanel CacheLength="1"/></ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="local:TrackViewModel">
+                      <Grid ColumnDefinitions="48,*,Auto,Auto,Auto,Auto" Margin="0,0,0,13" ColumnSpacing="12">
+                        <Button Command="{Binding PlayCommand}" Padding="0" Width="48" Height="48" Background="{Binding Color}" CornerRadius="9" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding Title}">
+                          <Grid Width="48" Height="48">
+                            <icons:LucideIcon Kind="music-2" Classes="large" Foreground="White" IsVisible="{Binding !HasArtwork}"/>
+                            <icons:TrackArtworkImage Classes="trackArtwork" Source="{Binding Artwork}" Stretch="Uniform" AutomationProperties.Name="{Binding Title}"/>
+                          </Grid>
+                        </Button>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="5">
+                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                          <TextBlock Text="{Binding Artist}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <Button Grid.Column="2" Classes="ghost" Command="{Binding OpenArtworkSource}" IsVisible="{Binding HasArtwork}" Width="48" Height="48" Padding="12" AutomationProperties.Name="{Binding ArtworkSourceLabel}" ToolTip.Tip="{Binding ArtworkSourceLabel}">
+                          <Image Source="avares://Musync/Assets/Spotify/icon-black.png" Width="24" Height="24" Stretch="Uniform"/>
+                        </Button>
+                        <TextBlock Grid.Column="3" Text="{Binding Duration}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
+                        <Button Grid.Column="4" Classes="ghost iconButton" Command="{Binding LikeCommand}" Foreground="#D83855" AutomationProperties.Name="{Binding LikeLabel}" ToolTip.Tip="{Binding LikeLabel}"><icons:LucideIcon Kind="heart" Filled="{Binding Liked}"/></Button>
+                        <Button Grid.Column="5" Classes="ghost iconButton" Command="{Binding AddCommand}" AutomationProperties.Name="{Binding AddPlaylistLabel}" ToolTip.Tip="{Binding AddPlaylistLabel}"><icons:LucideIcon Kind="plus"/></Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Spacing="6" Margin="0,8,0,16" IsVisible="{Binding NoSearchResults}">
+                  <TextBlock Text="{Binding Text[NoSearchResults]}" FontSize="16" FontWeight="SemiBold"/>
+                  <TextBlock Text="{Binding Text[SearchTryAnother]}" FontSize="12" Foreground="#716877" TextWrapping="Wrap"/>
+                </StackPanel>
+              </StackPanel>
+              <StackPanel Spacing="14" IsVisible="{Binding ShowPlaylists}">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding Text[Playlists]}" FontSize="21" FontWeight="Bold"/>
+                  <Button Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding NewPlaylist}" IsEnabled="{Binding CanManagePlaylists}" AutomationProperties.Name="{Binding Text[CreatePlaylist]}" ToolTip.Tip="{Binding Text[CreatePlaylist]}"><icons:LucideIcon Kind="plus"/></Button>
+                </Grid>
+                <ItemsControl x:Name="WorkspacePlaylistList" ItemsSource="{Binding Playlists}">
+                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="local:PlaylistViewModel">
+                      <Grid ColumnDefinitions="*,Auto" Margin="0,0,24,16">
+                      <Button Classes="ghost" Command="{Binding OpenCommand}" Padding="0" MinWidth="150" AutomationProperties.Name="{Binding Name}" ToolTip.Tip="{Binding Name}">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                          <Border Background="#241A36" CornerRadius="30" Width="58" Height="58">
+                            <Grid>
+                              <Border Background="#AD839D" CornerRadius="24" Width="46" Height="46" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsFavorites}">
+                                <Border Background="#241A36" CornerRadius="9" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                              </Border>
+                              <icons:LucideIcon Kind="heart" Filled="True" Classes="large" Foreground="#F87C90" IsVisible="{Binding IsFavorites}"/>
+                            </Grid>
+                          </Border>
+                          <StackPanel VerticalAlignment="Center" Spacing="5"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" MaxWidth="120" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Count}" Classes="muted" FontSize="11"/></StackPanel>
+                        </StackPanel>
+                      </Button>
+                      <Button Grid.Column="1" Classes="ghost iconButton playlistAction" Command="{Binding RemoveCommand}" Click="PlaylistRemovedClicked"
+                              IsVisible="{Binding !IsFavorites}" IsEnabled="{Binding CanRemove}" Width="36" VerticalAlignment="Center" AutomationProperties.Name="{Binding RemoveLabel}" ToolTip.Tip="{Binding RemoveLabel}"><icons:LucideIcon Kind="minus"/></Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </Grid>
+      <Border Grid.Row="1" ZIndex="10" Background="#251A35" Padding="24,12">
+        <Grid ZIndex="30" ColumnDefinitions="220,Auto,*,Auto,Auto" ColumnSpacing="16" MaxWidth="1664">
+          <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+            <Border Background="#D9556B" CornerRadius="8" Width="48" Height="48" ClipToBounds="True">
+              <Grid>
+                <icons:LucideIcon Kind="music-2" Classes="large" Foreground="White" IsVisible="{Binding !HasSpotifyArtwork}"/>
+                <icons:CrossfadeImage x:Name="PlayerArtwork" Source="{Binding SpotifyArtwork}" Stretch="Uniform" AutomationProperties.Name="{Binding Title}"/>
+              </Grid>
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="5"><TextBlock Text="{Binding Title}" Foreground="#FFFFFF" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}"/><TextBlock Text="{Binding Artist}" Foreground="#A99FB9" FontSize="10" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Artist}"/></StackPanel>
+            <Button Grid.Column="2" Classes="transport" Foreground="#F87C90" Command="{Binding LikeCurrent}" ToolTip.Tip="{Binding LikeCurrentLabel}" AutomationProperties.Name="{Binding LikeCurrentLabel}"><icons:LucideIcon Kind="heart" Filled="{Binding CurrentLiked}"/></Button>
+          </Grid>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+            <Button Classes="transport" Command="{Binding ShuffleCommand}" Foreground="{Binding ShuffleColor}" ToolTip.Tip="{Binding Text[Shuffle]}" AutomationProperties.Name="{Binding Text[Shuffle]}"><icons:LucideIcon Kind="shuffle"/></Button>
+            <Button Classes="transport" Command="{Binding PreviousCommand}" ToolTip.Tip="{Binding Text[Previous]}" AutomationProperties.Name="{Binding Text[Previous]}"><icons:LucideIcon Kind="skip-back"/></Button>
+            <Button x:Name="PlayerPlayButton" Classes="playerPrimary" IsEnabled="{Binding PlayEnabled}" Command="{Binding PlayCommand}" ToolTip.Tip="{Binding PlayLabel}" AutomationProperties.Name="{Binding PlayLabel}"><icons:LucideIcon Kind="{Binding PlayIcon}" Classes="large"/></Button>
+            <Button Classes="transport" Command="{Binding NextCommand}" ToolTip.Tip="{Binding Text[Next]}" AutomationProperties.Name="{Binding Text[Next]}"><icons:LucideIcon Kind="skip-forward"/></Button>
+            <Button Classes="transport" Command="{Binding RepeatCommand}" Foreground="{Binding RepeatColor}" ToolTip.Tip="{Binding Text[Repeat]}" AutomationProperties.Name="{Binding Text[Repeat]}"><icons:LucideIcon Kind="repeat"/></Button>
+          </StackPanel>
+          <Grid Grid.Column="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" MinWidth="180" VerticalAlignment="Center">
+            <TextBlock Text="{Binding PositionText}" Foreground="#AEA5BD" FontSize="11" VerticalAlignment="Center"/>
+            <icons:PlaybackSlider x:Name="SeekSlider" Grid.Column="1" PlaybackPosition="{Binding Position}" IsAdvancing="{Binding IsPlaying}" ProgressEpoch="{Binding ProgressEpoch}" Maximum="{Binding Duration}" Minimum="0" IsEnabled="{Binding Seekable}" Height="32" AutomationProperties.Name="{Binding Text[Seek]}"/>
+            <TextBlock Grid.Column="2" Text="{Binding DurationText}" Foreground="#AEA5BD" FontSize="11" VerticalAlignment="Center"/>
+          </Grid>
+          <Grid Grid.Column="3" ColumnDefinitions="36,72,32" ColumnSpacing="4" VerticalAlignment="Center" ToolTip.Tip="{Binding VolumeHint}">
+            <Button x:Name="PlayerMuteButton" Classes="transport" Command="{Binding MuteCommand}" IsEnabled="{Binding CanAdjustVolume}"
+                    AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}"><icons:LucideIcon Kind="{Binding VolumeIcon}"/></Button>
+            <Slider x:Name="PlayerVolumeSlider" Grid.Column="1" Value="{Binding PlayerVolume, Mode=TwoWay}" Minimum="0" Maximum="100"
+                    SmallChange="1" LargeChange="10" IsEnabled="{Binding CanAdjustVolume}" Height="32" AutomationProperties.Name="{Binding Text[Volume]}"/>
+            <TextBlock Grid.Column="2" Text="{Binding PlayerVolumeText}" Foreground="#C0B5CB" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          </Grid>
+          <Grid Grid.Column="4" ColumnDefinitions="36,36,36" ColumnSpacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+              <ComboBox x:Name="MusicSourceSelector" Classes="playerUtility" ItemsSource="{Binding Sources}" SelectedItem="{Binding Source, Mode=TwoWay}"
+                        Theme="{StaticResource MusyncSourceSelector}"
+                        AutomationProperties.Name="{Binding Text[MusicSource]}" ToolTip.Tip="{Binding Text[MusicSource]}"/>
+              <ToggleButton x:Name="SpeakerToggle" Grid.Column="1" Classes="playerUtility" Theme="{StaticResource MusyncPlayerToggle}"
+                          IsChecked="{Binding LinkPanelOpen, Mode=TwoWay}"
+                          AutomationProperties.Name="{Binding Text[Links]}" ToolTip.Tip="{Binding LinkSummary}">
+                <icons:LucideIcon Kind="link-2"/>
+              </ToggleButton>
+              <Button x:Name="MiniPlayerButton" Grid.Column="2" Classes="playerUtility" Theme="{StaticResource MusyncPlayerIcon}" Click="ToggleMiniPlayer"
+                      AutomationProperties.Name="{Binding Text[MiniPlayer]}" ToolTip.Tip="{Binding Text[MiniPlayer]}">
+                <icons:LucideIcon Kind="picture-in-picture-2"/>
+              </Button>
+          </Grid>
+        </Grid>
+      </Border>
+    </Grid>
+    <Popup x:Name="SpeakerPopover" ZIndex="40" PlacementTarget="{Binding ElementName=SpeakerToggle}"
+           Placement="TopEdgeAlignedRight" VerticalOffset="-10" ShouldUseOverlayLayer="True"
+           IsOpen="{Binding IsChecked, ElementName=SpeakerToggle, Mode=TwoWay}"
+           IsLightDismissEnabled="True"
+           Opened="SpeakerPopoverOpened" Closed="SpeakerPopoverClosed">
+      <Border x:Name="SpeakerPanel" ZIndex="40" Width="336" Height="640" Background="{DynamicResource LinkSurfaceBrush}" CornerRadius="16" Padding="20" BoxShadow="0 10 28 0 #60251A35" KeyDown="SpeakerPopoverKeyDown" KeyboardNavigation.TabNavigation="Cycle">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <TextBlock Text="{Binding LinkPopoverTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+              <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding LinkOverview}">
+                <Button Classes="ghost iconButton" Command="{Binding CreateLink}" IsVisible="{Binding HasActiveLink}" IsEnabled="{Binding CanConfigureLink}" AutomationProperties.Name="{Binding Text[CreateLink]}" ToolTip.Tip="{Binding Text[CreateLink]}"><icons:LucideIcon Kind="plus"/></Button>
+                <Button Classes="ghost iconButton" Command="{Binding EditLink}" IsVisible="{Binding HasActiveLink}" IsEnabled="{Binding CanEditLink}" AutomationProperties.Name="{Binding Text[ConfigureLink]}" ToolTip.Tip="{Binding Text[ConfigureLink]}"><icons:LucideIcon Kind="settings"/></Button>
+              </StackPanel>
+              <Button x:Name="CloseSpeakersButton" Classes="ghost iconButton" Click="CloseSpeakers" AutomationProperties.Name="{Binding Text[Close]}" ToolTip.Tip="{Binding Text[Close]}"><icons:LucideIcon Kind="x"/></Button>
+            </StackPanel>
+          </Grid>
+          <StackPanel Grid.Row="1" Spacing="12">
+            <StackPanel IsVisible="{Binding LinkOverview}" Spacing="8">
+              <ComboBox ItemsSource="{Binding Links}" SelectedItem="{Binding ActiveLink, Mode=TwoWay}" IsVisible="{Binding HasActiveLink}" IsEnabled="{Binding CanConfigureLink}" HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Text[ActiveLink]}">
+                <ComboBox.Resources>
+                  <SolidColorBrush x:Key="MusyncComboPopupSurfaceBrush" Color="#342741"/>
+                  <SolidColorBrush x:Key="MusyncComboPopupBorderBrush" Color="#A191AD"/>
+                </ComboBox.Resources>
+              </ComboBox>
+              <TextBlock Text="{Binding LinkSummary}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
+              <Button Classes="primary" Content="{Binding Text[CreateLink]}" Command="{Binding CreateLink}" IsVisible="{Binding NoLinks}" IsEnabled="{Binding CanConfigureLink}" HorizontalAlignment="Left"/>
+            </StackPanel>
+            <StackPanel IsVisible="{Binding IsLinkEditing}" Spacing="16">
+              <StackPanel Spacing="8">
+                <TextBlock Text="{Binding Text[LinkName]}" FontWeight="SemiBold" FontSize="12"/>
+                <TextBox x:Name="LinkNameEditor" Text="{Binding LinkName, Mode=TwoWay}" PlaceholderText="{Binding Text[LinkNamePlaceholder]}" MaxLength="48" Height="40" Padding="12,8" Background="{DynamicResource LinkFieldBrush}" AutomationProperties.Name="{Binding Text[LinkName]}"/>
+                <TextBlock Text="{Binding LinkEditError}" IsVisible="{Binding HasLinkEditError}" Foreground="{DynamicResource LinkFocusBrush}" FontSize="12" TextWrapping="Wrap"/>
+              </StackPanel>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="{Binding Text[Speakers]}" FontWeight="SemiBold" FontSize="13"/>
+                  <TextBlock Text="{Binding LinkSelectionSummary}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11"/>
+                </StackPanel>
+                <Button Grid.Column="1" Classes="ghost" Content="{Binding Text[Rescan]}" Command="{Binding ScanCommand}" IsEnabled="{Binding !IsScanning}" FontSize="12" Padding="8,6" VerticalAlignment="Center"/>
+              </Grid>
+              <Grid x:Name="NetworkScanNotice" ColumnDefinitions="24,*" ColumnSpacing="8" IsVisible="{Binding IsScanning}">
+                <icons:PreparationIndicator x:Name="NetworkScanWave" Width="24" Height="18" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                <TextBlock x:Name="NetworkScanStatus" Grid.Column="1" Text="{Binding Text[Scanning]}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+          <Grid Grid.Row="2">
+            <ScrollViewer x:Name="LinkDeviceList" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+              <ItemsControl ItemsSource="{Binding VisibleLinkSpeakers}">
+              <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="local:SpeakerViewModel">
+                    <Border BorderBrush="{DynamicResource LinkDividerBrush}" BorderThickness="0,0,0,1" Padding="0,12">
+                      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                        <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" IsVisible="{Binding SelectionVisible}" Width="36" Height="36" VerticalAlignment="Top" AutomationProperties.Name="{Binding Name}"/>
+                        <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                          <StackPanel Spacing="5" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" FontSize="13" ToolTip.Tip="{Binding Name}"/>
+                            <Grid ColumnDefinitions="16,Auto,*" ColumnSpacing="6">
+                              <icons:LucideIcon Kind="{Binding Icon}" Classes="compact" Foreground="{DynamicResource LinkMutedBrush}"/>
+                              <TextBlock Grid.Column="1" Text="{Binding Transport}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="10" VerticalAlignment="Center"/>
+                              <Grid Grid.Column="2" ColumnDefinitions="5,*" ColumnSpacing="5" VerticalAlignment="Center">
+                                <Ellipse Width="5" Height="5" Fill="{Binding StatusColor}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="10" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Details}"/>
+                              </Grid>
+                            </Grid>
+                          </StackPanel>
+                          <Button Grid.Column="1" Classes="ghost iconButton" IsVisible="{Binding ControlsVisible}" Command="{Binding MuteCommand}" AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}" VerticalAlignment="Top"><icons:LucideIcon Kind="{Binding MuteIcon}"/></Button>
+                        </Grid>
+                        <StackPanel Grid.Column="1" Grid.Row="1" IsVisible="{Binding ControlsVisible}" Spacing="8" Margin="0,8,0,0">
+                          <Grid ColumnDefinitions="Auto,*,36" ColumnSpacing="8">
+                            <TextBlock Text="{Binding VolumeLabel}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" Height="28" MinHeight="28" ToolTip.Tip="{Binding VolumeLabel}" AutomationProperties.Name="{Binding VolumeLabel}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Volume, StringFormat={}{0:0}%}" Foreground="{DynamicResource LinkTextBrush}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                          </Grid>
+                          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBlock Text="{Binding DelayLabel}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            <Grid Grid.Column="1" ColumnDefinitions="36,72,36,Auto" ColumnSpacing="4">
+                              <Button Classes="delayStep" Command="{Binding Minus}" AutomationProperties.Name="{Binding DecreaseDelayLabel}" ToolTip.Tip="{Binding DecreaseDelayLabel}"><icons:LucideIcon Kind="minus" Classes="compact"/></Button>
+                              <NumericUpDown Grid.Column="1" Value="{Binding DelayMs, Mode=TwoWay}" Minimum="0" Maximum="10000" Increment="10" ShowButtonSpinner="False" FormatString="0" FontSize="12" MinHeight="36" Height="36" Padding="8,4" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource LinkFieldBorderBrush}" VerticalContentAlignment="Center" TextAlignment="Center" AutomationProperties.Name="{Binding DelayLabel}"/>
+                              <Button Grid.Column="2" Classes="delayStep" Command="{Binding Plus}" AutomationProperties.Name="{Binding IncreaseDelayLabel}" ToolTip.Tip="{Binding IncreaseDelayLabel}"><icons:LucideIcon Kind="plus" Classes="compact"/></Button>
+                              <TextBlock Grid.Column="3" Text="ms" Foreground="{DynamicResource LinkMutedBrush}" FontSize="10" VerticalAlignment="Center"/>
+                            </Grid>
+                          </Grid>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+              </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+            <StackPanel IsVisible="{Binding NoDraftSpeakers}" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="280" Spacing="8">
+              <TextBlock Text="{Binding Text[LinkNoSpeakers]}" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>
+              <TextBlock Text="{Binding Text[LinkNoSpeakersHint]}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Grid>
+          <StackPanel Grid.Row="3" Spacing="12">
+            <Border IsVisible="{Binding IsLinkEditing}" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource LinkDividerBrush}" Padding="0,14,0,0">
+              <Grid ColumnDefinitions="*,1.618*" ColumnSpacing="12">
+                <Button Classes="ghost" Content="{Binding Text[Cancel]}" Command="{Binding CancelLink}" Height="40"/>
+                <Button Grid.Column="1" Classes="primary" Content="{Binding Text[SaveLink]}" Command="{Binding SaveLink}" IsEnabled="{Binding CanSaveLink}" Height="40"/>
+              </Grid>
+            </Border>
+            <StackPanel IsVisible="{Binding LinkOverview}" Spacing="10">
+              <StackPanel IsVisible="{Binding HasActiveLink}" Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding Text[MasterVolume]}" FontWeight="SemiBold" FontSize="12"/>
+                  <TextBlock Grid.Column="1" Text="{Binding MasterVolume, StringFormat={}{0:0}%}" Classes="muted" FontSize="12"/>
+                </Grid>
+                <Slider Value="{Binding MasterVolume}" Minimum="0" Maximum="100"/>
+                <Button Classes="primary" Content="{Binding Text[PlayLink]}" Command="{Binding PlayEverywhere}" IsEnabled="{Binding CanPlayLink}" HorizontalAlignment="Stretch" FontSize="12" Padding="10,12"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsEnabled="{Binding CanPlayLink}">
+                  <Button Classes="ghost" Content="{Binding Text[Calibrate]}" Command="{Binding CalibrateCommand}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationInfo]}"/>
+                  <Button Grid.Column="1" Classes="ghost" Content="{Binding Text[Reset]}" Command="{Binding ResetDelays}" FontSize="11"/>
+                </Grid>
+              </StackPanel>
+              <TextBlock Text="{Binding Text[SpotifyBoundary]}" IsVisible="{Binding SpotifyMode}" Classes="muted" FontSize="10" TextWrapping="Wrap"/>
+              <TextBlock Text="{Binding Text[Experimental]}" Classes="muted" FontSize="10" TextWrapping="Wrap"/>
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Popup>
+    <Popup x:Name="MiniVolumePopover" ZIndex="40" PlacementTarget="{Binding ElementName=MiniVolumeToggle}"
+           Placement="TopEdgeAlignedRight" VerticalOffset="-8" ShouldUseOverlayLayer="True"
+           IsOpen="{Binding IsChecked, ElementName=MiniVolumeToggle, Mode=TwoWay}" IsLightDismissEnabled="True"
+           Opened="MiniVolumeOpened" Closed="MiniVolumeClosed">
+      <Border x:Name="MiniVolumePanel" Width="228" Background="#342741" CornerRadius="12" Padding="16" KeyDown="MiniVolumeKeyDown" KeyboardNavigation.TabNavigation="Cycle">
+        <StackPanel Spacing="8">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding Text[Volume]}" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+            <TextBlock Grid.Column="1" Text="{Binding PlayerVolumeText}" Foreground="#D5CADF" FontSize="12"/>
+          </Grid>
+          <Grid ColumnDefinitions="36,*" ColumnSpacing="8">
+            <Button x:Name="MiniMuteButton" Classes="transport" Command="{Binding MuteCommand}" IsEnabled="{Binding CanAdjustVolume}"
+                    AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}"><icons:LucideIcon Kind="{Binding VolumeIcon}"/></Button>
+            <Slider x:Name="MiniVolumeSlider" Grid.Column="1" Value="{Binding PlayerVolume, Mode=TwoWay}" Minimum="0" Maximum="100"
+                    SmallChange="1" LargeChange="10" IsEnabled="{Binding CanAdjustVolume}" Height="36" AutomationProperties.Name="{Binding Text[Volume]}"/>
+          </Grid>
+          <TextBlock Text="{Binding Text[SpotifyVolumeUnavailable]}" IsVisible="{Binding !CanAdjustVolume}" Foreground="#D5CADF" FontSize="11" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
+    </Popup>
+    <Border ZIndex="40" IsVisible="{Binding SettingsOpen}" Background="#A0251A35">
+      <Border x:Name="SettingsPanel" Width="650" MaxHeight="790" Margin="24,48,24,24" Background="White" CornerRadius="18" Padding="30" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 12 40 0 #40251A35">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+          <StackPanel Spacing="15">
+            <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Text[Settings]}" FontSize="27" FontWeight="Bold"/><Button Grid.Column="1" Classes="ghost iconButton" Command="{Binding CloseSettings}" AutomationProperties.Name="{Binding Text[Close]}" ToolTip.Tip="{Binding Text[Close]}"><icons:LucideIcon Kind="x"/></Button></Grid>
+            <StackPanel Spacing="8">
+              <TextBlock Text="{Binding Text[Language]}" FontWeight="SemiBold"/>
+              <ComboBox x:Name="SettingsLanguageSelector" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language, Mode=TwoWay}"
+                        HorizontalAlignment="Stretch" Background="White" AutomationProperties.Name="{Binding Text[Language]}"/>
+            </StackPanel>
+            <Separator Margin="0,6"/>
+            <TextBlock Text="{Binding Text[SourceEndpoint]}" FontWeight="SemiBold"/>
+            <ComboBox ItemsSource="{Binding CaptureEndpoints}" SelectedItem="{Binding CaptureEndpoint}" HorizontalAlignment="Stretch"/>
+            <TextBlock Text="{Binding Text[CaptureInfo]}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+            <Separator Margin="0,6"/>
+            <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Text[SpotifySetup]}" FontWeight="Bold" FontSize="20"/><TextBlock Grid.Column="1" Text="{Binding SpotifyStatus}" Foreground="#19885B" VerticalAlignment="Center"/></Grid>
+            <TextBlock Text="{Binding Text[SpotifyInfo]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
+            <TextBlock Text="{Binding Text[ClientId]}" FontSize="12" FontWeight="SemiBold"/>
+            <TextBox Text="{Binding ClientId}" PlaceholderText="{Binding Text[ClientId]}" MaxLength="32"/>
+            <TextBox Text="{Binding RedirectUri}" IsReadOnly="True" FontFamily="Consolas" FontSize="12"/>
+            <Button Classes="ghost" Content="{Binding Text[DeveloperDashboard]}" Command="{Binding DashboardCommand}" HorizontalAlignment="Left" Foreground="#E7405D" Padding="0,7"/>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Classes="primary" Content="{Binding Text[Connect]}" Command="{Binding ConnectSpotify}" Padding="22,10"/>
+              <Button Content="{Binding Text[Disconnect]}" Command="{Binding DisconnectSpotify}" Background="#F6F3F7"/>
+            </StackPanel>
+            <TextBlock Text="{Binding Text[SpotifyBoundary]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
+            <Separator Margin="0,6"/>
+            <TextBlock Text="{Binding Text[DelayInfo]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
+            <TextBlock Text="{Binding Status}" Foreground="#B85863" TextWrapping="Wrap" FontSize="12"/>
+            <Button Classes="primary" Content="{Binding Text[Save]}" Command="{Binding CloseSettings}" HorizontalAlignment="Right" Padding="26,10"/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Border>
+    <Border ZIndex="40" IsVisible="{Binding PlaylistOpen}" Background="#A0251A35">
+      <Border x:Name="PlaylistPanel" Width="400" Margin="24,48,24,24" Background="White" CornerRadius="18" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center"
+              KeyboardNavigation.TabNavigation="Cycle" KeyDown="PlaylistDialogKeyDown">
+        <StackPanel Spacing="18">
+          <TextBlock Text="{Binding PlaylistDialogTitle}" FontSize="23" FontWeight="Bold"/>
+          <StackPanel Spacing="8">
+            <TextBox x:Name="PlaylistNameInput" Text="{Binding PlaylistName, Mode=TwoWay}" PlaceholderText="{Binding Text[PlaylistName]}" MaxLength="80" AutomationProperties.Name="{Binding Text[PlaylistName]}"/>
+            <TextBlock Text="{Binding PlaylistError}" IsVisible="{Binding HasPlaylistError}" Foreground="#B52C47" FontSize="12" TextWrapping="Wrap"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Classes="ghost" Content="{Binding Text[Close]}" Command="{Binding ClosePlaylist}"/>
+            <Button Classes="primary" Content="{Binding Text[Save]}" Command="{Binding SavePlaylist}" IsEnabled="{Binding CanManagePlaylists}"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Border>
+    <Border ZIndex="40" Background="Transparent" Height="24" Margin="0,0,126,0" VerticalAlignment="Top"
+            chrome:WindowDecorationProperties.ElementRole="TitleBar" />
+    <Grid ZIndex="40" ColumnDefinitions="42,42,42" HorizontalAlignment="Right" VerticalAlignment="Top" Background="White">
+      <Button Grid.Column="0" Classes="windowControl" Click="MinimizeWindow"
+              chrome:WindowDecorationProperties.ElementRole="MinimizeButton"
+              ToolTip.Tip="{Binding Text[Minimize]}" AutomationProperties.Name="{Binding Text[Minimize]}">
+        <icons:LucideIcon Kind="minus" Classes="compact"/>
+      </Button>
+      <Button x:Name="MaximizeWindowButton" Grid.Column="1" Classes="windowControl" Click="ToggleMaximizeWindow"
+              chrome:WindowDecorationProperties.ElementRole="MaximizeButton"
+              ToolTip.Tip="{Binding Text[Maximize]}" AutomationProperties.Name="{Binding Text[Maximize]}">
+        <icons:LucideIcon Kind="maximize" Classes="compact"/>
+      </Button>
+      <Button x:Name="RestoreWindowButton" Grid.Column="1" Classes="windowControl" Click="ToggleMaximizeWindow" IsVisible="False"
+              chrome:WindowDecorationProperties.ElementRole="MaximizeButton"
+              ToolTip.Tip="{Binding Text[Restore]}" AutomationProperties.Name="{Binding Text[Restore]}">
+        <icons:LucideIcon Kind="copy" Classes="compact"/>
+      </Button>
+      <Button Grid.Column="2" Classes="windowControl closeWindow" Click="CloseWindow"
+              chrome:WindowDecorationProperties.ElementRole="CloseButton"
+              ToolTip.Tip="{Binding Text[Close]}" AutomationProperties.Name="{Binding Text[Close]}">
+        <icons:LucideIcon Kind="x" Classes="compact"/>
+      </Button>
+    </Grid>
+    <Grid ZIndex="40" IsVisible="{Binding !IsMiniPlayer, ElementName=MusyncWindow}">
+    <Border x:Name="PreparationNotice" IsVisible="{Binding IsPreparingPlayback}"
+            MaxWidth="400" Margin="28,0,28,112" Padding="16,12" CornerRadius="12"
+            Background="#251A35" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+      <Grid ColumnDefinitions="24,*,36" ColumnSpacing="12">
+        <icons:PreparationIndicator x:Name="FullPreparationWave" Width="24" Height="22" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Text[PreparingSpeakers]}" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+          <TextBlock x:Name="PreparationCount" Text="{Binding PreparationDetail}" Foreground="#C0B5CB" FontSize="11"
+                     AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+        <Button x:Name="CancelPreparationButton" Grid.Column="2" Classes="transport" Command="{Binding CancelPreparation}"
+                AutomationProperties.Name="{Binding Text[CancelPreparation]}" ToolTip.Tip="{Binding Text[CancelPreparation]}">
+          <icons:LucideIcon Kind="x"/>
+        </Button>
+      </Grid>
+    </Border>
+    </Grid>
+    <Border x:Name="StatusToast" Classes="statusToast" Classes.linkVisible="{Binding LinkPanelOpen}"
+            ZIndex="40" IsVisible="{Binding HasToast}"
+            MaxWidth="440" Padding="16,12" CornerRadius="12"
+            Background="#251A35" VerticalAlignment="Bottom"
+            IsHitTestVisible="False">
+      <TextBlock x:Name="StatusToastText" Text="{Binding ToastMessage}" Foreground="White"
+                 FontSize="13" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+    </Border>
+    </Grid>
+    <Border x:Name="MiniPlayerView" ZIndex="30" IsVisible="{Binding IsMiniPlayer, ElementName=MusyncWindow}" Background="#251A35" Padding="16">
+      <Grid RowDefinitions="64,44,16" RowSpacing="12">
+        <Grid ColumnDefinitions="64,*,Auto" ColumnSpacing="12">
+          <Border Background="#D9556B" CornerRadius="10" ClipToBounds="True"
+                  chrome:WindowDecorationProperties.ElementRole="TitleBar">
+            <Grid>
+              <icons:LucideIcon Kind="music-2" Classes="large" Foreground="White" IsVisible="{Binding !HasSpotifyArtwork}"/>
+              <icons:CrossfadeImage x:Name="MiniPlayerArtwork" Source="{Binding SpotifyArtwork}" Stretch="Uniform" AutomationProperties.Name="{Binding Title}"/>
+            </Grid>
+          </Border>
+          <Border Grid.Column="1" Background="Transparent" chrome:WindowDecorationProperties.ElementRole="TitleBar">
+            <StackPanel Spacing="4" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Title}" Foreground="White" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}"/>
+              <TextBlock Text="{Binding Artist}" Foreground="#C0B5CB" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Artist}"/>
+              <TextBlock Text="{Binding Status}" IsVisible="{Binding !IsPreparingPlayback}" Foreground="#E5DCEC" FontSize="10" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}"/>
+              <Grid IsVisible="{Binding IsPreparingPlayback}" ColumnDefinitions="24,*,36" ColumnSpacing="5">
+                <icons:PreparationIndicator x:Name="MiniPreparationWave" Width="24" Height="16"/>
+                <TextBlock Grid.Column="1" Text="{Binding PreparationDetail}" Foreground="#E5DCEC" FontSize="11" VerticalAlignment="Center"
+                           AutomationProperties.LiveSetting="Polite" ToolTip.Tip="{Binding Text[PreparingSpeakers]}"/>
+                <Button Grid.Column="2" Classes="transport" Width="36" Height="36" MinWidth="36" MinHeight="36" Command="{Binding CancelPreparation}"
+                        AutomationProperties.Name="{Binding Text[CancelPreparation]}" ToolTip.Tip="{Binding Text[CancelPreparation]}"><icons:LucideIcon Kind="x" Classes="compact"/></Button>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+            <Button x:Name="RestoreFullPlayerButton" Classes="transport" Click="ToggleMiniPlayer"
+                    AutomationProperties.Name="{Binding Text[FullPlayer]}" ToolTip.Tip="{Binding Text[FullPlayer]}">
+              <icons:LucideIcon Kind="maximize"/>
+            </Button>
+            <Button Classes="transport" Click="CloseWindow" AutomationProperties.Name="{Binding Text[Close]}" ToolTip.Tip="{Binding Text[Close]}">
+              <icons:LucideIcon Kind="x"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*">
+          <Button Classes="transport" Command="{Binding LikeCurrent}" Foreground="#F87C90" HorizontalAlignment="Left" VerticalAlignment="Center"
+                  AutomationProperties.Name="{Binding LikeCurrentLabel}" ToolTip.Tip="{Binding LikeCurrentLabel}">
+            <icons:LucideIcon Kind="heart" Filled="{Binding CurrentLiked}"/>
+          </Button>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+            <Button Classes="transport" Command="{Binding PreviousCommand}" AutomationProperties.Name="{Binding Text[Previous]}" ToolTip.Tip="{Binding Text[Previous]}"><icons:LucideIcon Kind="skip-back"/></Button>
+            <Button Classes="playerPrimary" IsEnabled="{Binding PlayEnabled}" Command="{Binding PlayCommand}" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="{Binding PlayLabel}"><icons:LucideIcon Kind="{Binding PlayIcon}" Classes="large"/></Button>
+            <Button Classes="transport" Command="{Binding NextCommand}" AutomationProperties.Name="{Binding Text[Next]}" ToolTip.Tip="{Binding Text[Next]}"><icons:LucideIcon Kind="skip-forward"/></Button>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <ToggleButton x:Name="MiniVolumeToggle" Theme="{StaticResource MusyncPlayerToggle}" AutomationProperties.Name="{Binding Text[Volume]}" ToolTip.Tip="{Binding VolumeHint}">
+              <icons:LucideIcon Kind="{Binding VolumeIcon}"/>
+            </ToggleButton>
+            <TextBlock Text="{Binding PositionText}" Foreground="#C0B5CB" FontSize="10" VerticalAlignment="Center"/>
+            <TextBlock Text="/" Foreground="#C0B5CB" FontSize="10" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding DurationText}" Foreground="#C0B5CB" FontSize="10" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Grid>
+        <icons:PlaybackSlider x:Name="MiniSeekSlider" Grid.Row="2" PlaybackPosition="{Binding Position}" IsAdvancing="{Binding IsPlaying}" ProgressEpoch="{Binding ProgressEpoch}" Maximum="{Binding Duration}" Minimum="0"
+                IsEnabled="{Binding Seekable}" Height="16" MinHeight="16" AutomationProperties.Name="{Binding Text[Seek]}"/>
+      </Grid>
+    </Border>
+    </Grid>
+    </Border>
+    <Grid x:Name="ResizeHandles" ZIndex="40">
+      <Border Tag="North" Height="6" Margin="12,0,12,0" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="ResizeWindow"/>
+      <Border Tag="South" Height="6" Margin="12,0,12,0" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="ResizeWindow"/>
+      <Border Tag="West" Width="6" Margin="0,12,0,12" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWestEast" PointerPressed="ResizeWindow"/>
+      <Border Tag="East" Width="6" Margin="0,12,0,12" HorizontalAlignment="Right" Background="Transparent" Cursor="SizeWestEast" PointerPressed="ResizeWindow"/>
+      <Border Tag="NorthWest" Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent" Cursor="TopLeftCorner" PointerPressed="ResizeWindow"/>
+      <Border Tag="NorthEast" Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" Cursor="TopRightCorner" PointerPressed="ResizeWindow"/>
+      <Border Tag="SouthWest" Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent" Cursor="BottomLeftCorner" PointerPressed="ResizeWindow"/>
+      <Border Tag="SouthEast" Width="12" Height="12" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="Transparent" Cursor="BottomRightCorner" PointerPressed="ResizeWindow"/>
+    </Grid>
+  </Grid>
+</Window>

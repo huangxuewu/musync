@@ -1,0 +1,364 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Musync.App.Controls">
+  <!-- Musync visuals; Avalonia template-part contracts follow Avalonia 12.1.4 (MIT). -->
+  <Styles.Resources>
+    <SolidColorBrush x:Key="MusyncComboPopupSurfaceBrush" Color="White"/>
+    <SolidColorBrush x:Key="MusyncComboPopupBorderBrush" Color="#E5DFEA"/>
+    <ControlTheme x:Key="MusyncButton" TargetType="Button">
+      <Setter Property="Background" Value="#F5F2F6"/>
+      <Setter Property="Foreground" Value="#241E2E"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Padding" Value="13,8"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter x:Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                            Foreground="{TemplateBinding Foreground}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                            Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                            Padding="{TemplateBinding Padding}" RecognizesAccessKey="True"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#ECE6EF"/>
+      </Style>
+      <Style Selector="^:pressed"><Setter Property="Opacity" Value="0.8"/></Style>
+      <Style Selector="^:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="#F34A64"/>
+        <Setter Property="BorderThickness" Value="1"/>
+      </Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncToggle" TargetType="ToggleButton" BasedOn="{StaticResource MusyncButton}">
+      <Style Selector="^:checked">
+        <Setter Property="Background" Value="#FFF0F3"/>
+        <Setter Property="Foreground" Value="#D83855"/>
+      </Style>
+      <Style Selector="^:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#FFE4EA"/>
+      </Style>
+    </ControlTheme>
+
+    <!-- Footer utilities keep the transport icon scale without a button surface. -->
+    <ControlTheme x:Key="MusyncPlayerIcon" TargetType="Button" BasedOn="{StaticResource MusyncButton}">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#F8F5FC"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Width" Value="36"/><Setter Property="Height" Value="36"/>
+      <Setter Property="MinWidth" Value="36"/><Setter Property="MinHeight" Value="36"/>
+      <Setter Property="Padding" Value="0"/>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#F87C90"/>
+      </Style>
+      <Style Selector="^:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="#F87C90"/>
+      </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncPlayerToggle" TargetType="ToggleButton" BasedOn="{StaticResource MusyncPlayerIcon}">
+      <Style Selector="^:checked"><Setter Property="Foreground" Value="#F87C90"/></Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncCheckBox" TargetType="CheckBox">
+      <Setter Property="MinWidth" Value="32"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Padding" Value="8,0,0,0"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid ColumnDefinitions="32,Auto" Background="Transparent">
+            <Border x:Name="CheckSurface" Width="20" Height="20" Background="White" BorderBrush="#CFC7D6"
+                    BorderThickness="1" CornerRadius="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Grid>
+                <icons:LucideIcon x:Name="CheckGlyph" Kind="check" Classes="compact" Foreground="White" IsVisible="False"/>
+                <icons:LucideIcon x:Name="MixedGlyph" Kind="minus" Classes="compact" Foreground="White" IsVisible="False"/>
+              </Grid>
+            </Border>
+            <ContentPresenter x:Name="PART_ContentPresenter" Grid.Column="1" Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}" Margin="{TemplateBinding Padding}"
+                              VerticalAlignment="Center" RecognizesAccessKey="True"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ Border#CheckSurface"><Setter Property="BorderBrush" Value="#F34A64"/></Style>
+      <Style Selector="^:checked /template/ Border#CheckSurface, ^:indeterminate /template/ Border#CheckSurface">
+        <Setter Property="Background" Value="#F34A64"/><Setter Property="BorderBrush" Value="#F34A64"/>
+      </Style>
+      <Style Selector="^:checked /template/ icons|LucideIcon#CheckGlyph"><Setter Property="IsVisible" Value="True"/></Style>
+      <Style Selector="^:indeterminate /template/ icons|LucideIcon#MixedGlyph"><Setter Property="IsVisible" Value="True"/></Style>
+      <Style Selector="^:focus-visible /template/ Border#CheckSurface"><Setter Property="BorderThickness" Value="2"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncSliderTrack" TargetType="RepeatButton">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid Background="Transparent">
+            <Border Height="3" Background="{TemplateBinding Background}" CornerRadius="2" VerticalAlignment="Center"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncSliderThumb" TargetType="Thumb">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" BorderBrush="White" BorderThickness="2" CornerRadius="8"/>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover"><Setter Property="Opacity" Value="0.85"/></Style>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncSlider" TargetType="Slider">
+      <Setter Property="Background" Value="#E8E1ED"/>
+      <Setter Property="Foreground" Value="#F34A64"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <DataValidationErrors>
+            <Border x:Name="SliderFocus" CornerRadius="8" BorderThickness="1" BorderBrush="Transparent" Padding="2,0">
+              <Track Name="PART_Track" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                     Value="{TemplateBinding Value, Mode=TwoWay}" Orientation="{TemplateBinding Orientation}"
+                     IsDirectionReversed="{TemplateBinding IsDirectionReversed}">
+                <Track.DecreaseButton>
+                  <RepeatButton Name="PART_DecreaseButton" Theme="{StaticResource MusyncSliderTrack}"
+                                Background="{TemplateBinding Foreground}" Focusable="False"/>
+                </Track.DecreaseButton>
+                <Track.IncreaseButton>
+                  <RepeatButton Name="PART_IncreaseButton" Theme="{StaticResource MusyncSliderTrack}"
+                                Background="{TemplateBinding Background}" Focusable="False"/>
+                </Track.IncreaseButton>
+                <Thumb Width="16" Height="16" Theme="{StaticResource MusyncSliderThumb}"
+                       Background="{TemplateBinding Foreground}" VerticalAlignment="Center" Cursor="Hand"/>
+              </Track>
+            </Border>
+          </DataValidationErrors>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:focus-visible /template/ Border#SliderFocus"><Setter Property="BorderBrush" Value="#F34A64"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncTextBox" TargetType="TextBox">
+      <Setter Property="Background" Value="White"/>
+      <Setter Property="Foreground" Value="#241E2E"/>
+      <Setter Property="CaretBrush" Value="#241E2E"/>
+      <Setter Property="SelectionBrush" Value="#FFD9E2"/>
+      <Setter Property="SelectionForegroundBrush" Value="#241E2E"/>
+      <Setter Property="PlaceholderForeground" Value="#938B9C"/>
+      <Setter Property="BorderBrush" Value="#E5DFEA"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="ContextFlyout" Value="{DynamicResource DefaultTextBoxContextFlyout}"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <DataValidationErrors>
+            <Border Name="PART_BorderElement" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <ContentPresenter Content="{TemplateBinding InnerLeftContent}" VerticalContentAlignment="Center"/>
+                <ScrollViewer Name="PART_ScrollViewer" Grid.Column="1" Margin="{TemplateBinding Padding}"
+                              HorizontalScrollBarVisibility="{TemplateBinding (ScrollViewer.HorizontalScrollBarVisibility)}"
+                              VerticalScrollBarVisibility="{TemplateBinding (ScrollViewer.VerticalScrollBarVisibility)}">
+                  <Panel>
+                    <TextBlock Name="PART_Placeholder" Text="{TemplateBinding PlaceholderText}"
+                               Foreground="{TemplateBinding PlaceholderForeground}" IsHitTestVisible="False"
+                               TextAlignment="{TemplateBinding TextAlignment}" TextWrapping="{TemplateBinding TextWrapping}"
+                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                      <TextBlock.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                          <Binding ElementName="PART_TextPresenter" Path="PreeditText" Converter="{x:Static StringConverters.IsNullOrEmpty}"/>
+                          <Binding RelativeSource="{RelativeSource TemplatedParent}" Path="Text" Converter="{x:Static StringConverters.IsNullOrEmpty}"/>
+                        </MultiBinding>
+                      </TextBlock.IsVisible>
+                    </TextBlock>
+                    <TextPresenter Name="PART_TextPresenter" Text="{TemplateBinding Text, Mode=TwoWay}"
+                                   CaretBlinkInterval="{TemplateBinding CaretBlinkInterval}" CaretIndex="{TemplateBinding CaretIndex}"
+                                   SelectionStart="{TemplateBinding SelectionStart}" SelectionEnd="{TemplateBinding SelectionEnd}"
+                                   TextAlignment="{TemplateBinding TextAlignment}" TextWrapping="{TemplateBinding TextWrapping}"
+                                   LineHeight="{TemplateBinding LineHeight}" LetterSpacing="{TemplateBinding LetterSpacing}"
+                                   PasswordChar="{TemplateBinding PasswordChar}" RevealPassword="{TemplateBinding RevealPassword}"
+                                   SelectionBrush="{TemplateBinding SelectionBrush}" SelectionForegroundBrush="{TemplateBinding SelectionForegroundBrush}"
+                                   CaretBrush="{TemplateBinding CaretBrush}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                  </Panel>
+                </ScrollViewer>
+                <ContentPresenter Grid.Column="2" Content="{TemplateBinding InnerRightContent}" VerticalContentAlignment="Center"/>
+              </Grid>
+            </Border>
+          </DataValidationErrors>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:focus-within /template/ Border#PART_BorderElement"><Setter Property="BorderBrush" Value="#F34A64"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncSearchBox" TargetType="TextBox" BasedOn="{StaticResource MusyncTextBox}">
+      <Setter Property="Background" Value="#FAF8FB"/>
+      <Setter Property="BorderBrush" Value="#E4DFE8"/>
+      <Setter Property="PlaceholderForeground" Value="#756D7F"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Height" Value="46"/>
+      <Setter Property="Padding" Value="0,9,8,9"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="#B7ACBF"/>
+      </Style>
+      <Style Selector="^:focus-within /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="#D83855"/>
+      </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncComboBoxItem" TargetType="ComboBoxItem">
+      <Setter Property="Foreground" Value="#241E2E"/>
+      <Setter Property="Padding" Value="12,9"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}"
+                            Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="6"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#F6F2F7"/></Style>
+      <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#FFF0F3"/><Setter Property="Foreground" Value="#D83855"/>
+      </Style>
+      <Style Selector="^:focus-visible /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="#FFE4EA"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncComboBox" TargetType="ComboBox">
+      <Setter Property="Background" Value="#F7F4F8"/>
+      <Setter Property="Foreground" Value="#241E2E"/>
+      <Setter Property="BorderBrush" Value="#E5DFEA"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="ItemContainerTheme" Value="{StaticResource MusyncComboBoxItem}"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <DataValidationErrors>
+            <Grid ColumnDefinitions="*,28">
+              <Border Name="ComboSurface" Grid.ColumnSpan="2" Background="{TemplateBinding Background}"
+                      BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                      CornerRadius="{TemplateBinding CornerRadius}"/>
+              <TextBlock Text="{TemplateBinding PlaceholderText}" Foreground="#938B9C" Margin="{TemplateBinding Padding}"
+                         VerticalAlignment="Center" IsHitTestVisible="False"
+                         IsVisible="{TemplateBinding SelectionBoxItem, Converter={x:Static ObjectConverters.IsNull}}"/>
+              <ContentControl Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                              Margin="{TemplateBinding Padding}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" IsHitTestVisible="False"/>
+              <icons:LucideIcon Grid.Column="1" Kind="chevron-down" Classes="compact" Foreground="{TemplateBinding Foreground}"/>
+              <Popup Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}"
+                     PlacementTarget="ComboSurface" Placement="BottomEdgeAlignedLeft" VerticalOffset="6"
+                     MinWidth="{Binding Bounds.Width, RelativeSource={RelativeSource TemplatedParent}}"
+                     MaxHeight="{TemplateBinding MaxDropDownHeight}" IsLightDismissEnabled="True" ShouldUseOverlayLayer="True">
+                <Border Name="ComboMenuSurface" Background="{DynamicResource MusyncComboPopupSurfaceBrush}" BorderBrush="{DynamicResource MusyncComboPopupBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="4">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" IsScrollChainingEnabled="False">
+                    <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
+                  </ScrollViewer>
+                </Border>
+              </Popup>
+            </Grid>
+          </DataValidationErrors>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ Border#ComboSurface"><Setter Property="Background" Value="#F0EBF3"/></Style>
+      <Style Selector="^:focus /template/ Border#ComboSurface"><Setter Property="BorderBrush" Value="#F34A64"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="MusyncSourceSelector" TargetType="ComboBox" BasedOn="{StaticResource MusyncComboBox}">
+      <Setter Property="Width" Value="36"/><Setter Property="Height" Value="36"/>
+      <Setter Property="MinWidth" Value="36"/><Setter Property="MinHeight" Value="36"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#F8F5FC"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid>
+            <Border Name="SourceIconTarget" Background="Transparent">
+              <icons:LucideIcon Kind="music-2" Foreground="{TemplateBinding Foreground}" IsHitTestVisible="False"/>
+            </Border>
+            <Popup Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}"
+                   PlacementTarget="SourceIconTarget" Placement="TopEdgeAlignedRight" VerticalOffset="-10"
+                   Width="200" MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                   IsLightDismissEnabled="True" ShouldUseOverlayLayer="True">
+              <Border Background="White" BorderBrush="#E5DFEA" BorderThickness="1" CornerRadius="10" Padding="4">
+                <ScrollViewer Foreground="#241E2E" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" IsScrollChainingEnabled="False">
+                  <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
+                </ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover"><Setter Property="Foreground" Value="#F87C90"/></Style>
+      <Style Selector="^:focus-visible"><Setter Property="Foreground" Value="#F87C90"/></Style>
+      <Style Selector="^:dropdownopen"><Setter Property="Foreground" Value="#F87C90"/></Style>
+    </ControlTheme>
+
+    <!-- Preserve spinner keyboard/wheel behavior; delay fields have separate visible +/- buttons. -->
+    <ControlTheme x:Key="MusyncDelaySpinner" TargetType="ButtonSpinner">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncDelayEditor" TargetType="NumericUpDown">
+      <Setter Property="Background" Value="White"/>
+      <Setter Property="Foreground" Value="#241E2E"/>
+      <Setter Property="BorderBrush" Value="#E5DFEA"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <DataValidationErrors>
+            <ButtonSpinner Name="PART_Spinner" Theme="{StaticResource MusyncDelaySpinner}" IsTabStop="False"
+                           AllowSpin="{TemplateBinding AllowSpin}" ShowButtonSpinner="{TemplateBinding ShowButtonSpinner}"
+                           HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+              <TextBox Name="PART_TextBox" Theme="{StaticResource MusyncTextBox}" Text="{TemplateBinding Text}"
+                     Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}"
+                     BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                     CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}" MinHeight="0" MinWidth="0"
+                     PlaceholderText="{TemplateBinding PlaceholderText}" IsReadOnly="{TemplateBinding IsReadOnly}"
+                     TextAlignment="{TemplateBinding TextAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                     HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" TextWrapping="NoWrap" AcceptsReturn="False"/>
+            </ButtonSpinner>
+          </DataValidationErrors>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+    </ControlTheme>
+  </Styles.Resources>
+  <Style Selector="Button"><Setter Property="Theme" Value="{StaticResource MusyncButton}"/></Style>
+  <Style Selector="ToggleButton"><Setter Property="Theme" Value="{StaticResource MusyncToggle}"/></Style>
+  <Style Selector="CheckBox"><Setter Property="Theme" Value="{StaticResource MusyncCheckBox}"/></Style>
+  <Style Selector="Slider"><Setter Property="Theme" Value="{StaticResource MusyncSlider}"/></Style>
+  <Style Selector="TextBox"><Setter Property="Theme" Value="{StaticResource MusyncTextBox}"/></Style>
+  <Style Selector="ComboBox"><Setter Property="Theme" Value="{StaticResource MusyncComboBox}"/></Style>
+  <Style Selector="NumericUpDown"><Setter Property="Theme" Value="{StaticResource MusyncDelayEditor}"/></Style>
+  <Style Selector="ToolTip">
+    <Setter Property="Background" Value="#251A35"/><Setter Property="Foreground" Value="White"/>
+    <Setter Property="CornerRadius" Value="8"/><Setter Property="Padding" Value="10,6"/>
+  </Style>
+</Styles>

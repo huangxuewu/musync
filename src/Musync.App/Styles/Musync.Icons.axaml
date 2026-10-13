@@ -1,0 +1,31 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:icons="using:Musync.App.Controls">
+  <!-- Size roles are in device-independent pixels; every icon keeps Lucide's 24-unit canvas. -->
+  <Style Selector="icons|LucideIcon.compact">
+    <Setter Property="Width" Value="16"/><Setter Property="Height" Value="16"/>
+  </Style>
+  <Style Selector="icons|LucideIcon.large">
+    <Setter Property="Width" Value="24"/><Setter Property="Height" Value="24"/>
+  </Style>
+  <Style Selector="Button.iconButton, Button.transport, Button.delayStep">
+    <Setter Property="Width" Value="36"/><Setter Property="Height" Value="36"/>
+    <Setter Property="MinWidth" Value="36"/><Setter Property="MinHeight" Value="36"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.transport:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#3D304D"/>
+  </Style>
+  <Style Selector="Button.playerPrimary">
+    <Setter Property="Width" Value="44"/><Setter Property="Height" Value="44"/>
+    <Setter Property="MinWidth" Value="44"/><Setter Property="MinHeight" Value="44"/>
+    <Setter Property="CornerRadius" Value="22"/><Setter Property="Padding" Value="0"/>
+    <Setter Property="Background" Value="White"/><Setter Property="Foreground" Value="#251A35"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.playerPrimary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#FFE3EA"/>
+  </Style>
+</Styles>

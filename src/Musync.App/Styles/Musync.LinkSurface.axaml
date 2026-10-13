@@ -1,0 +1,93 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Musync.App.Controls">
+  <!-- Links share the player's plum palette; scope every state to this overlay. -->
+  <Styles.Resources>
+    <SolidColorBrush x:Key="LinkSurfaceBrush" Color="#342741"/>
+    <SolidColorBrush x:Key="LinkTextBrush" Color="#F8F5FC"/>
+    <SolidColorBrush x:Key="LinkMutedBrush" Color="#CABFD4"/>
+    <SolidColorBrush x:Key="LinkFieldBrush" Color="#45364F"/>
+    <SolidColorBrush x:Key="LinkHoverBrush" Color="#54405E"/>
+    <SolidColorBrush x:Key="LinkDividerBrush" Color="#655371"/>
+    <SolidColorBrush x:Key="LinkFieldBorderBrush" Color="#A191AD"/>
+    <SolidColorBrush x:Key="LinkFocusBrush" Color="#FF91A5"/>
+    <ControlTheme x:Key="MusyncLinkChoice" TargetType="ComboBoxItem" BasedOn="{StaticResource MusyncComboBoxItem}">
+      <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+      <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource LinkHoverBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+      </Style>
+      <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter, ^:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource LinkHoverBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource LinkFocusBrush}"/>
+      </Style>
+    </ControlTheme>
+  </Styles.Resources>
+  <Style Selector="Border#SpeakerPanel TextBlock"><Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/></Style>
+  <Style Selector="Border#SpeakerPanel TextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource LinkMutedBrush}"/></Style>
+  <Style Selector="Border#SpeakerPanel Button.ghost, Border#SpeakerPanel Button.delayStep">
+    <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel Button.ghost:pointerover /template/ ContentPresenter, Border#SpeakerPanel Button.delayStep:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource LinkHoverBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel Button:focus-visible /template/ ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFocusBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel Button.primary">
+    <Setter Property="Background" Value="#D83855"/><Setter Property="Foreground" Value="White"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel Button.primary TextBlock"><Setter Property="Foreground" Value="White"/></Style>
+  <Style Selector="Border#SpeakerPanel Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#C72D49"/><Setter Property="Foreground" Value="White"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel TextBox, Border#SpeakerPanel NumericUpDown">
+    <Setter Property="Background" Value="{DynamicResource LinkFieldBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFieldBorderBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel TextBox">
+    <Setter Property="CaretBrush" Value="{DynamicResource LinkTextBrush}"/>
+    <Setter Property="PlaceholderForeground" Value="{DynamicResource LinkMutedBrush}"/>
+    <Setter Property="SelectionBrush" Value="{DynamicResource LinkFocusBrush}"/>
+    <Setter Property="SelectionForegroundBrush" Value="#251A35"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel TextBox:focus-within /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFocusBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel ComboBox">
+    <Setter Property="Background" Value="{DynamicResource LinkFieldBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFieldBorderBrush}"/>
+    <Setter Property="ItemContainerTheme" Value="{StaticResource MusyncLinkChoice}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel ComboBox /template/ ContentControl">
+    <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel ComboBox /template/ TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource LinkTextBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel ComboBox:pointerover /template/ Border#ComboSurface">
+    <Setter Property="Background" Value="{DynamicResource LinkHoverBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel ComboBox:focus /template/ Border#ComboSurface">
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFocusBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel CheckBox /template/ Border#CheckSurface">
+    <Setter Property="Background" Value="{DynamicResource LinkFieldBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFieldBorderBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel CheckBox:checked /template/ Border#CheckSurface">
+    <Setter Property="Background" Value="#D83855"/><Setter Property="BorderBrush" Value="#D83855"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel CheckBox:pointerover /template/ Border#CheckSurface, Border#SpeakerPanel CheckBox:focus-visible /template/ Border#CheckSurface">
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFocusBrush}"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel Slider">
+    <Setter Property="Background" Value="{DynamicResource LinkFieldBorderBrush}"/>
+    <Setter Property="Foreground" Value="#F87C90"/>
+  </Style>
+  <Style Selector="Border#SpeakerPanel Slider:focus-visible /template/ Border#SliderFocus">
+    <Setter Property="BorderBrush" Value="{DynamicResource LinkFocusBrush}"/>
+  </Style>
+</Styles>

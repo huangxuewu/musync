@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" PrivateAssets="all" />
+    <ProjectReference Include="../../src/Musync.Core/Musync.Core.csproj" />
+    <ProjectReference Include="../../src/Musync.Network/Musync.Network.csproj" />
+    <ProjectReference Include="../../src/Musync.Platform.Windows/Musync.Platform.Windows.csproj" />
+  </ItemGroup>
+</Project>

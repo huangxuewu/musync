@@ -1,0 +1,12 @@
+{
+  "Version": "1.0.0",
+  "Platform": "win-x64",
+  "Executable": "artifacts/Musync-1.0.0-win-x64/Musync.exe",
+  "Archive": "artifacts/Musync-1.0.0-win-x64.zip",
+  "Bytes": 151503876,
+  "SHA256": "e13c524e4257e2d7aa58a47e90da4b9c749a39a004f9073affccde7fdb62ead7",
+  "SelfContained": true,
+  "Signed": false,
+  "Validation": "release-validation.json",
+  "AutomatedTestsPassed": 412
+}

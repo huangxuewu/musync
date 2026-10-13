@@ -1,0 +1,15 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Musync.App.Controls">
+  <!-- The window class follows the OS animation preference. State stays immediate
+       when it is absent; hit targets and layout remain at their authored size. -->
+  <Style Selector="Window.motionEnabled Button.nav /template/ ContentPresenter">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.14"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.14"/>
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Window.motionEnabled Button.transport, Window.motionEnabled Button.playerPrimary, Window.motionEnabled Button.playerUtility, Window.motionEnabled ToggleButton.playerUtility, Window.motionEnabled ComboBox.playerUtility">
+    <Setter Property="icons:InteractionMotion.Enabled" Value="True"/>
+  </Style>
+</Styles>

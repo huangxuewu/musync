@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Musync</AssemblyName>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Musync.App.Tests" />
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <ProjectReference Include="../Musync.Core/Musync.Core.csproj" />
+    <ProjectReference Include="../Musync.Platform.Windows/Musync.Platform.Windows.csproj" />
+    <ProjectReference Include="../Musync.Network/Musync.Network.csproj" />
+    <AvaloniaResource Include="Assets/**" />
+    <None Include="../../licenses/TagLibSharp-LGPL-2.1.txt" Link="licenses/TagLibSharp-LGPL-2.1.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets/Fonts/NotoSansSC-OFL.txt" Link="licenses/NotoSansSC-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
