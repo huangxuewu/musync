@@ -49,9 +49,10 @@ public sealed class PosterBackdrop : Control
         var colors = Colors[((palette % 3) + 3) % 3];
         var w = bounds.Width; var h = bounds.Height;
         context.DrawRectangle(colors.Ground, null, bounds);
-        Polygon(context, colors.Wedge, new(.72 * w, 0), new(w, 0), new(w, h), new(.46 * w, h));
+        context.DrawEllipse(colors.Circle, null, new Point(.05 * w, .82 * h), .46 * h, .46 * h);
+        Polygon(context, colors.Wedge, new(.66 * w, 0), new(w, 0), new(w, h), new(.38 * w, h));
         context.DrawEllipse(colors.Circle, null, new Point(.86 * w, .34 * h), .38 * h, .38 * h);
-        Polygon(context, colors.Stripe, new(.42 * w, .83 * h), new(w, .25 * h), new(w, .35 * h), new(.46 * w, h));
+        Polygon(context, colors.Stripe, new(.26 * w, .83 * h), new(w, .25 * h), new(w, .35 * h), new(.32 * w, h));
         Polygon(context, colors.Ground, new(.80 * w, 0), new(.84 * w, 0), new(w, .28 * h), new(w, .35 * h));
     }
     private static void Polygon(DrawingContext context, IBrush brush, params Point[] points)

@@ -151,7 +151,7 @@
             <StackPanel Spacing="24">
               <Grid x:Name="HeroScene" ColumnDefinitions="1.618*,*" MinHeight="330" ClipToBounds="False" IsVisible="{Binding ShowHero}">
                   <icons:PosterBackdrop x:Name="HeroSurface" Grid.ColumnSpan="2" ZIndex="10" Palette="{Binding PosterPalette}" Margin="0,24,0,0" IsHitTestVisible="False"/>
-                  <Border x:Name="HeroGlassPanel" Grid.Column="0" ZIndex="30" VerticalAlignment="Center" Margin="22,42,-46,18" CornerRadius="16" BoxShadow="0 8 24 0 #12251A35">
+                  <Border x:Name="HeroGlassPanel" Grid.Column="0" ZIndex="30" VerticalAlignment="Center" Margin="22,42,-46,18" CornerRadius="16">
                     <Grid>
                       <icons:FrostedPosterGlass x:Name="HeroGlass" Backdrop="{Binding #HeroSurface}" IsHitTestVisible="False"/>
                       <StackPanel Margin="24" Spacing="10">

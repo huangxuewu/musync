@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The frosted lyric sheet reveals more of the poster's cropped color disc and widened diagonal ribbon, with sharp text above the blur and a single glass edge. Navigation, music lists and playback controls retain their existing layout.
 - AirPlay helper control queues are independent for each receiver, so a slow handshake or volume reply cannot delay another speaker's setup or close. Concurrent handshakes wait for one shared timing clock; pending sessions retain that clock and peer until their own cleanup completes.
 - AirPlay helper instances own their requests, diagnostics and receiver sessions. Replacing a stopped helper retains old receivers' failures and prevents their PCM, volume or close commands from being sent to the replacement; both output readers are cancelled and awaited during cleanup.
 - AirPlay preparation, PCM pipe writes and volume requests honor the playback session's cancellation. Stop or Pause can cancel pending sends and control replies, and helper session closure has a five-second wait limit. Late replies to cancelled requests cannot become errors in a newer session.

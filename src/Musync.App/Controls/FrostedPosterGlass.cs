@@ -15,7 +15,7 @@ public sealed class FrostedPosterGlass : Control
     {
         StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
         EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-        GradientStops = [new(Color.Parse("#BDFFFFFF"), 0), new(Color.Parse("#A6FFFFFF"), 1)]
+        GradientStops = [new(Color.Parse("#A6FFFFFF"), 0), new(Color.Parse("#8FFFFFFF"), 1)]
     };
     private readonly Pen _edge = new(new SolidColorBrush(Color.Parse("#D9FFFFFF")), 1);
     private PosterBackdrop? _observed;

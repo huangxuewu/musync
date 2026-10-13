@@ -31,7 +31,7 @@ public sealed partial class SpotifyPlaybackTests
             await Task.Delay(60);
             // Just outside the blue diagonal the unfiltered poster is pure
             // yellow. A real blur includes blue from the neighboring pixels.
-            Point Sample() => new((.72 - .26 * .45) * backdrop.Bounds.Width - 4, .45 * backdrop.Bounds.Height);
+            Point Sample() => new((.66 - .28 * .45) * backdrop.Bounds.Width - 4, .45 * backdrop.Bounds.Height);
             Color At(Bitmap frame, Point point) => ReadGlassPixel(frame, backdrop.TranslatePoint(point, window)!.Value);
             glass.IsVisible = false;
             using (var sharp = window.CaptureRenderedFrame()!) Assert.Equal(255, At(sharp, Sample()).R);
