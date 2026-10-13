@@ -17,6 +17,8 @@
     <Style Selector="Button.trackPlay:pointerover Border.trackPlayOverlay, Button.trackPlay:focus-visible Border.trackPlayOverlay"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="icons|PreparationIndicator.trackActivity"><Setter Property="MotionEnabled" Value="False"/></Style>
     <Style Selector="Window.motionEnabled.trackPlaybackVisible icons|PreparationIndicator.trackActivity"><Setter Property="MotionEnabled" Value="True"/></Style>
+    <Style Selector="icons|PreparationIndicator.radioActivity"><Setter Property="MotionEnabled" Value="False"/></Style>
+    <Style Selector="Window.motionEnabled.radioPlaybackVisible icons|PreparationIndicator.radioActivity"><Setter Property="MotionEnabled" Value="True"/></Style>
     <Style Selector="Border.statusToast">
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Margin" Value="24,0,28,112"/>

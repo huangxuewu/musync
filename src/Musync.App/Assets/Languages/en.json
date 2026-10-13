@@ -193,6 +193,8 @@
   "RadioSaved": "Station saved.",
   "RadioRemoved": "Station removed.",
   "RadioPlayNamed": "Play station “{0}”",
+  "RadioPauseNamed": "Pause station “{0}”",
+  "RadioPreparingNamed": "Preparing station “{0}”",
   "RadioRemoveNamed": "Remove station “{0}”",
   "RadioBuffering": "Buffering radio and preparing linked speakers…",
   "RadioToolsMissing": "Radio tools are unavailable. Prepare the radio dependencies, then try again.",

@@ -193,6 +193,8 @@
   "RadioSaved": "ステーションを保存しました。",
   "RadioRemoved": "ステーションを削除しました。",
   "RadioPlayNamed": "「{0}」を再生",
+  "RadioPauseNamed": "「{0}」を一時停止",
+  "RadioPreparingNamed": "「{0}」を準備しています",
   "RadioRemoveNamed": "「{0}」を削除",
   "RadioBuffering": "音声を読み込み、リンクしたスピーカーを準備中…",
   "RadioToolsMissing": "再生ツールが準備されていません。依存ツールを設定して再試行してください。",

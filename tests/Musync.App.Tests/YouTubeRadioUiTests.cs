@@ -82,13 +82,15 @@ public sealed partial class SpotifyPlaybackTests
     {
         public TaskCompletionSource? ResolveGate;
         public readonly TaskCompletionSource Resolving = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public int Plays, Cancellations; public double Position => 0; public double Duration => 180; public bool IsFinished => false;
+        public int Plays, Cancellations, Lookups; public double PositionValue; public bool Paused;
+        public double Position => PositionValue; public double Duration => 180; public bool IsFinished => false;
         public string? DefaultDeviceId => "test-output";
         public IReadOnlyList<SpeakerDevice> GetDevices() => [new("test-output", "Test output", SpeakerTransport.Windows)];
         public IAudioOutput CreateOutput(SpeakerDevice device) => new PresentationOutput(device);
         public bool IsStreamingSource(string source) => YouTubeAddress.TryParse(source, out _);
         public async Task<MusicTrack> ResolveRadioAsync(YouTubeAddress address, CancellationToken token)
         {
+            Lookups++;
             Resolving.TrySetResult();
             try { if (ResolveGate is not null) await ResolveGate.Task.WaitAsync(token); }
             catch (OperationCanceledException) { Cancellations++; throw; }
@@ -97,19 +99,19 @@ public sealed partial class SpotifyPlaybackTests
         public async Task PlayFileAsync(string path, AudioHub hub, CancellationToken token, double startPosition = 0)
         { Plays++; await Task.Delay(Timeout.Infinite, token); }
         public Task CaptureAsync(string id, AudioHub hub, CancellationToken token) => Task.Delay(Timeout.Infinite, token);
-        public void Pause(bool paused) { } public void Seek(double seconds) { }
+        public void Pause(bool paused) => Paused = paused; public void Seek(double seconds) { }
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
     private sealed class RadioFixture : IAsyncDisposable
     {
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "Musync-Radio-UI-" + Guid.NewGuid());
         public RadioTestBackend Backend { get; } = new(); public MainViewModel Model { get; }
-        public RadioFixture()
+        public RadioFixture(string language = "en")
         {
             Directory.CreateDirectory(_directory);
             var preferences = new SpeakerPreferences { Selected = true };
             var link = new SpeakerLink { Id = "test-link", Name = "Test link", Speakers = new() { ["test-output"] = new() { Name = "Test output", Preferences = preferences } } };
-            var settings = new AppSettings { Language = "en", LinksInitialized = true, ActiveLinkId = link.Id, Links = [link] };
+            var settings = new AppSettings { Language = language, LinksInitialized = true, ActiveLinkId = link.Id, Links = [link] };
             Model = new(Backend, new PlaybackCoordinator(Backend, Backend.CreateOutput),
                 Client(new Handler((_, _) => Task.FromResult(Response(HttpStatusCode.NoContent)))),
                 new SettingsStore(Path.Combine(_directory, "settings.json")), settings, _directory);

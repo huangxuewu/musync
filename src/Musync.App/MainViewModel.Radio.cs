@@ -57,6 +57,22 @@ public sealed partial class MainViewModel
         if (_disposed || !YouTubeMode) return;
         await PlayTrackAsync(new("youtube:" + ParseRadioAddress(station.Url).VideoId, station.Name, "YouTube", station.Url));
     }
+    private async Task ActivateRadioAsync(RadioStation station)
+    {
+        if (_disposed || Busy || !_settings.RadioStations.Any(s => s.Id == station.Id)) return;
+        if (_session && YouTubeMode && _current?.FilePath == station.Url) await TogglePlayback();
+        else await PlayRadioAsync(station);
+    }
+    private TrackPlaybackPhase RadioPhase(RadioStation station)
+    {
+        if (!YouTubeMode || IsSwitchingSource || _current?.FilePath != station.Url) return TrackPlaybackPhase.None;
+        if (IsPreparingPlayback) return TrackPlaybackPhase.Preparing;
+        return !_session ? TrackPlaybackPhase.None : IsPlaying ? TrackPlaybackPhase.Playing : TrackPlaybackPhase.Paused;
+    }
+    private void RefreshRadioPlayback()
+    {
+        foreach (var station in RadioStations) station.RefreshPlayback();
+    }
     private async Task RemoveRadioAsync(RadioStation station)
     {
         if (Busy) return;
@@ -83,7 +99,11 @@ public sealed partial class MainViewModel
     }
     private void RefreshRadioSelection()
     {
-        foreach (var station in RadioStations) station.IsActive = YouTubeMode && station.Station.Url == _current?.FilePath;
+        foreach (var station in RadioStations)
+        {
+            station.IsActive = YouTubeMode && station.Station.Url == _current?.FilePath;
+            station.RefreshPlayback();
+        }
         Raise(nameof(RadioHeadline));
     }
     private void RefreshRadioText()
@@ -95,11 +115,16 @@ public sealed partial class MainViewModel
     {
         private readonly MainViewModel _owner;
         private bool _active;
+        private TrackPlaybackPhase _phase;
         public RadioStation Station { get; }
         public string Name => Station.Name;
         public string Url => Station.Url;
         public bool IsActive { get => _active; internal set => Set(ref _active, value); }
-        public string PlayLabel => string.Format(_owner.Text["RadioPlayNamed"], Name);
+        public bool IsPreparing => _phase == TrackPlaybackPhase.Preparing;
+        public bool HasPlaybackActivity => _phase is TrackPlaybackPhase.Preparing or TrackPlaybackPhase.Playing;
+        public string PlayIcon => _phase == TrackPlaybackPhase.Playing ? "pause" : "play";
+        public string StatusCaption => _phase == TrackPlaybackPhase.None ? Url : _owner.Text[IsPreparing ? "RadioBuffering" : _phase == TrackPlaybackPhase.Playing ? "Playing" : "Paused"];
+        public string PlayLabel => string.Format(_owner.Text[IsPreparing ? "RadioPreparingNamed" : _phase == TrackPlaybackPhase.Playing ? "RadioPauseNamed" : "RadioPlayNamed"], Name);
         public string RemoveLabel => string.Format(_owner.Text["RadioRemoveNamed"], Name);
         public bool CanEdit => !_owner.Busy;
         public ICommand Play { get; }
@@ -107,10 +132,19 @@ public sealed partial class MainViewModel
         public RadioStationViewModel(RadioStation station, MainViewModel owner)
         {
             Station = station; _owner = owner;
-            Play = new AsyncCommand(_ => owner.PlayRadioAsync(station), owner.ShowError, () => CanEdit);
+            Play = new AsyncCommand(_ => owner.ActivateRadioAsync(station), owner.ShowError, () => CanEdit);
             Remove = new AsyncCommand(_ => owner.RemoveRadioAsync(station), owner.ShowError, () => CanEdit);
+            RefreshPlayback();
         }
-        internal void RefreshText() { Raise(nameof(PlayLabel)); Raise(nameof(RemoveLabel)); }
+        internal void RefreshText() { Raise(nameof(PlayLabel)); Raise(nameof(RemoveLabel)); Raise(nameof(StatusCaption)); }
         internal void RefreshAvailability() => Raise(nameof(CanEdit));
+        internal void RefreshPlayback()
+        {
+            var phase = _owner.RadioPhase(Station);
+            if (_phase == phase) return;
+            _phase = phase;
+            Raise(nameof(IsPreparing)); Raise(nameof(HasPlaybackActivity)); Raise(nameof(PlayIcon));
+            Raise(nameof(StatusCaption)); Raise(nameof(PlayLabel));
+        }
     }
 }

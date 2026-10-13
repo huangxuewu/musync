@@ -303,7 +303,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         set { if (_settings.PlaylistsExpanded == value) return; _settings.PlaylistsExpanded = value; Raise(); Raise(nameof(PlaylistSectionLabel)); SaveSoon(); }
     }
     public string ListTitle { get => _listTitle; private set => Set(ref _listTitle, value); }
-    public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); RefreshTrackPlayback(); } } }
+    public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); RefreshTrackPlayback(); RefreshRadioPlayback(); } } }
     public string PlayIcon => IsPlaying ? "pause" : "play";
     public string PlayLabel => Text[IsSwitchingSource ? "SwitchingSource" : IsPreparingPlayback ? "PreparingSpeakers" : IsPlaying ? "Pause" : "Play"];
     public bool IsPreparingPlayback
@@ -315,6 +315,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             Raise(nameof(PlayLabel)); Raise(nameof(PlayEnabled)); Raise(nameof(Seekable)); Raise(nameof(PreparationDetail));
             RefreshSpeakerPlaybackStatus();
             RefreshTrackPlayback();
+            RefreshRadioPlayback();
         }
     }
     public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Clicking the current YouTube radio row pauses/resumes its existing stream instead of repeating metadata lookup and restarting the decoder. Station rows show preparation/playback activity, localized status and contextual play/pause actions. The active preparing row stays readable while duplicate requests are disabled; activity stops for reduced motion, hidden/minimized windows, the mini player and other pages. Explicit station selection for next/previous continues to start the chosen station.
+
 ## 1.0.1 — 2026-10-13
 
 - YouTube radio accepts saved video/live addresses and routes one buffered audio timeline through the active Windows/Bluetooth, AirPlay and Chromecast speaker link. It includes pause/resume, volume and station navigation, with bundled checksum-pinned yt-dlp and LGPL shared FFmpeg helpers. Seeking is disabled; physical multi-speaker radio synchronization has not been retested for this release.
