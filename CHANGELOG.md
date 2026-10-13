@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Playback visual tests verify contrasting foreground and background pixels for navigation and transport icons in English, Simplified Chinese and Japanese. Animated headless captures advance pending render frames before inspection, avoiding incomplete snapshots being mistaken for a language or palette defect.
 - Song rows highlight the current track, show preparing/playing activity or a paused icon, and expose a play/pause overlay on hover or keyboard focus. Activating the current row pauses/resumes at its existing position; Spotify resumes its queue without resending the track URI. Row activity stops for reduced motion, minimized/hidden windows, the mini player and hidden song lists. Busy rows do not queue duplicate playback requests.
 - Search identifies the active playlist or favorites collection, preserves its scope when cleared, and tolerates surrounding spaces. Searching from the playlist overview reveals library song results instead of leaving them hidden. Empty playlists and favorites offer a localized library action; empty searches offer Clear search with focus restored to the search field, without interrupting playback.
 - Chromecast local-file preparation validates MP3 frames and serves the original MP3 bytes through a shared read lease, avoiding another lossy encoding pass. Other formats retain the existing compatible MP3 encoding path. File routes now support HEAD and ranged probes; source preparation displays the selected receiver count before handshakes start.
