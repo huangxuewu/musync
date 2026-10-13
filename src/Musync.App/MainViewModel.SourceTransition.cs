@@ -41,7 +41,7 @@ public sealed partial class MainViewModel
             if (!OwnsSource(version)) return;
             await StopAsync(resetStatus: false);
             if (!OwnsSource(version) || !SpotifyMode) return;
-            if (!_spotify.Connected) SettingsOpen = true;
+            if (!_spotify.Connected) ShowSpotifySettings();
             else
             {
                 using var lookup = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);

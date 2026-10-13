@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Settings groups General, Audio and Spotify controls in a compact frosted panel with a fixed Save action. Unconnected Spotify actions open the setup section directly; closing settings restores keyboard focus without interrupting playback.
 - Music recognition and artwork caches have a configurable 500 MB default capacity, an atomic ownership index, background expiry/unused-file maintenance and least-recently-used eviction. Local tags survive restart and Spotify disconnection; source file size/timestamp changes invalidate their cached identification.
 - Local songs can be removed from playlists or the library using a Lucide minus action. Song/playlist removal cleans unreferenced cache files and retains shared covers; original audio files stay in place. Settings shows cache usage and the capacity control in all three languages.
 - Spotify attribution icons use high-quality bitmap scaling so the official mark remains clear at 24 px.

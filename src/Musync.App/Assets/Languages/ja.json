@@ -162,6 +162,8 @@
   "Radio": "ラジオ",
   "ArtworkCache": "曲の識別・アートワークのキャッシュ",
   "ArtworkCacheLimit": "キャッシュ上限",
+  "SettingsGeneral": "一般",
+  "SettingsAudio": "オーディオ",
   "ArtworkCacheUsage": "{1} MB 中 {0:N1} MB 使用 · {2} ファイル",
   "RemoveTrackFromPlaylist": "「{0}」をプレイリストから削除",
   "RemoveTrackFromLibrary": "「{0}」をライブラリから削除（ファイルを保持）",

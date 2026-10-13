@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private Slider? _seekingSlider;
     private double _pendingSeek;
     private Control? _playlistReturnFocus;
+    private Control? _settingsReturnFocus;
     public Func<Task>? Cleanup { get; set; }
     public MainWindow()
     {
@@ -218,8 +219,26 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(MainViewModel.LyricCurrent))
             Avalonia.Threading.Dispatcher.UIThread.Post(() => RevealPanel(CurrentLyric, 4, 180));
         if (e.PropertyName == nameof(MainViewModel.SettingsOpen) && _linkModel?.SettingsOpen == true)
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (_linkModel?.SettingsOpen == true) RevealPanel(SettingsPanel, 8, 320); }, Avalonia.Threading.DispatcherPriority.Loaded);
-        if (e.PropertyName == nameof(MainViewModel.SettingsOpen) && _linkModel?.SettingsOpen == false) SettleReveal(SettingsPanel);
+        {
+            _settingsReturnFocus = FocusManager?.GetFocusedElement() as Control;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_linkModel is not { SettingsOpen: true } model) return;
+                RevealPanel(SettingsPanel, 8, 320);
+                (model.SettingsSpotify ? SettingsSpotifyTab : model.SettingsAudio ? SettingsAudioTab : SettingsGeneralTab).Focus();
+            }, Avalonia.Threading.DispatcherPriority.Loaded);
+        }
+        if (e.PropertyName == nameof(MainViewModel.SettingsOpen) && _linkModel?.SettingsOpen == false)
+        {
+            SettleReveal(SettingsPanel);
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (_linkModel?.SettingsOpen == true) return;
+                var target = _settingsReturnFocus is { IsEffectivelyVisible: true, IsEnabled: true } control && TopLevel.GetTopLevel(control) is not null
+                    ? control : SettingsNav;
+                target.Focus(); _settingsReturnFocus = null;
+            }, Avalonia.Threading.DispatcherPriority.Loaded);
+        }
         if (e.PropertyName == nameof(MainViewModel.PlaylistsExpanded)) UpdatePlaylistDisclosure(animate: true);
         if (e.PropertyName == nameof(MainViewModel.PlaylistOpen) && _linkModel?.PlaylistOpen == true)
         {
@@ -319,6 +338,11 @@ public partial class MainWindow : Window
         if (e.Key != Key.Escape) return;
         SpeakerToggle.IsChecked = false;
         e.Handled = true;
+    }
+    private void SettingsPanelKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || DataContext is not MainViewModel { SettingsOpen: true } model) return;
+        model.CloseSettings.Execute(null); e.Handled = true;
     }
     private void ResizeWindow(object? sender, PointerPressedEventArgs e)
     {

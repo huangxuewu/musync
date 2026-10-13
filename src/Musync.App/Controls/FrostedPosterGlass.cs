@@ -11,19 +11,22 @@ public sealed class FrostedPosterGlass : Control
     public static readonly StyledProperty<PosterBackdrop?> BackdropProperty =
         AvaloniaProperty.Register<FrostedPosterGlass, PosterBackdrop?>(nameof(Backdrop));
     private readonly BlurEffect _blur = new() { Radius = 18 };
-    private readonly IBrush _tint = new LinearGradientBrush
+    private static readonly IBrush DefaultTint = new LinearGradientBrush
     {
         StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
         EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
         GradientStops = [new(Color.Parse("#A6FFFFFF"), 0), new(Color.Parse("#8FFFFFFF"), 1)]
     };
+    public static readonly StyledProperty<IBrush> TintProperty =
+        AvaloniaProperty.Register<FrostedPosterGlass, IBrush>(nameof(Tint), DefaultTint);
     private readonly Pen _edge = new(new SolidColorBrush(Color.Parse("#D9FFFFFF")), 1);
     private PosterBackdrop? _observed;
     private Point? _origin;
     private bool _attached;
 
     public PosterBackdrop? Backdrop { get => GetValue(BackdropProperty); set => SetValue(BackdropProperty, value); }
-    static FrostedPosterGlass() => AffectsRender<FrostedPosterGlass>(BackdropProperty, BoundsProperty);
+    public IBrush Tint { get => GetValue(TintProperty); set => SetValue(TintProperty, value); }
+    static FrostedPosterGlass() => AffectsRender<FrostedPosterGlass>(BackdropProperty, TintProperty, BoundsProperty);
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
@@ -86,7 +89,7 @@ public sealed class FrostedPosterGlass : Control
                 using (context.PushTransform(Matrix.CreateTranslation(origin.X, origin.Y)))
                     source.Render(context);
             }
-            context.DrawRectangle(_tint, null, bounds);
+            context.DrawRectangle(Tint, null, bounds);
         }
         context.DrawRectangle(null, _edge, bounds.Deflate(.5), 16, 16);
     }

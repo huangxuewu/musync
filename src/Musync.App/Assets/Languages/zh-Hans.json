@@ -162,6 +162,8 @@
   "Radio": "电台",
   "ArtworkCache": "音乐识别与封面缓存",
   "ArtworkCacheLimit": "缓存上限",
+  "SettingsGeneral": "常规",
+  "SettingsAudio": "音频",
   "ArtworkCacheUsage": "已用 {0:N1} MB / {1} MB · {2} 个文件",
   "RemoveTrackFromPlaylist": "从歌单移除“{0}”",
   "RemoveTrackFromLibrary": "从音乐库移除“{0}”（保留文件）",

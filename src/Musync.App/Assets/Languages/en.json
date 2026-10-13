@@ -162,6 +162,8 @@
   "Radio": "Radio",
   "ArtworkCache": "Music recognition & artwork cache",
   "ArtworkCacheLimit": "Cache limit",
+  "SettingsGeneral": "General",
+  "SettingsAudio": "Audio",
   "ArtworkCacheUsage": "{0:N1} MB used of {1} MB · {2} files",
   "RemoveTrackFromPlaylist": "Remove “{0}” from playlist",
   "RemoveTrackFromLibrary": "Remove “{0}” from library (keep file)",

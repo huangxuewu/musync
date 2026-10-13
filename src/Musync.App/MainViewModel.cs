@@ -96,6 +96,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ImportCommand = new AsyncCommand(async _ => { if (ImportFolders is not null) await ImportFolders(); }, ShowError);
         Navigation = new AsyncCommand(p => { Navigate(p?.ToString() ?? "home"); return Task.CompletedTask; }, ShowError);
         SettingsCommand = new AsyncCommand(_ => { SettingsOpen = true; return Task.CompletedTask; }, ShowError);
+        SettingsNavigation = new AsyncCommand(p => { SelectSettingsSection(p?.ToString() ?? "general"); return Task.CompletedTask; }, ShowError);
         CloseSettings = new AsyncCommand(async _ => { await SaveSettings(); SettingsOpen = false; }, ShowError);
         ConnectSpotify = new AsyncCommand(_ => ConnectSpotifyAsync(), ShowError);
         DisconnectSpotify = new AsyncCommand(async _ => { _spotify.Disconnect(); _listArtwork.Clear(includeLocalMetadata: false); RefreshTracks(); _spotifyStateVersion++; Raise(nameof(SpotifyStatus)); if (SpotifyMode) { await StopAsync(); ClearSpotifyPlayback(); } Status = Text["NotConnected"]; }, ShowError);
@@ -748,7 +749,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (SpotifyMode)
             {
                 _spotifyStateVersion++;
-                if (!_spotify.Connected) { SettingsOpen = true; Status = Text["NotConnected"]; return; }
+                if (!_spotify.Connected) { ShowSpotifySettings(); Status = Text["NotConnected"]; return; }
                 await _player.StopAsync();
                 if (!OwnsSource(sourceVersion)) return;
                 if (SpotifyDevice is null) await RefreshSpotifyDevicesAsync();
@@ -897,7 +898,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         }
         if (SpotifyMode)
         {
-            if (!_spotify.Connected) { SettingsOpen = true; return; }
+            if (!_spotify.Connected) { ShowSpotifySettings(); return; }
             _spotifyStateVersion++;
             if (direction > 0) await _spotify.NextAsync(_lifetime.Token); else await _spotify.PreviousAsync(_lifetime.Token);
             _spotifyNextPoll = DateTime.UtcNow.AddSeconds(1);
@@ -950,7 +951,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task SearchAsync()
     {
         if (!SpotifyMode) { RefreshTracks(); return; }
-        if (!_spotify.Connected) { SettingsOpen = true; return; }
+        if (!_spotify.Connected) { ShowSpotifySettings(); return; }
         if (string.IsNullOrWhiteSpace(Search)) return;
         var query = Search.Trim(); var version = _searchVersion;
         _searchRequest?.Cancel();

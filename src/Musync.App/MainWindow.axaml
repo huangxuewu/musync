@@ -9,6 +9,7 @@
     <StyleInclude Source="avares://Musync/Styles/Musync.Sidebar.axaml"/>
     <StyleInclude Source="avares://Musync/Styles/Musync.Motion.axaml"/>
     <StyleInclude Source="avares://Musync/Styles/Musync.LinkSurface.axaml"/>
+    <StyleInclude Source="avares://Musync/Styles/Musync.Settings.axaml"/>
     <Style Selector="TextBlock.searchFeedback"><Setter Property="Foreground" Value="#716877"/></Style>
     <Style Selector="TextBlock.searchFeedback.error"><Setter Property="Foreground" Value="#B83850"/></Style>
     <Style Selector="Border.statusToast">
@@ -452,47 +453,62 @@
       </Border>
     </Popup>
     <Border ZIndex="40" IsVisible="{Binding SettingsOpen}" Background="#A0251A35">
-      <Border x:Name="SettingsPanel" Width="650" MaxHeight="790" Margin="24,48,24,24" Background="White" CornerRadius="18" Padding="30" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 12 40 0 #40251A35">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
-          <StackPanel Spacing="15">
-            <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Text[Settings]}" FontSize="27" FontWeight="Bold"/><Button Grid.Column="1" Classes="ghost iconButton" Command="{Binding CloseSettings}" AutomationProperties.Name="{Binding Text[Close]}" ToolTip.Tip="{Binding Text[Close]}"><icons:LucideIcon Kind="x"/></Button></Grid>
-            <StackPanel Spacing="8">
-              <TextBlock Text="{Binding Text[Language]}" FontWeight="SemiBold"/>
-              <ComboBox x:Name="SettingsLanguageSelector" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language, Mode=TwoWay}"
-                        HorizontalAlignment="Stretch" Background="White" AutomationProperties.Name="{Binding Text[Language]}"/>
-            </StackPanel>
-            <Separator Margin="0,6"/>
-            <StackPanel Spacing="8">
-              <TextBlock Text="{Binding Text[ArtworkCache]}" FontWeight="SemiBold"/>
-              <Grid ColumnDefinitions="*,140,Auto" ColumnSpacing="10">
-                <TextBlock Text="{Binding Text[ArtworkCacheLimit]}" VerticalAlignment="Center"/>
-                <NumericUpDown x:Name="ArtworkCacheLimitInput" Grid.Column="1" Value="{Binding ArtworkCacheLimitMb, Mode=TwoWay}" Minimum="50" Maximum="10000" Increment="50" FormatString="0" Height="40" Padding="12,8" ShowButtonSpinner="False" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text[ArtworkCacheLimit]}"/>
-                <TextBlock Grid.Column="2" Text="MB" VerticalAlignment="Center"/>
+      <Border x:Name="SettingsPanel" Width="620" Height="{Binding SettingsPanelHeight}" MaxHeight="620" Margin="24,48,24,24" Background="White" CornerRadius="16" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center" KeyboardNavigation.TabNavigation="Cycle" KeyDown="SettingsPanelKeyDown">
+        <Grid>
+          <icons:FrostedPosterGlass x:Name="SettingsGlass" Backdrop="{Binding #HeroSurface}" Tint="#E3FFFFFF" IsHitTestVisible="False"/>
+          <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="18">
+            <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Text[Settings]}" FontSize="27" FontWeight="Bold"/><Button x:Name="SettingsCloseButton" Grid.Column="1" Classes="ghost iconButton" Command="{Binding CloseSettings}" AutomationProperties.Name="{Binding Text[Close]}" ToolTip.Tip="{Binding Text[Close]}"><icons:LucideIcon Kind="x"/></Button></Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8">
+              <RadioButton x:Name="SettingsGeneralTab" Classes="settingsSection" GroupName="settingsSections" Theme="{StaticResource MusyncToggle}" Content="{Binding Text[SettingsGeneral]}" IsChecked="{Binding SettingsGeneral, Mode=OneWay}" Command="{Binding SettingsNavigation}" CommandParameter="general" AutomationProperties.Name="{Binding Text[SettingsGeneral]}"/>
+              <RadioButton x:Name="SettingsAudioTab" Grid.Column="1" Classes="settingsSection" GroupName="settingsSections" Theme="{StaticResource MusyncToggle}" Content="{Binding Text[SettingsAudio]}" IsChecked="{Binding SettingsAudio, Mode=OneWay}" Command="{Binding SettingsNavigation}" CommandParameter="audio" AutomationProperties.Name="{Binding Text[SettingsAudio]}"/>
+              <RadioButton x:Name="SettingsSpotifyTab" Grid.Column="2" Classes="settingsSection" GroupName="settingsSections" Theme="{StaticResource MusyncToggle}" Content="Spotify" IsChecked="{Binding SettingsSpotify, Mode=OneWay}" Command="{Binding SettingsNavigation}" CommandParameter="spotify" AutomationProperties.Name="Spotify"/>
+            </Grid>
+            <ScrollViewer x:Name="SettingsContentScroll" Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+              <Grid>
+                <StackPanel IsVisible="{Binding SettingsGeneral}" Spacing="20">
+                  <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding Text[Language]}" FontWeight="SemiBold"/>
+                    <ComboBox x:Name="SettingsLanguageSelector" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language, Mode=TwoWay}" HorizontalAlignment="Stretch" Background="White" AutomationProperties.Name="{Binding Text[Language]}"/>
+                  </StackPanel>
+                  <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding Text[ArtworkCache]}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <Grid ColumnDefinitions="*,140,Auto" ColumnSpacing="10">
+                      <TextBlock Text="{Binding Text[ArtworkCacheLimit]}" VerticalAlignment="Center"/>
+                      <NumericUpDown x:Name="ArtworkCacheLimitInput" Grid.Column="1" Value="{Binding ArtworkCacheLimitMb, Mode=TwoWay}" Minimum="50" Maximum="10000" Increment="50" FormatString="0" Height="40" Padding="12,8" ShowButtonSpinner="False" VerticalContentAlignment="Center" AutomationProperties.Name="{Binding Text[ArtworkCacheLimit]}"/>
+                      <TextBlock Grid.Column="2" Text="MB" VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="{Binding ArtworkCacheUsage}" FontSize="12" Foreground="#5F536D" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </StackPanel>
+                <StackPanel IsVisible="{Binding SettingsAudio}" Spacing="14">
+                  <TextBlock Text="{Binding Text[SourceEndpoint]}" FontWeight="SemiBold"/>
+                  <ComboBox x:Name="SettingsCaptureSelector" ItemsSource="{Binding CaptureEndpoints}" SelectedItem="{Binding CaptureEndpoint}" HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Text[SourceEndpoint]}"/>
+                  <TextBlock Text="{Binding Text[CaptureInfo]}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Text[DelayInfo]}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel IsVisible="{Binding SettingsSpotify}" Spacing="12">
+                  <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Text[SpotifySetup]}" FontWeight="Bold" FontSize="20"/><TextBlock Grid.Column="1" Text="{Binding SpotifyStatus}" Foreground="#18664A" VerticalAlignment="Center"/></Grid>
+                  <TextBlock Text="{Binding Text[SpotifyInfo]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
+                  <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding Text[ClientId]}" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBox x:Name="SettingsClientIdInput" Text="{Binding ClientId}" PlaceholderText="{Binding Text[ClientId]}" MaxLength="32" AutomationProperties.Name="{Binding Text[ClientId]}"/>
+                    <TextBox Text="{Binding RedirectUri}" IsReadOnly="True" FontFamily="Consolas" FontSize="12"/>
+                  </StackPanel>
+                  <Button Classes="ghost" Content="{Binding Text[DeveloperDashboard]}" Command="{Binding DashboardCommand}" HorizontalAlignment="Left" Foreground="#A72644" Padding="0,7"/>
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button x:Name="SettingsConnectButton" Classes="primary" Content="{Binding Text[Connect]}" Command="{Binding ConnectSpotify}" Padding="22,10"/>
+                    <Button Content="{Binding Text[Disconnect]}" Command="{Binding DisconnectSpotify}" Background="#F6F3F7"/>
+                  </StackPanel>
+                  <TextBlock Text="{Binding Text[SpotifyBoundary]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
+                </StackPanel>
               </Grid>
-              <TextBlock Text="{Binding ArtworkCacheUsage}" FontSize="12" Foreground="#716877" TextWrapping="Wrap"/>
-            </StackPanel>
-            <Separator Margin="0,6"/>
-            <TextBlock Text="{Binding Text[SourceEndpoint]}" FontWeight="SemiBold"/>
-            <ComboBox ItemsSource="{Binding CaptureEndpoints}" SelectedItem="{Binding CaptureEndpoint}" HorizontalAlignment="Stretch"/>
-            <TextBlock Text="{Binding Text[CaptureInfo]}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
-            <Separator Margin="0,6"/>
-            <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Text[SpotifySetup]}" FontWeight="Bold" FontSize="20"/><TextBlock Grid.Column="1" Text="{Binding SpotifyStatus}" Foreground="#19885B" VerticalAlignment="Center"/></Grid>
-            <TextBlock Text="{Binding Text[SpotifyInfo]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
-            <TextBlock Text="{Binding Text[ClientId]}" FontSize="12" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding ClientId}" PlaceholderText="{Binding Text[ClientId]}" MaxLength="32"/>
-            <TextBox Text="{Binding RedirectUri}" IsReadOnly="True" FontFamily="Consolas" FontSize="12"/>
-            <Button Classes="ghost" Content="{Binding Text[DeveloperDashboard]}" Command="{Binding DashboardCommand}" HorizontalAlignment="Left" Foreground="#E7405D" Padding="0,7"/>
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <Button Classes="primary" Content="{Binding Text[Connect]}" Command="{Binding ConnectSpotify}" Padding="22,10"/>
-              <Button Content="{Binding Text[Disconnect]}" Command="{Binding DisconnectSpotify}" Background="#F6F3F7"/>
-            </StackPanel>
-            <TextBlock Text="{Binding Text[SpotifyBoundary]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
-            <Separator Margin="0,6"/>
-            <TextBlock Text="{Binding Text[DelayInfo]}" Classes="muted" TextWrapping="Wrap" FontSize="12"/>
-            <TextBlock Text="{Binding Status}" Foreground="#B85863" TextWrapping="Wrap" FontSize="12"/>
-            <Button Classes="primary" Content="{Binding Text[Save]}" Command="{Binding CloseSettings}" HorizontalAlignment="Right" Padding="26,10"/>
-          </StackPanel>
-        </ScrollViewer>
+            </ScrollViewer>
+            <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <TextBlock Text="{Binding Status}" Foreground="#8E2E43" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" FontSize="12" VerticalAlignment="Center" ToolTip.Tip="{Binding Status}"/>
+              <Button x:Name="SettingsSaveButton" Grid.Column="1" Classes="primary" Content="{Binding Text[Save]}" Command="{Binding CloseSettings}" Padding="26,10" Height="40"/>
+            </Grid>
+          </Grid>
+        </Grid>
       </Border>
     </Border>
     <Border ZIndex="40" IsVisible="{Binding PlaylistOpen}" Background="#A0251A35">
