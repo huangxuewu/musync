@@ -1187,7 +1187,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var phase = SpotifyMode || output is null ? SpeakerPlaybackPhase.Available
                 : IsPreparingPlayback ? _player.IsOutputPrepared(speaker.Id) ? SpeakerPlaybackPhase.WaitingForSync : SpeakerPlaybackPhase.Connecting
                 : !_session ? SpeakerPlaybackPhase.Available : IsPlaying ? SpeakerPlaybackPhase.Playing : SpeakerPlaybackPhase.Paused;
-            speaker.UpdateStatus(phase, SpotifyMode ? null : output?.Error ?? _player.OutputErrors.GetValueOrDefault(speaker.Id));
+            speaker.UpdateStatus(phase, SpotifyMode ? null : output?.Error ?? _player.GetOutputControlError(speaker.Id)
+                ?? _player.OutputErrors.GetValueOrDefault(speaker.Id));
         }
     }
     private void SaveSoon()

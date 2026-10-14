@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Recoverable receiver control failures remain attached to the affected speaker after the toast expires. Volume or delay rejection keeps the audio session running, shows the existing attention marker and per-speaker error detail, and clears that speaker's warning when its next control update succeeds. Fatal transport errors retain priority; stopped or replaced sessions cannot supply stale control details.
 - Settings and link configuration move beside the library search scope at the top right, with the same controls available on the Radio page. Link selection, scanning, draft edits and calibration stay in the upper popover; the bottom link icon opens a compact list of speaker volume, mute and delay controls. Popovers switch on one click, dismiss with Escape or outside interaction, and keep their own focus targets and saved preferences.
 - Local music rows show a small localized lossless badge beside the artist for verified lossless source files, with the codec in its tooltip. Header inspection runs lazily off the UI thread and reuses a bounded cache keyed by file size and modification time; AAC, compressed WAV, unknown and damaged sources do not gain the badge. The badge describes the source file, independent of speaker transport encoding.
 - Settings use one fixed panel height across General, Audio and Spotify. Switching sections keeps the panel and Save button in place while longer content scrolls inside the existing viewport.

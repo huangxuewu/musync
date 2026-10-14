@@ -24,7 +24,10 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private volatile bool _activating;
     private int _preparingOutputs;
     private int _stopVersion;
-    private sealed record ControlFailure(IAudioOutput Output, string Message);
+    private sealed record ControlFailure(IAudioOutput Output, string Detail)
+    {
+        public string Message => Output.Device.Name + ": " + Detail;
+    }
     private sealed record ErrorState(CancellationTokenSource? Session, string? PlaybackError, ControlFailure[] Controls);
     private ErrorState _errors = new(null, null, []);
     private sealed class ControlUpdateState
@@ -79,6 +82,14 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     public bool TailComplete { get { lock (_tailGate) return Finished && _tailClock.Elapsed >= RequiredTail; } }
     public IReadOnlyDictionary<string, IAudioOutput> Outputs => _outputs;
     public IReadOnlyDictionary<string, string> OutputErrors => _outputErrors;
+    // A rejected control command does not terminate its audio output. Expose
+    // its current-session detail separately from fatal transport/media errors.
+    public string? GetOutputControlError(string id)
+    {
+        var state = Volatile.Read(ref _errors);
+        if (state.Session is not { IsCancellationRequested: false } || !_outputs.TryGetValue(id, out var output)) return null;
+        return state.Controls.LastOrDefault(failure => ReferenceEquals(failure.Output, output))?.Detail;
+    }
 
     public async Task StartAsync(string source, bool capture, IReadOnlyList<(SpeakerDevice Device, SpeakerPreferences Preferences)> devices,
         double masterVolume, double position = 0, bool paused = false)
@@ -281,7 +292,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                UpdateControlError(output, session.Lifetime, output.Device.Name + ": " + ex.Message);
+                UpdateControlError(output, session.Lifetime, ex.Message);
             }
             lock (state)
             {

@@ -78,6 +78,28 @@ public sealed class ControlUpdateBurstTests
     }
 
     [Fact]
+    public async Task ReceiverControlErrorDetailsStayIndependentAndSuccessfulRetryClearsOnlyItsOwnFailure()
+    {
+        var backend = new Backend(); var first = new Output("first") { Fail = true }; var second = new Output("second") { Fail = true };
+        first.Release.TrySetResult(); second.Release.TrySetResult();
+        await using var player = new PlaybackCoordinator(backend, d => d.Id == first.Device.Id ? first : second);
+        await player.StartAsync("song.flac", false, [(first.Device, new()), (second.Device, new())], 100);
+        player.Update(first.Device.Id, new() { Volume = 40 }, 100);
+        player.Update(second.Device.Id, new() { Volume = 40 }, 100);
+        await Until(() => player.GetOutputControlError(first.Device.Id) is not null && player.GetOutputControlError(second.Device.Id) is not null);
+        Assert.Equal("Synthetic volume rejection", player.GetOutputControlError(first.Device.Id));
+        Assert.Equal("Synthetic volume rejection", player.GetOutputControlError(second.Device.Id));
+        Assert.Null(player.GetOutputControlError("unrelated")); Assert.Empty(player.OutputErrors);
+        await player.CheckOutputsAsync(); Assert.Equal(2, player.Outputs.Count); Assert.True(player.IsPlaying);
+        first.Fail = false; player.Update(first.Device.Id, new() { Volume = 45 }, 100);
+        await Until(() => player.GetOutputControlError(first.Device.Id) is null);
+        Assert.Equal("Synthetic volume rejection", player.GetOutputControlError(second.Device.Id));
+        Assert.Equal("second: Synthetic volume rejection", player.Error);
+        Assert.True(player.IsPlaying); Assert.Equal(1, backend.Starts);
+        await player.StopAsync(); Assert.Null(player.GetOutputControlError(first.Device.Id)); Assert.Null(player.GetOutputControlError(second.Device.Id));
+    }
+
+    [Fact]
     public async Task AirPlayVolumeFailureBurstUsesOnlyOneTrailingRetryAndCanRecover()
     {
         var bridge = new FailingVolumeBridge(); var device = new SpeakerDevice("homepod", "Simulated HomePod", SpeakerTransport.AirPlay);
