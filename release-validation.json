@@ -1,9 +1,10 @@
 {
-  "version": "1.0.1",
-  "date": "2026-10-13",
+  "version": "1.0.2",
+  "date": "2026-10-14",
   "platform": "Windows x64",
   "configuration": "Release",
-  "sourceCommit": "40d6f8bd2474b30b0500be256fac773a3f985d51",
+  "sourceCommit": "a979ac374c10baa097182fb21fa974dc48ca4db4",
+  "testSourceCommit": "a979ac374c10baa097182fb21fa974dc48ca4db4",
   "build": {
     "warnings": 0,
     "errors": 0
@@ -12,8 +13,8 @@
     {
       "project": "Musync.Tests",
       "configuration": "Release",
-      "total": 302,
-      "passed": 302,
+      "total": 457,
+      "passed": 457,
       "failed": 0,
       "skipped": 0,
       "evidence": "tests/Musync.Tests/TestResults/musync-tests.trx"
@@ -21,8 +22,8 @@
     {
       "project": "Musync.App.Tests",
       "configuration": "Release",
-      "total": 222,
-      "passed": 222,
+      "total": 373,
+      "passed": 373,
       "failed": 0,
       "skipped": 0,
       "evidence": "tests/Musync.App.Tests/TestResults/musync-app-tests.trx"
@@ -34,13 +35,13 @@
       "passed": 18,
       "failed": 0,
       "skipped": 0,
-      "evidence": ".local/release-1.0.1/build-and-tests.log"
+      "evidence": ".local/release-1.0.2/build-and-tests.log"
     }
   ],
-  "automatedTotal": 542,
+  "automatedTotal": 848,
   "portableStartup": {
-    "Version": "1.0.1.0",
-    "ProductVersion": "1.0.1",
+    "Version": "1.0.2.0",
+    "ProductVersion": "1.0.2",
     "PortableMainWindow": "Musync",
     "Responding": true,
     "IsolatedFreshProfile": true,
@@ -50,6 +51,36 @@
     "CacheLimitMb": 500,
     "ExecutableTested": "ZIP-extracted Musync.exe",
     "NormalCloseExitCode": 0
+  },
+  "upgradeVerification": {
+    "version": "1.0.2",
+    "fieldsVerified": [
+      "Library",
+      "Links",
+      "Playlists",
+      "LikedTracks",
+      "Language",
+      "ActiveLinkId",
+      "RadioStations",
+      "ArtworkCacheLimitMb"
+    ],
+    "allFieldsPreserved": true,
+    "originalProfileUnchanged": true,
+    "libraryTracks": 137,
+    "links": 1,
+    "radios": 1,
+    "language": "zh-Hans",
+    "cacheLimitMb": 500,
+    "credentialsCopied": false,
+    "audioPlayed": false,
+    "microphoneRequested": false
+  },
+  "releaseRegression": {
+    "initialUiPassed": 372,
+    "initialUiFailed": 1,
+    "reason": "Large headless Skia capture could complete after the 220 ms lyric movement; live transform assertions now precede the screenshot",
+    "productionAnimationChanged": false,
+    "evidence": ".local/release-1.0.2/initial-app-tests.trx"
   },
   "package": {
     "selfContained": true,
@@ -79,7 +110,11 @@
       "Collection search and empty states",
       "Recognition cache capacity and ownership",
       "Radio station persistence and speaker preparation",
-      "Source transitions, receiver recovery and control lifecycle"
+      "Source initialization, interruption recovery and control lifecycle",
+      "Stable seek axis, cover hover, custom scrollbar and lossless badges",
+      "Fixed-height settings and separate speaker configuration/quick controls",
+      "Acoustic calibration signal processing and cancellation (mock inputs)",
+      "Local retry and persistent mini-player error status in three languages"
     ],
     "nativeWindowStartupAndCloseVerified": true,
     "nativeGpuVisualInspection": false
@@ -89,6 +124,7 @@
     "releaseHardwareRetest": false,
     "homePodReleaseRetest": false,
     "youtubeRadioHardwareRetest": false,
+    "acousticCalibrationHardwareRetest": false,
     "sampleAccurateSynchronizationClaimed": false
   },
   "limits": [
@@ -99,11 +135,14 @@
     "Release executable is unsigned"
   ],
   "binaryHashes": {
-    "Musync.exe": "5eb0b7b39d518bac9af2ba91428537c0561b481b1af4d78c8d61c3db374fee21",
-    "Musync.dll": "70151c2ba5242af9dd6dfaf4ca58eb35c0fa6b9a3dcaaaf9fd2dfec98440826b",
-    "Musync.Core.dll": "378b0759d303d9655d99a111219130efb99d7284bbbc9352af268da828b9d14c",
-    "Musync.Network.dll": "21f77068c13cc78d810ba4f04a31887fd7234da86fcff5eace83a4085e6465d4",
-    "Musync.Platform.Windows.dll": "e5b297ae773de08a8c8c368748d8b5a46a2b3db45e8108e32070d56175b203fd",
+    "Musync.exe": "f6f679878fd871bfe7d7279e61ed4072adbcf7cec74e4cbe11277418a3743649",
+    "Musync.dll": "45b1e51f06d64e8e98f05ae830aed4898e2deabd8a5cc34adff27e065820d375",
+    "Musync.Core.dll": "adcf61682690130da94f21754ced077f31fa9b475fd920d926fcabf6810b0714",
+    "Musync.Network.dll": "aa28c263da16dc3f2dd8dec84c179e48752b93d1093564da491654f0bb7ed670",
+    "Musync.Platform.Windows.dll": "860cb725f1f4e7bd1cd2e15a43cf6cc2af2b21fb5d7e634fde61ea6ad1346a10",
+    "Sharpcaster.dll": "be417b64d8d9f893436b3190cc1bfe684be71f00dedfd9dcfa469333ffc9eead",
+    "Musync.deps.json": "cd8bbf2c7d31743d060a77cf0ad5cccc31a3d04cbc833f2452f6597973aa8606",
+    "Musync.runtimeconfig.json": "a626390f181f35de011e472f4a234fae90ec9a6c7f71fa246728eb88fb7ee755",
     "coreclr.dll": "128aee8c62a673d64739e585e3876b61133571cec83a46240a62581d5465639b",
     "hostfxr.dll": "838591885c5396fb0588a3aedc2f3e841d3afc67570868b1bce615264005a44c",
     "AirPlayBridge/node.exe": "ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32",
