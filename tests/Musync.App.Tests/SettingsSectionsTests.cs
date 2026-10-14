@@ -32,16 +32,21 @@ public sealed partial class SpotifyPlaybackTests
             var save = window.FindControl<Button>("SettingsSaveButton")!;
             var close = window.FindControl<Button>("SettingsCloseButton")!;
             Assert.Same(window.FindControl<PosterBackdrop>("HeroSurface"), window.FindControl<FrostedPosterGlass>("SettingsGlass")!.Backdrop);
-            foreach (var (section, tabName, expectedHeight) in new[] { ("general", "SettingsGeneralTab", 440d), ("audio", "SettingsAudioTab", 470d), ("spotify", "SettingsSpotifyTab", 620d) })
+            using var initial = window.CaptureRenderedFrame();
+            var panelBounds = panel.Bounds;
+            var saveOrigin = save.TranslatePoint(default, window)!.Value;
+            foreach (var (section, tabName) in new[] { ("general", "SettingsGeneralTab"), ("audio", "SettingsAudioTab"), ("spotify", "SettingsSpotifyTab"), ("general", "SettingsGeneralTab") })
             {
                 var tab = window.FindControl<ToggleButton>(tabName)!; ClickPlaylistControl(window, tab);
                 using var frame = window.CaptureRenderedFrame();
-                Assert.True(tab.IsChecked); Assert.Equal(expectedHeight, panel.Bounds.Height);
+                Assert.True(tab.IsChecked); Assert.Equal(620, panel.Bounds.Height);
+                Assert.Equal(panelBounds, panel.Bounds);
                 Assert.Equal(section == "general", languageInput.IsEffectivelyVisible);
                 Assert.Equal(section == "audio", capture.IsEffectivelyVisible);
                 Assert.Equal(section == "spotify", clientId.IsEffectivelyVisible);
                 Assert.Equal(ScrollBarVisibility.Hidden, window.FindControl<ScrollViewer>("SettingsContentScroll")!.VerticalScrollBarVisibility);
                 var origin = save.TranslatePoint(default, window)!.Value;
+                Assert.Equal(saveOrigin, origin);
                 Assert.InRange(origin.X, 0, width - save.Bounds.Width); Assert.InRange(origin.Y, 0, height - save.Bounds.Height);
                 Assert.True(save.IsEffectivelyVisible); Assert.Equal(40, save.Bounds.Height);
                 var closeRight = close.TranslatePoint(new Point(close.Bounds.Width, 0), panel)!.Value.X;

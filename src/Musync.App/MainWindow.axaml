@@ -499,7 +499,7 @@
       </Border>
     </Popup>
     <Border ZIndex="40" IsVisible="{Binding SettingsOpen}" Background="#A0251A35">
-      <Border x:Name="SettingsPanel" Width="620" Height="{Binding SettingsPanelHeight}" MaxHeight="620" Margin="24,48,24,24" Background="White" CornerRadius="16" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center" KeyboardNavigation.TabNavigation="Cycle" KeyDown="SettingsPanelKeyDown">
+      <Border x:Name="SettingsPanel" Width="620" Height="620" MaxHeight="620" Margin="24,48,24,24" Background="White" CornerRadius="16" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center" KeyboardNavigation.TabNavigation="Cycle" KeyDown="SettingsPanelKeyDown">
         <Grid>
           <icons:FrostedPosterGlass x:Name="SettingsGlass" Backdrop="{Binding #HeroSurface}" Tint="#E3FFFFFF" IsHitTestVisible="False"/>
           <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="18">
