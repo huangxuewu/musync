@@ -9,6 +9,22 @@ public sealed partial class MainViewModel
     private sealed record LocalTrackFailure(MusicTrack Track, long SourceVersion, string Detail);
     private LocalTrackFailure? _localTrackFailure;
 
+    private string? StoppedLocalTrackError => !_session && _current is { } track ? TrackPlaybackError(track) : null;
+    public string PlayerStatusText => StoppedLocalTrackError is not null ? Text["TrackRetryHint"] : Status;
+    public string PlayerStatusDetails => StoppedLocalTrackError is { } detail ? LocalTrackFailureDetails(detail) : Status;
+    public string PlayerStatusForeground => StoppedLocalTrackError is not null ? "#FFC970" : "#E5DCEC";
+
+    internal string LocalTrackFailureDetails(string detail)
+    {
+        var explanation = PlaybackErrorPresentation.Format(detail, Text);
+        return Text["TrackRetryHelp"] + (explanation != detail ? "\n\n" + explanation : "")
+            + "\n\n" + Text["TechnicalDetails"] + "\n" + detail;
+    }
+    private void RefreshPlayerStatusPresentation()
+    {
+        Raise(nameof(PlayerStatusText)); Raise(nameof(PlayerStatusDetails)); Raise(nameof(PlayerStatusForeground));
+    }
+
     internal string? TrackPlaybackError(MusicTrack track) => IsLocal && !IsSwitchingSource
         && _localTrackFailure is { } failure && failure.SourceVersion == _sourceVersion
         && _current?.Id == track.Id && failure.Track.Id == track.Id
@@ -18,13 +34,13 @@ public sealed partial class MainViewModel
     {
         if (!IsLocal || track?.FilePath is null || _current?.Id != track.Id || _current.FilePath != track.FilePath) return;
         _localTrackFailure = new(track, _sourceVersion, detail);
-        Raise(nameof(PlayLabel)); RefreshTrackPlayback();
+        Raise(nameof(PlayLabel)); RefreshTrackPlayback(); RefreshPlayerStatusPresentation();
     }
     private void ClearLocalTrackFailure()
     {
         if (_localTrackFailure is null) return;
         _localTrackFailure = null;
-        Raise(nameof(PlayLabel)); RefreshTrackPlayback();
+        Raise(nameof(PlayLabel)); RefreshTrackPlayback(); RefreshPlayerStatusPresentation();
     }
     internal TrackPlaybackPhase TrackPhase(MusicTrack track)
     {

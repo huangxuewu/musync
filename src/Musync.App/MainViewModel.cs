@@ -77,6 +77,10 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         SpeakerLinks.MigrateLegacy(settings, Text["MainLink"]);
         foreach (var link in settings.Links) link.Calibrations ??= new();
         Text.Changed += RefreshText;
+        PropertyChanged += (_, change) =>
+        {
+            if (change.PropertyName == nameof(Status)) RefreshPlayerStatusPresentation();
+        };
         _library.AddRange(settings.Library.Where(t => t.FilePath is not null && File.Exists(t.FilePath)));
         _library.AddRange(DemoMusic.EnsureLibrary(Path.Combine(dataDirectory, "Demos")).Where(t => _library.All(l => l.Id != t.Id)));
         if (!settings.PlaylistsInitialized && settings.Speakers.Count == 0 && settings.Playlists.Count == 0)
@@ -576,6 +580,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Raise(nameof(ArtworkCacheUsage));
         if (_reportedPlayerError is not null) RefreshReportedPlayerErrorText();
         else if (!_session) Status = Text[IsSwitchingSource ? "SwitchingSource" : "Idle"];
+        RefreshPlayerStatusPresentation();
     }
     private void RefreshTracks()
     {
@@ -1028,6 +1033,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void RefreshCurrent()
     {
         RefreshLinkFeedback();
+        RefreshPlayerStatusPresentation();
         RefreshTrackPlayback();
         RefreshRadioSelection();
         RefreshPresentation();

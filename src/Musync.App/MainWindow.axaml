@@ -760,7 +760,9 @@
             <StackPanel Spacing="4" VerticalAlignment="Center">
               <TextBlock Text="{Binding Title}" Foreground="White" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}"/>
               <TextBlock Text="{Binding Artist}" Foreground="#C0B5CB" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Artist}"/>
-              <TextBlock Text="{Binding Status}" IsVisible="{Binding !IsPreparingPlayback}" Foreground="#E5DCEC" FontSize="10" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}"/>
+              <TextBlock x:Name="MiniPlaybackStatus" Text="{Binding PlayerStatusText}" IsVisible="{Binding !IsPreparingPlayback}"
+                         Foreground="{Binding PlayerStatusForeground}" FontSize="10" TextTrimming="CharacterEllipsis"
+                         ToolTip.Tip="{Binding PlayerStatusDetails}" AutomationProperties.HelpText="{Binding PlayerStatusDetails}"/>
               <Grid IsVisible="{Binding IsPreparingPlayback}" ColumnDefinitions="24,*,36" ColumnSpacing="5">
                 <icons:PreparationIndicator x:Name="MiniPreparationWave" Width="24" Height="16"/>
                 <TextBlock x:Name="MiniPreparationSummary" Grid.Column="1" Text="{Binding PreparationSummary}" Foreground="#E5DCEC" FontSize="11" VerticalAlignment="Center"

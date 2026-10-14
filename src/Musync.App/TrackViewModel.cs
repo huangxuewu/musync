@@ -50,16 +50,7 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public bool HasPlaybackActivity => _phase is TrackPlaybackPhase.Preparing or TrackPlaybackPhase.Playing;
     public string PlaybackStatus => HasPlaybackError ? _owner.Text["TrackRetryHint"] : _phase == TrackPlaybackPhase.None ? ""
         : _phase == TrackPlaybackPhase.Preparing ? _owner.PreparationHeadline : _owner.Text[IsRowPlaying ? "Playing" : "Paused"];
-    public string PlaybackDetails
-    {
-        get
-        {
-            if (_playbackError is not { } detail) return PlaybackStatus;
-            var explanation = PlaybackErrorPresentation.Format(detail, _owner.Text);
-            return _owner.Text["TrackRetryHelp"] + (explanation != detail ? "\n\n" + explanation : "")
-                + "\n\n" + _owner.Text["TechnicalDetails"] + "\n" + detail;
-        }
-    }
+    public string PlaybackDetails => _playbackError is { } detail ? _owner.LocalTrackFailureDetails(detail) : PlaybackStatus;
     public string AddPlaylistLabel => _owner.Text["AddPlaylist"];
     public string ArtworkSourceLabel => _owner.Text["ArtworkSourceSpotify"];
     public string RemoveLabel => _owner.TrackRemoveLabel(Track);
