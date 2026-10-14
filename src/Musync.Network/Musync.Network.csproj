@@ -2,7 +2,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Musync.Tests" />
     <ProjectReference Include="../Musync.Core/Musync.Core.csproj" />
-    <PackageReference Include="SharpCaster" Version="3.0.0" />
+    <ProjectReference Include="../../third-party/SharpCaster/SharpCaster.Musync.csproj" />
     <PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

@@ -163,6 +163,109 @@ public sealed class CastRequestOwnershipTests
     }
 
     [Theory]
+    [InlineData("ERROR")]
+    [InlineData("CANCELLED")]
+    [InlineData("INTERRUPTED")]
+    public async Task OwnedTerminalStatusAfterAForeignEntryStillReachesTheActivePlayback(string reason)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver); var request = await PrepareAsync(session, receiver);
+        await receiver.BroadcastStatusesAsync(request, FakeCastReceiver.Status(999, "PLAYING"),
+            new { mediaSessionId = 102, playerState = "IDLE", idleReason = reason });
+        await session.ReadVolumeAsync().WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.NotNull(session.Error); Assert.Equal(reason != "ERROR", session.ControlLost); Assert.False(session.ConnectionLost);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AMultiSessionLoadReplyBindsTheRequestedContentEvenAfterAForeignEntry(bool live)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver);
+        var pending = live ? session.LoadAsync("http://127.0.0.1/music/index.m3u8")
+            : session.PrepareFileAsync("http://127.0.0.1/music.mp3", 120, 0, default);
+        var request = await receiver.NextAsync("LOAD"); var content = request.Payload.GetProperty("media").GetProperty("contentId").GetString()!;
+        await receiver.ReplyStatusesAsync(request, FakeCastReceiver.StatusWithMedia(999, "http://127.0.0.1/another-song.mp3", 99),
+            FakeCastReceiver.StatusWithMedia(102, content));
+        await pending.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Equal(12, await session.ReadPositionAsync().WaitAsync(TimeSpan.FromSeconds(3)));
+        pending = session.PlayPreparedAsync(); var play = await receiver.NextAsync("PLAY");
+        Assert.Equal(102, play.Payload.GetProperty("mediaSessionId").GetInt64());
+        await receiver.ReplyStatusAsync(play, 102, "PLAYING"); await pending.WaitAsync(TimeSpan.FromSeconds(3)); Assert.Null(session.Error);
+    }
+
+    [Theory]
+    [InlineData("ERROR")]
+    [InlineData("CANCELLED")]
+    [InlineData("INTERRUPTED")]
+    public async Task AnEarlyOwnedTerminalInAMixedBroadcastSurvivesAMultiSessionLoadReply(string reason)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver);
+        var pending = session.PrepareFileAsync("http://127.0.0.1/music.mp3", 120, 0, default);
+        var request = await receiver.NextAsync("LOAD"); var content = request.Payload.GetProperty("media").GetProperty("contentId").GetString()!;
+        await receiver.BroadcastStatusesAsync(request, FakeCastReceiver.Status(999, "PLAYING"),
+            new { mediaSessionId = 102, playerState = "IDLE", idleReason = reason });
+        await receiver.ReplyStatusesAsync(request, FakeCastReceiver.StatusWithMedia(999, "http://127.0.0.1/another-song.mp3"),
+            FakeCastReceiver.StatusWithMedia(102, content));
+        var error = await Assert.ThrowsAsync<IOException>(() => pending.WaitAsync(TimeSpan.FromSeconds(3)));
+        Assert.Equal(session.Error, error.Message); Assert.Equal(reason != "ERROR", session.ControlLost);
+    }
+
+    [Theory]
+    [InlineData("ERROR")]
+    [InlineData("CANCELLED")]
+    [InlineData("INTERRUPTED")]
+    public async Task ForeignFailuresAroundAnOwnedStatusDoNotFailOrRedirectPlayback(string reason)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver); var load = await PrepareAsync(session, receiver);
+        await receiver.BroadcastStatusesAsync(load, new { mediaSessionId = 101, playerState = "IDLE", idleReason = reason },
+            FakeCastReceiver.Status(102, "PAUSED"), new { mediaSessionId = 999, playerState = "IDLE", idleReason = reason });
+        await session.ReadVolumeAsync().WaitAsync(TimeSpan.FromSeconds(3)); Assert.Null(session.Error); Assert.False(session.ControlLost);
+        var pending = session.PlayPreparedAsync(); var play = await receiver.NextAsync("PLAY");
+        Assert.Equal(102, play.Payload.GetProperty("mediaSessionId").GetInt64());
+        await receiver.ReplyStatusAsync(play, 102, "PLAYING"); await pending.WaitAsync(TimeSpan.FromSeconds(3));
+    }
+
+    [Theory]
+    [InlineData("no-identity")]
+    [InlineData("foreign-only")]
+    [InlineData("duplicate-content")]
+    public async Task AnUnidentifiableLoadReplyFailsWithoutGuessingAPlaybackToControl(string reply)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver);
+        var pending = session.PrepareFileAsync("http://127.0.0.1/music.mp3", 120, 0, default);
+        var load = await receiver.NextAsync("LOAD"); var content = load.Payload.GetProperty("media").GetProperty("contentId").GetString()!;
+        var statuses = reply switch
+        {
+            "no-identity" => new[] { FakeCastReceiver.Status(101, "PAUSED"), FakeCastReceiver.Status(102, "PAUSED") },
+            "foreign-only" => new[] { FakeCastReceiver.StatusWithMedia(999, "http://127.0.0.1/another-song.mp3") },
+            _ => new[] { FakeCastReceiver.StatusWithMedia(102, content), FakeCastReceiver.StatusWithMedia(103, content) }
+        };
+        await receiver.ReplyStatusesAsync(load, statuses);
+        var error = await Assert.ThrowsAsync<IOException>(() => pending.WaitAsync(TimeSpan.FromSeconds(3)));
+        Assert.Contains("identify the requested music", error.Message); Assert.Equal(error.Message, session.Error);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => session.PlayPreparedAsync());
+        await PrepareAsync(session, receiver, 104); Assert.Null(session.Error);
+    }
+
+    [Fact]
+    public async Task TheRequestedContentUrlCanIdentifyTheLoadWhenTheReceiverUsesAnOpaqueContentId()
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver);
+        var pending = session.PrepareFileAsync("http://127.0.0.1/music.mp3", 120, 0, default);
+        var load = await receiver.NextAsync("LOAD"); var content = load.Payload.GetProperty("media").GetProperty("contentId").GetString()!;
+        await receiver.ReplyStatusesAsync(load, FakeCastReceiver.StatusWithMedia(999, "another-source"),
+            FakeCastReceiver.StatusWithMedia(102, "receiver-content-key", contentUrl: content));
+        await pending.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Equal(12, await session.ReadPositionAsync().WaitAsync(TimeSpan.FromSeconds(3))); Assert.Null(session.Error);
+    }
+
+    [Theory]
     [InlineData("CANCELLED", "stopped on the receiver")]
     [InlineData("INTERRUPTED", "replaced by another source")]
     public async Task ExternalStopOfTheOwnedPlaybackRemainsVisibleAndReleasesReceiverControls(string reason, string detail)

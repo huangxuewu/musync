@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>13.0</LangVersion>
+    <Nullable>annotations</Nullable>
+    <AssemblyName>Sharpcaster</AssemblyName>
+    <RootNamespace>Sharpcaster</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Version>3.0.0</Version>
+    <Authors>Teemu Tapanila</Authors>
+    <Copyright>Copyright 2016-2025 Teemu Tapanila</Copyright>
+    <RepositoryUrl>https://github.com/Tapanila/SharpCaster</RepositoryUrl>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Source/**/*.cs" />
+    <PackageReference Include="Google.Protobuf" Version="3.32.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
+    <PackageReference Include="Zeroconf" Version="3.7.16" />
+  </ItemGroup>
+</Project>

@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Musync.Tests", "tests\Musyn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Musync.App.Tests", "tests\Musync.App.Tests\Musync.App.Tests.csproj", "{54A7D59B-50A0-45C4-9893-155071E8C728}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "third-party", "third-party", "{C53924FE-98D2-80FD-04F3-50636C3DA32C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCaster.Musync", "third-party\SharpCaster\SharpCaster.Musync.csproj", "{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +105,18 @@ Global
 		{54A7D59B-50A0-45C4-9893-155071E8C728}.Release|x64.Build.0 = Release|Any CPU
 		{54A7D59B-50A0-45C4-9893-155071E8C728}.Release|x86.ActiveCfg = Release|Any CPU
 		{54A7D59B-50A0-45C4-9893-155071E8C728}.Release|x86.Build.0 = Release|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Debug|x64.Build.0 = Debug|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Debug|x86.Build.0 = Debug|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Release|x64.ActiveCfg = Release|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Release|x64.Build.0 = Release|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Release|x86.ActiveCfg = Release|Any CPU
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -112,5 +128,6 @@ Global
 		{ECB21272-8475-4179-B5C3-7910728191D0} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{A7C6715C-D524-49E2-9068-F854AE0D53F4} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{54A7D59B-50A0-45C4-9893-155071E8C728} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{0AADAAA0-45FC-4156-AEED-8FEDC20D38BB} = {C53924FE-98D2-80FD-04F3-50636C3DA32C}
 	EndGlobalSection
 EndGlobal

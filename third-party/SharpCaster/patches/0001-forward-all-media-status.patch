@@ -1,0 +1,21 @@
+--- a/Source/Channels/MediaChannel.cs
++++ b/Source/Channels/MediaChannel.cs
+@@ -135,9 +135,15 @@
+                 case "MEDIA_STATUS":
+                     var mediaStatusMessage = JsonSerializer.Deserialize(messagePayload, SharpcasteSerializationContext.Default.MediaStatusMessage);
+                     mediaStatus = mediaStatusMessage?.Status.FirstOrDefault();
+-                    if (MediaStatus != null)
+-                    {
+-                        SafeInvokeEvent(StatusChanged, this, MediaStatus);
++                    if (mediaStatusMessage?.Status != null)
++                    {
++                        // Musync: a status notification may describe several
++                        // sessions. Preserve the first-entry property, but let
++                        // subscribers find their own playback in every entry.
++                        foreach (var status in mediaStatusMessage.Status)
++                        {
++                            SafeInvokeEvent(StatusChanged, this, status);
++                        }
+                     }
+                     return;
+                 case "QUEUE_ITEMS":

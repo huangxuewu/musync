@@ -60,10 +60,20 @@ internal sealed class FakeCastReceiver : IAsyncDisposable
         _statuses = [Status(session, state, time)];
         return SendAsync(request.Envelope, new { type = "MEDIA_STATUS", requestId = request.Id, status = _statuses });
     }
+    public Task ReplyStatusesAsync(Request request, params object[] statuses)
+    {
+        _statuses = statuses;
+        return SendAsync(request.Envelope, new { type = "MEDIA_STATUS", requestId = request.Id, status = statuses });
+    }
+    public static object StatusWithMedia(long session, string contentId, double time = 12, string? contentUrl = null) => new
+    { mediaSessionId = session, playerState = "PAUSED", currentTime = time,
+        media = new { contentId, contentUrl = contentUrl ?? contentId, contentType = "audio/mpeg", streamType = "BUFFERED" } };
     public Task SendErrorAsync(Request request, string type) => SendAsync(request.Envelope,
         new { type, requestId = request.Id, reason = "INVALID_COMMAND", detailedErrorCode = 201 });
     public Task BroadcastAsync(Request request, object status) => SendAsync(request.Envelope,
         new { type = "MEDIA_STATUS", requestId = 0, status = new[] { status } });
+    public Task BroadcastStatusesAsync(Request request, params object[] statuses) => SendAsync(request.Envelope,
+        new { type = "MEDIA_STATUS", requestId = 0, status = statuses });
     public Task BroadcastForeignApplicationAsync(Request request)
     {
         var envelope = request.Envelope.Clone(); envelope.Namespace = "urn:x-cast:com.google.cast.receiver";

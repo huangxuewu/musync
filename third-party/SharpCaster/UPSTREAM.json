@@ -1,0 +1,921 @@
+{
+  "UpstreamNugetVersion": "3.0.0",
+  "UpstreamCommit": "d04aa95f8a518c6b0434012e3feee7ce3f36ef61",
+  "Files": [
+    {
+      "Path": "Source/Channels/ChromecastChannel.cs",
+      "Sha256": "7944fccf3427bda1e3bf9aedf99acc583c1d94500cc1a839583b2ae10bfd6435",
+      "GitBlob": "6bf13d61042244563b96afeed2a2146052dea8ce",
+      "UpstreamPath": "Sharpcaster/Channels/ChromecastChannel.cs",
+      "NormalizedSha256": "7944fccf3427bda1e3bf9aedf99acc583c1d94500cc1a839583b2ae10bfd6435"
+    },
+    {
+      "Path": "Source/Channels/ConnectionChannel.cs",
+      "Sha256": "214200c5040af676b85ad53cb5d7991b86c5c492228475f42a787c07fdf39b9c",
+      "GitBlob": "2bc38b1effd27dd42c0781927a5480e6408a0d88",
+      "UpstreamPath": "Sharpcaster/Channels/ConnectionChannel.cs",
+      "NormalizedSha256": "214200c5040af676b85ad53cb5d7991b86c5c492228475f42a787c07fdf39b9c"
+    },
+    {
+      "Path": "Source/Channels/HeartbeatChannel.cs",
+      "Sha256": "6f1a60b63c39e0c6b59030346f9ff83c594e886f89ed8f61992a7bbd16c3a17e",
+      "GitBlob": "22d86aaad17e17024f9e68d055c2d869df5f6bed",
+      "UpstreamPath": "Sharpcaster/Channels/HeartbeatChannel.cs",
+      "NormalizedSha256": "6f1a60b63c39e0c6b59030346f9ff83c594e886f89ed8f61992a7bbd16c3a17e"
+    },
+    {
+      "Path": "Source/Channels/MediaChannel.cs",
+      "Sha256": "07617fcb983cddb668c8b892ff90322e190264880a0dd629a89b7f92cd6953a2",
+      "GitBlob": "c5b2922153858f6d3809189f331a3fdd9c624e11",
+      "UpstreamPath": "Sharpcaster/Channels/MediaChannel.cs",
+      "NormalizedSha256": "07617fcb983cddb668c8b892ff90322e190264880a0dd629a89b7f92cd6953a2",
+      "PatchedNormalizedSha256": "e4c0bb8d87464ba20c750490728dc2f07cd15cad9a89ca4b547a6db7219028c9"
+    },
+    {
+      "Path": "Source/Channels/MultiZoneChannel.cs",
+      "Sha256": "ed58454e5980ce92bd9beec4bdf14f40e181e4719053cf3013759541f6415097",
+      "GitBlob": "87c46b937f6b376d1fd4736a43674abe3fe294a2",
+      "UpstreamPath": "Sharpcaster/Channels/MultiZoneChannel.cs",
+      "NormalizedSha256": "ed58454e5980ce92bd9beec4bdf14f40e181e4719053cf3013759541f6415097"
+    },
+    {
+      "Path": "Source/Channels/ReceiverChannel.cs",
+      "Sha256": "bd18e00ffc1d92df65072a0e75bc830b94f0485c226a5722675c2889fc85572e",
+      "GitBlob": "72160b8857f7bca67efd7360ddb27e2141be04bf",
+      "UpstreamPath": "Sharpcaster/Channels/ReceiverChannel.cs",
+      "NormalizedSha256": "bd18e00ffc1d92df65072a0e75bc830b94f0485c226a5722675c2889fc85572e"
+    },
+    {
+      "Path": "Source/Channels/SpotifyChannel.cs",
+      "Sha256": "61812c457a289218078ba3e06d840f1f96acbe20986b4754546181cf95f8c124",
+      "GitBlob": "b099fb5f689599c353a80b7096c09566370977ea",
+      "UpstreamPath": "Sharpcaster/Channels/SpotifyChannel.cs",
+      "NormalizedSha256": "61812c457a289218078ba3e06d840f1f96acbe20986b4754546181cf95f8c124"
+    },
+    {
+      "Path": "Source/ChromeCastClient.cs",
+      "Sha256": "4e210b068c088cb3e97489d850888b6171b6fbc1d2653f96025894a3eb0bc492",
+      "GitBlob": "d1d5a2d2dceb2692b75151ea5aae62753615212b",
+      "UpstreamPath": "Sharpcaster/ChromeCastClient.cs",
+      "NormalizedSha256": "4e210b068c088cb3e97489d850888b6171b6fbc1d2653f96025894a3eb0bc492"
+    },
+    {
+      "Path": "Source/ChromecastLocator.cs",
+      "Sha256": "15c24025a7dd9ca7cf3510c970354b8de69ad9818cee95970df07d4fac395e3a",
+      "GitBlob": "90750716f557e43329a873446bdf64595421e475",
+      "UpstreamPath": "Sharpcaster/ChromecastLocator.cs",
+      "NormalizedSha256": "15c24025a7dd9ca7cf3510c970354b8de69ad9818cee95970df07d4fac395e3a"
+    },
+    {
+      "Path": "Source/Converters/MediaCommandEnumConverter.cs",
+      "Sha256": "c564c5efa13c4531ddfa060a7411c0c17e9434622b59c877439744ac399a7d96",
+      "GitBlob": "356452c9513f9c55a4f954e41d0e23cef2825278",
+      "UpstreamPath": "Sharpcaster/Converters/MediaCommandEnumConverter.cs",
+      "NormalizedSha256": "c564c5efa13c4531ddfa060a7411c0c17e9434622b59c877439744ac399a7d96"
+    },
+    {
+      "Path": "Source/Converters/MediaMetadataJsonConverter.cs",
+      "Sha256": "cc0dadffc0e52e2209e8348796f0d088a4a3a0626aa6ef9af867a5162b201ebe",
+      "GitBlob": "a89ffe2e15a1e7a119cc658cd3f16dfc40a0909a",
+      "UpstreamPath": "Sharpcaster/Converters/MediaMetadataJsonConverter.cs",
+      "NormalizedSha256": "cc0dadffc0e52e2209e8348796f0d088a4a3a0626aa6ef9af867a5162b201ebe"
+    },
+    {
+      "Path": "Source/Converters/PlayerStateEnumConverter.cs",
+      "Sha256": "001479d7ff245ad9ec4efa225108f52c8009203aed3d2f701928b1149c214a76",
+      "GitBlob": "66d81ac521adfc8cb1077b042e0a6dbeaed9eae2",
+      "UpstreamPath": "Sharpcaster/Converters/PlayerStateEnumConverter.cs",
+      "NormalizedSha256": "001479d7ff245ad9ec4efa225108f52c8009203aed3d2f701928b1149c214a76"
+    },
+    {
+      "Path": "Source/Converters/RepeatModeEnumConverter.cs",
+      "Sha256": "0ca807e24f2e99cdde033519c2a59fbdc49479abe3e630e6885927146543e277",
+      "GitBlob": "2a55d9dde4279cdf4856157946235a8ad457b74e",
+      "UpstreamPath": "Sharpcaster/Converters/RepeatModeEnumConverter.cs",
+      "NormalizedSha256": "0ca807e24f2e99cdde033519c2a59fbdc49479abe3e630e6885927146543e277"
+    },
+    {
+      "Path": "Source/Converters/StreamTypeEnumConverter.cs",
+      "Sha256": "171d7da753b505fd10a2cc28fed277c3d653b78eedb6efab2f82f6cfea20088c",
+      "GitBlob": "f0178bcf5b22a6d19c74e8d0486634cbdfadbd9b",
+      "UpstreamPath": "Sharpcaster/Converters/StreamTypeEnumConverter.cs",
+      "NormalizedSha256": "171d7da753b505fd10a2cc28fed277c3d653b78eedb6efab2f82f6cfea20088c"
+    },
+    {
+      "Path": "Source/DefaultIdentifiers.cs",
+      "Sha256": "14ea27f214b240936e628db0ff090069174e7237456f3942432040a1a0c1824b",
+      "GitBlob": "4216af2605009d000010378525b97baf924e096e",
+      "UpstreamPath": "Sharpcaster/DefaultIdentifiers.cs",
+      "NormalizedSha256": "14ea27f214b240936e628db0ff090069174e7237456f3942432040a1a0c1824b"
+    },
+    {
+      "Path": "Source/Extensions/IEnumerableExtensions.cs",
+      "Sha256": "3254e30c991a68de66b669b767682002bd727437dc89557f5755747c336caba2",
+      "GitBlob": "a3809ce68e9b79623447cef92b789be7d551e04b",
+      "UpstreamPath": "Sharpcaster/Extensions/IEnumerableExtensions.cs",
+      "NormalizedSha256": "3254e30c991a68de66b669b767682002bd727437dc89557f5755747c336caba2"
+    },
+    {
+      "Path": "Source/Extensions/SharpcasteSerialiationContext.cs",
+      "Sha256": "cd487f722d112c1692a336940b308d8ee5c2b82b8469775a223878eeb8a770a4",
+      "GitBlob": "77d419f952a29b4d5032770531d62156a85b62fb",
+      "UpstreamPath": "Sharpcaster/Extensions/SharpcasteSerialiationContext.cs",
+      "NormalizedSha256": "cd487f722d112c1692a336940b308d8ee5c2b82b8469775a223878eeb8a770a4"
+    },
+    {
+      "Path": "Source/Extensions/SslStreamExtensions.cs",
+      "Sha256": "af9dc361c46dcdb3294de4d3bad074d24000546fede51ac4dd0a7564207c3d6e",
+      "GitBlob": "6fde494c7f748edd886d9fb3aca0e13ae7473b4d",
+      "UpstreamPath": "Sharpcaster/Extensions/SslStreamExtensions.cs",
+      "NormalizedSha256": "af9dc361c46dcdb3294de4d3bad074d24000546fede51ac4dd0a7564207c3d6e"
+    },
+    {
+      "Path": "Source/Extensions/TaskExtensions.cs",
+      "Sha256": "53cb3ea01135c22e1afc4d564e80afd4f3ea29baa2c4c8c33f640d7ae07fbd32",
+      "GitBlob": "5a63e7acf95789e2e0016da50a572a3ebd20fc8c",
+      "UpstreamPath": "Sharpcaster/Extensions/TaskExtensions.cs",
+      "NormalizedSha256": "53cb3ea01135c22e1afc4d564e80afd4f3ea29baa2c4c8c33f640d7ae07fbd32"
+    },
+    {
+      "Path": "Source/GlobalSuppressions.cs",
+      "Sha256": "02531ec7c5473a339f15cb0c9a29ad9084ab03fe1e7d403e92ca7d87b257b5ee",
+      "GitBlob": "4bdeb236cf617b6b7bf1541f509618a9097218f7",
+      "UpstreamPath": "Sharpcaster/GlobalSuppressions.cs",
+      "NormalizedSha256": "02531ec7c5473a339f15cb0c9a29ad9084ab03fe1e7d403e92ca7d87b257b5ee"
+    },
+    {
+      "Path": "Source/Interfaces/IChromecastChannel.cs",
+      "Sha256": "5466ca5494e2677cb8d9f0fc7efd87bdc17e6c13484718ea8f568fa08968ad2a",
+      "GitBlob": "fe7418ae7a6d704c82835468325c70d4cb2383e2",
+      "UpstreamPath": "Sharpcaster/Interfaces/IChromecastChannel.cs",
+      "NormalizedSha256": "5466ca5494e2677cb8d9f0fc7efd87bdc17e6c13484718ea8f568fa08968ad2a"
+    },
+    {
+      "Path": "Source/Interfaces/IMessage.cs",
+      "Sha256": "fb2386a216a7bf05fbc4d29bda802966a40cbd1aa5ce9bcdc3521d02082a54dc",
+      "GitBlob": "7f4fab170bc56e4f804826578144ac5944f91bc0",
+      "UpstreamPath": "Sharpcaster/Interfaces/IMessage.cs",
+      "NormalizedSha256": "fb2386a216a7bf05fbc4d29bda802966a40cbd1aa5ce9bcdc3521d02082a54dc"
+    },
+    {
+      "Path": "Source/Interfaces/IMessageWithId.cs",
+      "Sha256": "251b6af8858da0c128382f9268c27254c76ae92fa119e42d00757d120bb02dd4",
+      "GitBlob": "3e4229ff75762ff9039390b24d131bb3fc9afc06",
+      "UpstreamPath": "Sharpcaster/Interfaces/IMessageWithId.cs",
+      "NormalizedSha256": "251b6af8858da0c128382f9268c27254c76ae92fa119e42d00757d120bb02dd4"
+    },
+    {
+      "Path": "Source/Messages/Chromecast/StatusMessage.cs",
+      "Sha256": "6f91f0a900727def1fc95ba62e2af11f2b10653c55c94e45c72ec1379a0f94bc",
+      "GitBlob": "ec609d76d87245edf93fb4c090a74cb134a51bc7",
+      "UpstreamPath": "Sharpcaster/Messages/Chromecast/StatusMessage.cs",
+      "NormalizedSha256": "6f91f0a900727def1fc95ba62e2af11f2b10653c55c94e45c72ec1379a0f94bc"
+    },
+    {
+      "Path": "Source/Messages/Connection/CloseMessage.cs",
+      "Sha256": "cab677ba6556ee996bf4f142a5868cc6583fb8e87044991e5c94ad8762bbb3a1",
+      "GitBlob": "1fa98d900337949b6cd409750cff90181fd401bc",
+      "UpstreamPath": "Sharpcaster/Messages/Connection/CloseMessage.cs",
+      "NormalizedSha256": "cab677ba6556ee996bf4f142a5868cc6583fb8e87044991e5c94ad8762bbb3a1"
+    },
+    {
+      "Path": "Source/Messages/Connection/ConnectMessage.cs",
+      "Sha256": "efc8040df28d849bdf30bb8c2791a25c2b3149e90b20405944e4716c809157c2",
+      "GitBlob": "deafeca0ab62aca3ef969fa373c5880b9a5dedae",
+      "UpstreamPath": "Sharpcaster/Messages/Connection/ConnectMessage.cs",
+      "NormalizedSha256": "efc8040df28d849bdf30bb8c2791a25c2b3149e90b20405944e4716c809157c2"
+    },
+    {
+      "Path": "Source/Messages/Heartbeat/PingMessage.cs",
+      "Sha256": "514e10a3118737cda8adc5980c1964aae642524829eb3434959c984a781ea042",
+      "GitBlob": "f24a1731cbfa8fd2d636eade2ba3a5ed7e9a3e30",
+      "UpstreamPath": "Sharpcaster/Messages/Heartbeat/PingMessage.cs",
+      "NormalizedSha256": "514e10a3118737cda8adc5980c1964aae642524829eb3434959c984a781ea042"
+    },
+    {
+      "Path": "Source/Messages/Heartbeat/PongMessage.cs",
+      "Sha256": "dfc1b60563887c5f2600173bbc85ddcc7187ff335e94d76b16e366d5f4908865",
+      "GitBlob": "62238c92a0a50bdb9a794a76cc40d2d2ab983d9f",
+      "UpstreamPath": "Sharpcaster/Messages/Heartbeat/PongMessage.cs",
+      "NormalizedSha256": "dfc1b60563887c5f2600173bbc85ddcc7187ff335e94d76b16e366d5f4908865"
+    },
+    {
+      "Path": "Source/Messages/Media/EditTracksInfoMessage.cs",
+      "Sha256": "2b7b3a6f2c0abd12072f9241fd780b7f92e30c263bcbcb73acf17c707168b63f",
+      "GitBlob": "6a5934418fe6bf48a2df7f8e9723f994387e6d0e",
+      "UpstreamPath": "Sharpcaster/Messages/Media/EditTracksInfoMessage.cs",
+      "NormalizedSha256": "2b7b3a6f2c0abd12072f9241fd780b7f92e30c263bcbcb73acf17c707168b63f"
+    },
+    {
+      "Path": "Source/Messages/Media/ErrorMessage.cs",
+      "Sha256": "e9981c805783c2d13fa60bd623ae8dfe7fd7be88ff70eb61959e354205bfc673",
+      "GitBlob": "74e98a352248b678e08c2f3a20d2540f4a25bffb",
+      "UpstreamPath": "Sharpcaster/Messages/Media/ErrorMessage.cs",
+      "NormalizedSha256": "e9981c805783c2d13fa60bd623ae8dfe7fd7be88ff70eb61959e354205bfc673"
+    },
+    {
+      "Path": "Source/Messages/Media/InvalidRequestMessage.cs",
+      "Sha256": "5d3b8216d6520b9e687665765c96317f8bedf782269984750958e2d1c178f9d8",
+      "GitBlob": "ea2c3dea33ab676e95c1c291241e89c3e21b57dc",
+      "UpstreamPath": "Sharpcaster/Messages/Media/InvalidRequestMessage.cs",
+      "NormalizedSha256": "5d3b8216d6520b9e687665765c96317f8bedf782269984750958e2d1c178f9d8"
+    },
+    {
+      "Path": "Source/Messages/Media/LoadCancelledMessage.cs",
+      "Sha256": "2722d97613b1d31c31d412e7f1e3c24ca5d26f66342b7104941aea499f1695ed",
+      "GitBlob": "8fa7377d8a480f19980989a504aaaee1a37c0621",
+      "UpstreamPath": "Sharpcaster/Messages/Media/LoadCancelledMessage.cs",
+      "NormalizedSha256": "2722d97613b1d31c31d412e7f1e3c24ca5d26f66342b7104941aea499f1695ed"
+    },
+    {
+      "Path": "Source/Messages/Media/LoadFailedMessage.cs",
+      "Sha256": "f94b598ab2065160a997cbf638da09d28d63245a6150c1ea066909034921bfe1",
+      "GitBlob": "7e75db42504efc9dbdc672b0c2c408a8512e8c94",
+      "UpstreamPath": "Sharpcaster/Messages/Media/LoadFailedMessage.cs",
+      "NormalizedSha256": "f94b598ab2065160a997cbf638da09d28d63245a6150c1ea066909034921bfe1"
+    },
+    {
+      "Path": "Source/Messages/Media/LoadMessage.cs",
+      "Sha256": "f22aa114cbbb38df2dd922d260b88daadcdcc9ae11c3bb2e909f368d7bb4fb73",
+      "GitBlob": "865e4cbdac9e190620491ffa31a88b0580d4a111",
+      "UpstreamPath": "Sharpcaster/Messages/Media/LoadMessage.cs",
+      "NormalizedSha256": "f22aa114cbbb38df2dd922d260b88daadcdcc9ae11c3bb2e909f368d7bb4fb73"
+    },
+    {
+      "Path": "Source/Messages/Media/MediaSessionMessage.cs",
+      "Sha256": "5746b96918e5eca440eab6a87538a5ce7b094ba6d6e34be67f2109976f83be6b",
+      "GitBlob": "eea2e584525d66b6beb5ade000046a0b31dc124a",
+      "UpstreamPath": "Sharpcaster/Messages/Media/MediaSessionMessage.cs",
+      "NormalizedSha256": "5746b96918e5eca440eab6a87538a5ce7b094ba6d6e34be67f2109976f83be6b"
+    },
+    {
+      "Path": "Source/Messages/Media/MediaStatusMessage.cs",
+      "Sha256": "47f7296f47c03efdfa8c4fbd89b28ead6ae811b66ddf5fd13d158348b9cd01e5",
+      "GitBlob": "8711c07ae0083d958436f4f91b103d881d17be85",
+      "UpstreamPath": "Sharpcaster/Messages/Media/MediaStatusMessage.cs",
+      "NormalizedSha256": "47f7296f47c03efdfa8c4fbd89b28ead6ae811b66ddf5fd13d158348b9cd01e5"
+    },
+    {
+      "Path": "Source/Messages/Media/PauseMessage.cs",
+      "Sha256": "a8de0fd4903eeee1f5c6e37cb70ab45d9df40cc0721eb6c6cdc462ea45ecd609",
+      "GitBlob": "d3f899cae019dcd2a0f8f882a682ba5977ff8f69",
+      "UpstreamPath": "Sharpcaster/Messages/Media/PauseMessage.cs",
+      "NormalizedSha256": "a8de0fd4903eeee1f5c6e37cb70ab45d9df40cc0721eb6c6cdc462ea45ecd609"
+    },
+    {
+      "Path": "Source/Messages/Media/PlayMessage.cs",
+      "Sha256": "e5508ef60eac967692faf69e2532ace96e45c664b7243f44aed98f101efc50f5",
+      "GitBlob": "feee67370e152fe482fafa9e0ac94aba10367607",
+      "UpstreamPath": "Sharpcaster/Messages/Media/PlayMessage.cs",
+      "NormalizedSha256": "e5508ef60eac967692faf69e2532ace96e45c664b7243f44aed98f101efc50f5"
+    },
+    {
+      "Path": "Source/Messages/Media/SeekMessage.cs",
+      "Sha256": "354d1a5e0653627d2666fec94e7918540db36a273c041a9ce323b86557014fc0",
+      "GitBlob": "df5f2c97f2e0f4c92d36e57a94f6dc39cf043a61",
+      "UpstreamPath": "Sharpcaster/Messages/Media/SeekMessage.cs",
+      "NormalizedSha256": "354d1a5e0653627d2666fec94e7918540db36a273c041a9ce323b86557014fc0"
+    },
+    {
+      "Path": "Source/Messages/Media/SetPlaybackRateMessage.cs",
+      "Sha256": "dc6bd054a0162c3ff2b5f724fdf3208b67211602ac18e42c2a69fed5aed52f37",
+      "GitBlob": "7e3d3c6001cea3150707c0a096c43f102ef025e9",
+      "UpstreamPath": "Sharpcaster/Messages/Media/SetPlaybackRateMessage.cs",
+      "NormalizedSha256": "dc6bd054a0162c3ff2b5f724fdf3208b67211602ac18e42c2a69fed5aed52f37"
+    },
+    {
+      "Path": "Source/Messages/Media/SkipAdMessage.cs",
+      "Sha256": "59a98c1d1e259f8e593cd18454d92575bb8f596975c7cf3a6f0c230287085992",
+      "GitBlob": "1f9406a3fb4e36f31de6feffcd07124bff834376",
+      "UpstreamPath": "Sharpcaster/Messages/Media/SkipAdMessage.cs",
+      "NormalizedSha256": "59a98c1d1e259f8e593cd18454d92575bb8f596975c7cf3a6f0c230287085992"
+    },
+    {
+      "Path": "Source/Messages/Media/StopMessage.cs",
+      "Sha256": "1f6718367061d23a34ff9b19ed5d666d2e6ff02d016fccdb3a2ecfe904429a48",
+      "GitBlob": "b9d26ad1b92b7d67a18897f03807bb9d02fa78bf",
+      "UpstreamPath": "Sharpcaster/Messages/Media/StopMessage.cs",
+      "NormalizedSha256": "1f6718367061d23a34ff9b19ed5d666d2e6ff02d016fccdb3a2ecfe904429a48"
+    },
+    {
+      "Path": "Source/Messages/Media/UserActionMessage.cs",
+      "Sha256": "77c5dd48bd268cae53e8922eeb4b831a5f783ff1c370a368a30bef837edebced",
+      "GitBlob": "90ede5aae261f55b7ccc7ba2407ec4bbb1d0e8f2",
+      "UpstreamPath": "Sharpcaster/Messages/Media/UserActionMessage.cs",
+      "NormalizedSha256": "77c5dd48bd268cae53e8922eeb4b831a5f783ff1c370a368a30bef837edebced"
+    },
+    {
+      "Path": "Source/Messages/Message.cs",
+      "Sha256": "2f5bbe5558074f551a7776ea31bbe6266e5298a32e54bd376d9524a23c413451",
+      "GitBlob": "691e4f3b332b9bdc14ab6cd603692d45d4f53a8f",
+      "UpstreamPath": "Sharpcaster/Messages/Message.cs",
+      "NormalizedSha256": "2f5bbe5558074f551a7776ea31bbe6266e5298a32e54bd376d9524a23c413451"
+    },
+    {
+      "Path": "Source/Messages/MessageWithID.cs",
+      "Sha256": "7b095f4c6c4004e897c6866559c64b436a97657a454c59e1fd91d7da426ee59a",
+      "GitBlob": "ce5346cfa885581c53308fb2a2d00dafa94caa96",
+      "UpstreamPath": "Sharpcaster/Messages/MessageWithID.cs",
+      "NormalizedSha256": "7b095f4c6c4004e897c6866559c64b436a97657a454c59e1fd91d7da426ee59a"
+    },
+    {
+      "Path": "Source/Messages/MessageWithSession.cs",
+      "Sha256": "b548ee5fa853bfc2092a025b5b7ae051e61bb09e79e5655279cd332856cbaf17",
+      "GitBlob": "705b3da5e997a8350825d2542a961bbeabd8e676",
+      "UpstreamPath": "Sharpcaster/Messages/MessageWithSession.cs",
+      "NormalizedSha256": "b548ee5fa853bfc2092a025b5b7ae051e61bb09e79e5655279cd332856cbaf17"
+    },
+    {
+      "Path": "Source/Messages/Multizone/DeviceUpdatedMessage.cs",
+      "Sha256": "19b1621edc757800decea043f3eb5bcd406eceb605392f6be3819054ea3bccf1",
+      "GitBlob": "7cf876ea9fb43edf62c1e9cb44adb6f1c24816aa",
+      "UpstreamPath": "Sharpcaster/Messages/Multizone/DeviceUpdatedMessage.cs",
+      "NormalizedSha256": "19b1621edc757800decea043f3eb5bcd406eceb605392f6be3819054ea3bccf1"
+    },
+    {
+      "Path": "Source/Messages/Multizone/MultizoneStatusMessage.cs",
+      "Sha256": "8e8b216d136d2c9186a6dc6442bb1004700c086f5aa21d16515abdf240219e66",
+      "GitBlob": "ac4b174da1da26c27853dfabc1ea6b547c119b2b",
+      "UpstreamPath": "Sharpcaster/Messages/Multizone/MultizoneStatusMessage.cs",
+      "NormalizedSha256": "8e8b216d136d2c9186a6dc6442bb1004700c086f5aa21d16515abdf240219e66"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueChangeMessage.cs",
+      "Sha256": "bc995669a6edc1f797bd57bd68394a2920dbb2791c271d2fb492da956e040e78",
+      "GitBlob": "fcb005b41a0d07839ca5008c7742e5781442ff79",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueChangeMessage.cs",
+      "NormalizedSha256": "bc995669a6edc1f797bd57bd68394a2920dbb2791c271d2fb492da956e040e78"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueGetItemIdsMessage.cs",
+      "Sha256": "dd7d197e89e5d57542d8b3b7afc077035aa41dcb7d57eeffc85402b1a03d8381",
+      "GitBlob": "3bac696603b68e21d02feb266c14830d6195f6e2",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueGetItemIdsMessage.cs",
+      "NormalizedSha256": "dd7d197e89e5d57542d8b3b7afc077035aa41dcb7d57eeffc85402b1a03d8381"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueGetItemsMessage.cs",
+      "Sha256": "1a11fa9ea466c848fa056a7e586e5d590bbe7f279c58ed23635929e1f8701a42",
+      "GitBlob": "01d2b47fab446327a9db420361a358c71c72da9f",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueGetItemsMessage.cs",
+      "NormalizedSha256": "1a11fa9ea466c848fa056a7e586e5d590bbe7f279c58ed23635929e1f8701a42"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueInsertMessage.cs",
+      "Sha256": "ddbc4a503815726e5ea0d8d46682702a72f845f86b0b6fa73526533b92570452",
+      "GitBlob": "331aa53166880b52ea79740df7a1e955d9d90bea",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueInsertMessage.cs",
+      "NormalizedSha256": "ddbc4a503815726e5ea0d8d46682702a72f845f86b0b6fa73526533b92570452"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueItemIdsMessage.cs",
+      "Sha256": "6953c4bfa740697cc9fdf75161fdeee23066a76d948cf25dfdd848d5ab4f0780",
+      "GitBlob": "b4bcb11ef0c1af512ba91e563ebeaa2d216fb234",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueItemIdsMessage.cs",
+      "NormalizedSha256": "6953c4bfa740697cc9fdf75161fdeee23066a76d948cf25dfdd848d5ab4f0780"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueItemsMessage.cs",
+      "Sha256": "80b2530ccf0257ed3631ff46c8c98f906337ab07bc9310e747cc406bc355a543",
+      "GitBlob": "6e084c185f738dd594540346f1a88436da6b42ca",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueItemsMessage.cs",
+      "NormalizedSha256": "80b2530ccf0257ed3631ff46c8c98f906337ab07bc9310e747cc406bc355a543"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueLoadMessage.cs",
+      "Sha256": "dd2d25c0dd0725eeb1da117e57ba419eaf9b54c6740902878de6601b5de2de28",
+      "GitBlob": "cff94cff054c9804674cf7bc0e2584f392cb2544",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueLoadMessage.cs",
+      "NormalizedSha256": "dd2d25c0dd0725eeb1da117e57ba419eaf9b54c6740902878de6601b5de2de28"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueRemoveMessage.cs",
+      "Sha256": "db559aacd99d56152681dd4ff3581512b8a4bb5f748633e6f282240698f550f1",
+      "GitBlob": "6f4b0e9abb7fc7d8ac419d7cdd3189c347ec8c2d",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueRemoveMessage.cs",
+      "NormalizedSha256": "db559aacd99d56152681dd4ff3581512b8a4bb5f748633e6f282240698f550f1"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueReorderMessage.cs",
+      "Sha256": "b62bf64ac801ebd3af3e4dbecd68397f8594fe8a7e7808b8d06f4a2476cdbf03",
+      "GitBlob": "685eeb1431990681879dd98a834be286da0f3442",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueReorderMessage.cs",
+      "NormalizedSha256": "b62bf64ac801ebd3af3e4dbecd68397f8594fe8a7e7808b8d06f4a2476cdbf03"
+    },
+    {
+      "Path": "Source/Messages/Queue/QueueUpdateMessage.cs",
+      "Sha256": "2f0bef1ec5745f5b888cec1049ac8648ba1b5c404f01741ee8b1a67f9b9f3158",
+      "GitBlob": "732f33f8060160ed6b9124c50f5fd472c728cf46",
+      "UpstreamPath": "Sharpcaster/Messages/Queue/QueueUpdateMessage.cs",
+      "NormalizedSha256": "2f0bef1ec5745f5b888cec1049ac8648ba1b5c404f01741ee8b1a67f9b9f3158"
+    },
+    {
+      "Path": "Source/Messages/Receiver/GetStatusMessage.cs",
+      "Sha256": "990ceaf9bc9aba855e95434d58fb3be0fa60746c32e5190695062f2f1d03c509",
+      "GitBlob": "6a233184723c25d1016e62139386f34d685faefc",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/GetStatusMessage.cs",
+      "NormalizedSha256": "990ceaf9bc9aba855e95434d58fb3be0fa60746c32e5190695062f2f1d03c509"
+    },
+    {
+      "Path": "Source/Messages/Receiver/LaunchErrorMessage.cs",
+      "Sha256": "9581bd20d61e0fe1a4fa9887db95aa192b3feba945d594d37f75435ac2fe10ed",
+      "GitBlob": "41455590bbc117a0b73d78b1631ccee645e02392",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/LaunchErrorMessage.cs",
+      "NormalizedSha256": "9581bd20d61e0fe1a4fa9887db95aa192b3feba945d594d37f75435ac2fe10ed"
+    },
+    {
+      "Path": "Source/Messages/Receiver/LaunchMessage.cs",
+      "Sha256": "32faae9e280042bec6b79f4afabad20f3986e6df810a7a2010e097109b00e0d0",
+      "GitBlob": "a2b0af5fd1f1827eb618fe4256faec3392cd181e",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/LaunchMessage.cs",
+      "NormalizedSha256": "32faae9e280042bec6b79f4afabad20f3986e6df810a7a2010e097109b00e0d0"
+    },
+    {
+      "Path": "Source/Messages/Receiver/LaunchStatusMessage.cs",
+      "Sha256": "bcfb8d695057cbf534cb6f8445a9eaf55954644da158a548edcbad6705fd1148",
+      "GitBlob": "f023fe246fa4f4b8a4db7025c3098c7ea2961601",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/LaunchStatusMessage.cs",
+      "NormalizedSha256": "bcfb8d695057cbf534cb6f8445a9eaf55954644da158a548edcbad6705fd1148"
+    },
+    {
+      "Path": "Source/Messages/Receiver/ReceiverStatusMessage.cs",
+      "Sha256": "760a0a61f8432a9cf31cde6ad43065d4a35aa8ad18063664ef19f9939531f2e1",
+      "GitBlob": "3b27bc8cd8ef74981e3ad49962f43075d4621ed5",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/ReceiverStatusMessage.cs",
+      "NormalizedSha256": "760a0a61f8432a9cf31cde6ad43065d4a35aa8ad18063664ef19f9939531f2e1"
+    },
+    {
+      "Path": "Source/Messages/Receiver/SetVolumeMessage.cs",
+      "Sha256": "3cef30ccb6e2e01d93545931289eed6c044d074eeb2dfbc36762c55df09e343b",
+      "GitBlob": "6f9fc350802f21d2c52b28fee4c0db44a682e52f",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/SetVolumeMessage.cs",
+      "NormalizedSha256": "3cef30ccb6e2e01d93545931289eed6c044d074eeb2dfbc36762c55df09e343b"
+    },
+    {
+      "Path": "Source/Messages/Receiver/StopMessage.cs",
+      "Sha256": "210cf6eb1876645e827cef5b4b10b325f5c57cfbb7d6adec7113d8729f75d1cc",
+      "GitBlob": "9e630b67021ff8e40c83233d316b23ea7c8a2165",
+      "UpstreamPath": "Sharpcaster/Messages/Receiver/StopMessage.cs",
+      "NormalizedSha256": "210cf6eb1876645e827cef5b4b10b325f5c57cfbb7d6adec7113d8729f75d1cc"
+    },
+    {
+      "Path": "Source/Messages/ReceptionMessageAttribute.cs",
+      "Sha256": "28f42d5039b76f2655cc6030af9a75cf1f149a8ad1f5445215fed2cbf1b691ec",
+      "GitBlob": "ad9bda70668a199b1c285ea27fc5d8293138784f",
+      "UpstreamPath": "Sharpcaster/Messages/ReceptionMessageAttribute.cs",
+      "NormalizedSha256": "28f42d5039b76f2655cc6030af9a75cf1f149a8ad1f5445215fed2cbf1b691ec"
+    },
+    {
+      "Path": "Source/Messages/Spotify/AddUserMessage.cs",
+      "Sha256": "5a4c752b8d1ff630c64398b2f409b8bee11435dac4b1a98baf4bf5dbd48a14a9",
+      "GitBlob": "2bfb9cfd7f4fe1939377e477248bee34a82d8dd2",
+      "UpstreamPath": "Sharpcaster/Messages/Spotify/AddUserMessage.cs",
+      "NormalizedSha256": "5a4c752b8d1ff630c64398b2f409b8bee11435dac4b1a98baf4bf5dbd48a14a9"
+    },
+    {
+      "Path": "Source/Messages/Spotify/AddUserResponseMessage.cs",
+      "Sha256": "f3e66f411a59383ea31833e0b1281a2d938e39647126010c973c0946dca270e7",
+      "GitBlob": "1d31ba78def9e21bfb260a35e03acb62fa8d0d09",
+      "UpstreamPath": "Sharpcaster/Messages/Spotify/AddUserResponseMessage.cs",
+      "NormalizedSha256": "f3e66f411a59383ea31833e0b1281a2d938e39647126010c973c0946dca270e7"
+    },
+    {
+      "Path": "Source/Messages/Spotify/GetInfoMessage.cs",
+      "Sha256": "0ef3ffdbc5309f46eac0145baf165d9c778a1e2f7c9026d65636926eb952271d",
+      "GitBlob": "c47c898ee08efeabffdb58c1c91fc2bccd4cfb39",
+      "UpstreamPath": "Sharpcaster/Messages/Spotify/GetInfoMessage.cs",
+      "NormalizedSha256": "0ef3ffdbc5309f46eac0145baf165d9c778a1e2f7c9026d65636926eb952271d"
+    },
+    {
+      "Path": "Source/Messages/Spotify/GetInfoResponseMessage.cs",
+      "Sha256": "c7c345b6486a9a0bf5a2344b7e192a32420869906b47458a3d7cfc9fbee06728",
+      "GitBlob": "431fdc0f9aa241cd898adec8c47739de001945d7",
+      "UpstreamPath": "Sharpcaster/Messages/Spotify/GetInfoResponseMessage.cs",
+      "NormalizedSha256": "c7c345b6486a9a0bf5a2344b7e192a32420869906b47458a3d7cfc9fbee06728"
+    },
+    {
+      "Path": "Source/Messages/Web/WebMessage.cs",
+      "Sha256": "9e7a2d14179bb5d27d17fd8e8b91d18d5b8479c520f3ff6df023ac9699971dbb",
+      "GitBlob": "c55625c6507f1509fa8363e262c5d13444af106d",
+      "UpstreamPath": "Sharpcaster/Messages/Web/WebMessage.cs",
+      "NormalizedSha256": "9e7a2d14179bb5d27d17fd8e8b91d18d5b8479c520f3ff6df023ac9699971dbb"
+    },
+    {
+      "Path": "Source/Models/Cast/AutoJoinPolicy.cs",
+      "Sha256": "e29071f56298b1321ca7ba9522caa19c2691254d216a3fc4c9e8a6e63777b963",
+      "GitBlob": "f9001394c45583d5fd629202480f13bdeb0d0d2f",
+      "UpstreamPath": "Sharpcaster/Models/Cast/AutoJoinPolicy.cs",
+      "NormalizedSha256": "e29071f56298b1321ca7ba9522caa19c2691254d216a3fc4c9e8a6e63777b963"
+    },
+    {
+      "Path": "Source/Models/Cast/Capability.cs",
+      "Sha256": "bca6b28d11140dd3dcf75d839743968327c912895c474f8c19fe2344ae19a990",
+      "GitBlob": "655104cbf4b125d4b66126a746a1a95e85a7413f",
+      "UpstreamPath": "Sharpcaster/Models/Cast/Capability.cs",
+      "NormalizedSha256": "bca6b28d11140dd3dcf75d839743968327c912895c474f8c19fe2344ae19a990"
+    },
+    {
+      "Path": "Source/Models/Cast/DefaultActionPolicy.cs",
+      "Sha256": "b4c49b79034a36026984e6321642f713236392f4cdd3b8129b98cd6392e66ca6",
+      "GitBlob": "ad298699860ad38e60b9b31f73911f34c62ae0f7",
+      "UpstreamPath": "Sharpcaster/Models/Cast/DefaultActionPolicy.cs",
+      "NormalizedSha256": "b4c49b79034a36026984e6321642f713236392f4cdd3b8129b98cd6392e66ca6"
+    },
+    {
+      "Path": "Source/Models/Cast/ErrorCode.cs",
+      "Sha256": "5e6deea23d2bce474b3cdb70991b0dd62d9b7049fe326e3a8341167180bd6928",
+      "GitBlob": "7cb75ce9ccbd751f091f69dc7df4f777ca5625ee",
+      "UpstreamPath": "Sharpcaster/Models/Cast/ErrorCode.cs",
+      "NormalizedSha256": "5e6deea23d2bce474b3cdb70991b0dd62d9b7049fe326e3a8341167180bd6928"
+    },
+    {
+      "Path": "Source/Models/Cast/ReceiverAction.cs",
+      "Sha256": "9432df36e42a496922c456747180b1246ce46f8fdaab56da8af584d445740dac",
+      "GitBlob": "67f12f4f53a446cf5f00a17a860f931dfc90d337",
+      "UpstreamPath": "Sharpcaster/Models/Cast/ReceiverAction.cs",
+      "NormalizedSha256": "9432df36e42a496922c456747180b1246ce46f8fdaab56da8af584d445740dac"
+    },
+    {
+      "Path": "Source/Models/Cast/ReceiverAvailability.cs",
+      "Sha256": "b299172d17c4685b6a93b3605ec4608b4e3edcc9fe8f5fb02646b01d62965b1b",
+      "GitBlob": "de9da2a041b41677c82f58df8bd6da220da88649",
+      "UpstreamPath": "Sharpcaster/Models/Cast/ReceiverAvailability.cs",
+      "NormalizedSha256": "b299172d17c4685b6a93b3605ec4608b4e3edcc9fe8f5fb02646b01d62965b1b"
+    },
+    {
+      "Path": "Source/Models/Cast/ReceiverType.cs",
+      "Sha256": "72c4a81a622a1d7aceb5bc77f1031f5ede7e04a3b21b4714f0ca8ed48564e845",
+      "GitBlob": "dd7d61316360188c8df1a83d1a4e97fbf477d580",
+      "UpstreamPath": "Sharpcaster/Models/Cast/ReceiverType.cs",
+      "NormalizedSha256": "72c4a81a622a1d7aceb5bc77f1031f5ede7e04a3b21b4714f0ca8ed48564e845"
+    },
+    {
+      "Path": "Source/Models/Cast/SenderPlatform.cs",
+      "Sha256": "207ce335885370a2b62e74e58435b1658c25543eac9d8ed3ce66ba385ffed6ee",
+      "GitBlob": "8276af32cc3a703bba9471f54d9bac9133654c75",
+      "UpstreamPath": "Sharpcaster/Models/Cast/SenderPlatform.cs",
+      "NormalizedSha256": "207ce335885370a2b62e74e58435b1658c25543eac9d8ed3ce66ba385ffed6ee"
+    },
+    {
+      "Path": "Source/Models/Cast/SessionStatus.cs",
+      "Sha256": "9e6a20daa1130706363a4faebdf691bd281be4636f1a491e2fb2768d9246cca0",
+      "GitBlob": "a3d0a9c6317ae040c997ef17a97df79d4def9077",
+      "UpstreamPath": "Sharpcaster/Models/Cast/SessionStatus.cs",
+      "NormalizedSha256": "9e6a20daa1130706363a4faebdf691bd281be4636f1a491e2fb2768d9246cca0"
+    },
+    {
+      "Path": "Source/Models/Cast/VolumeControlType.cs",
+      "Sha256": "aa5b55fb83fb4804f8ab6c825d6d0df9a4f36c327880073171b64777c2655269",
+      "GitBlob": "1c16005750fd609de69e33e1c7f47d76921ca94e",
+      "UpstreamPath": "Sharpcaster/Models/Cast/VolumeControlType.cs",
+      "NormalizedSha256": "aa5b55fb83fb4804f8ab6c825d6d0df9a4f36c327880073171b64777c2655269"
+    },
+    {
+      "Path": "Source/Models/CastMessage.cs",
+      "Sha256": "da753a4144077b7efad3322450588e7d8eed2eb3b1dbbac49dba192399215bf0",
+      "GitBlob": "e2bad54cbfa780f2ae65c4e1bc423c2579481c33",
+      "UpstreamPath": "Sharpcaster/Models/CastMessage.cs",
+      "NormalizedSha256": "da753a4144077b7efad3322450588e7d8eed2eb3b1dbbac49dba192399215bf0"
+    },
+    {
+      "Path": "Source/Models/ChromecastReceiver.cs",
+      "Sha256": "5b31456c0f2bd80f11c522c97a66f6cbac1341f79b4f5cd9edd3447ca84fb953",
+      "GitBlob": "35ce9c4e9696fb614cb0a873308aa5bf5c67ca8b",
+      "UpstreamPath": "Sharpcaster/Models/ChromecastReceiver.cs",
+      "NormalizedSha256": "5b31456c0f2bd80f11c522c97a66f6cbac1341f79b4f5cd9edd3447ca84fb953"
+    },
+    {
+      "Path": "Source/Models/ChromecastStatus/ChromecastApplication.cs",
+      "Sha256": "42b63f916f4a2e6834f0467d6bf18d04c93a6f3e4bb953683491dc07f3eba7fe",
+      "GitBlob": "62bd3c521b5d72931b6441ccc60568a5fe8ff81e",
+      "UpstreamPath": "Sharpcaster/Models/ChromecastStatus/ChromecastApplication.cs",
+      "NormalizedSha256": "42b63f916f4a2e6834f0467d6bf18d04c93a6f3e4bb953683491dc07f3eba7fe"
+    },
+    {
+      "Path": "Source/Models/ChromecastStatus/ChromecastStatus.cs",
+      "Sha256": "e498e123459f2af7802ffeaa6822ebaaa9ae89ced6903b4b1283aeccc005b4ec",
+      "GitBlob": "cef2fe44bb17768e4b6f719901617bc49e9f23dd",
+      "UpstreamPath": "Sharpcaster/Models/ChromecastStatus/ChromecastStatus.cs",
+      "NormalizedSha256": "e498e123459f2af7802ffeaa6822ebaaa9ae89ced6903b4b1283aeccc005b4ec"
+    },
+    {
+      "Path": "Source/Models/ChromecastStatus/Namespace.cs",
+      "Sha256": "223b0bec0ad52361befdc1396adec8d73f771b74634ff31fa4cdf40267f89201",
+      "GitBlob": "3ca0a98994884eeb19e7619479e63c3473b397f4",
+      "UpstreamPath": "Sharpcaster/Models/ChromecastStatus/Namespace.cs",
+      "NormalizedSha256": "223b0bec0ad52361befdc1396adec8d73f771b74634ff31fa4cdf40267f89201"
+    },
+    {
+      "Path": "Source/Models/Media/AudiobookChapterMetadata.cs",
+      "Sha256": "e36e47a05f2f86ce39fe0a013f69d30e491dfb1ce36077051486cbf1de927172",
+      "GitBlob": "cb1b6d836f17e95f864bee5e9f57e3d8d78a825f",
+      "UpstreamPath": "Sharpcaster/Models/Media/AudiobookChapterMetadata.cs",
+      "NormalizedSha256": "e36e47a05f2f86ce39fe0a013f69d30e491dfb1ce36077051486cbf1de927172"
+    },
+    {
+      "Path": "Source/Models/Media/Break.cs",
+      "Sha256": "43d357ad35a3601eb5ab990035bfb53f519ee33c6af93346985222c8411a896f",
+      "GitBlob": "3ac6019a687a973969f17dbbef88151c658d5474",
+      "UpstreamPath": "Sharpcaster/Models/Media/Break.cs",
+      "NormalizedSha256": "43d357ad35a3601eb5ab990035bfb53f519ee33c6af93346985222c8411a896f"
+    },
+    {
+      "Path": "Source/Models/Media/BreakClip.cs",
+      "Sha256": "7519a5a1b3086e46ce8a321795208260ca39cd730a03861984f5f31c9567a299",
+      "GitBlob": "a5aa98dea0487b772f8c09a2c17c508bc51942cc",
+      "UpstreamPath": "Sharpcaster/Models/Media/BreakClip.cs",
+      "NormalizedSha256": "7519a5a1b3086e46ce8a321795208260ca39cd730a03861984f5f31c9567a299"
+    },
+    {
+      "Path": "Source/Models/Media/BreakStatus.cs",
+      "Sha256": "08314717af621cb96e9c2e4c1354c9de821b8918ec5ec77acefaadfdeafdd0db",
+      "GitBlob": "92911d809a873261d830db044b8008904d29b100",
+      "UpstreamPath": "Sharpcaster/Models/Media/BreakStatus.cs",
+      "NormalizedSha256": "08314717af621cb96e9c2e4c1354c9de821b8918ec5ec77acefaadfdeafdd0db"
+    },
+    {
+      "Path": "Source/Models/Media/CastColor.cs",
+      "Sha256": "ca1d579b06abed8b859439b5dd674630a89522b64c08592836d3ca765a86c2ce",
+      "GitBlob": "ef8dfe3a0f788a566154d60991e7d3a384067474",
+      "UpstreamPath": "Sharpcaster/Models/Media/CastColor.cs",
+      "NormalizedSha256": "ca1d579b06abed8b859439b5dd674630a89522b64c08592836d3ca765a86c2ce"
+    },
+    {
+      "Path": "Source/Models/Media/ContainerMetadata.cs",
+      "Sha256": "59aac244b116c7767afdeccaba8f447e923f7c16d89c09539da9cc06a0d15dd6",
+      "GitBlob": "8c21641f7800f482fed8316aa0698b59a4efae66",
+      "UpstreamPath": "Sharpcaster/Models/Media/ContainerMetadata.cs",
+      "NormalizedSha256": "59aac244b116c7767afdeccaba8f447e923f7c16d89c09539da9cc06a0d15dd6"
+    },
+    {
+      "Path": "Source/Models/Media/ContainerType.cs",
+      "Sha256": "9c57178a5237acc98dfaa089fc536857b4bc194a32101770b5849821a68ba1dd",
+      "GitBlob": "b6c20858752e0326078060199f285c1d11388941",
+      "UpstreamPath": "Sharpcaster/Models/Media/ContainerType.cs",
+      "NormalizedSha256": "9c57178a5237acc98dfaa089fc536857b4bc194a32101770b5849821a68ba1dd"
+    },
+    {
+      "Path": "Source/Models/Media/HlsSegmentFormat.cs",
+      "Sha256": "2add1b4f5dafc872f310e2622823cd7f91821795d6d811f77af30f63bbb62fbb",
+      "GitBlob": "1fd5c612aa1775566a51d8c49b34eae69d97a57f",
+      "UpstreamPath": "Sharpcaster/Models/Media/HlsSegmentFormat.cs",
+      "NormalizedSha256": "2add1b4f5dafc872f310e2622823cd7f91821795d6d811f77af30f63bbb62fbb"
+    },
+    {
+      "Path": "Source/Models/Media/HlsVideoSegmentFormat.cs",
+      "Sha256": "3cb9a3b23f39e9cc367b99900e87a205c80ca5df3817c4c2663be4720e142ded",
+      "GitBlob": "845e947d782464ed5fe4a7af7e69672f57117ffc",
+      "UpstreamPath": "Sharpcaster/Models/Media/HlsVideoSegmentFormat.cs",
+      "NormalizedSha256": "3cb9a3b23f39e9cc367b99900e87a205c80ca5df3817c4c2663be4720e142ded"
+    },
+    {
+      "Path": "Source/Models/Media/IdleReason.cs",
+      "Sha256": "bb3a4e404783e62830da16e83fdadca51ccd4e388ba1a25ffa71b5c662da2acb",
+      "GitBlob": "e6dad6b074ecc741ad59281ba8ba2383bb6826bb",
+      "UpstreamPath": "Sharpcaster/Models/Media/IdleReason.cs",
+      "NormalizedSha256": "bb3a4e404783e62830da16e83fdadca51ccd4e388ba1a25ffa71b5c662da2acb"
+    },
+    {
+      "Path": "Source/Models/Media/Image.cs",
+      "Sha256": "6b0eaf65948f56320ad25a261dab4ec4d49cf55b8e2fe03fab8905d593909c28",
+      "GitBlob": "f5e420fed32d910ec307e6b0e4a2c3989267ba8e",
+      "UpstreamPath": "Sharpcaster/Models/Media/Image.cs",
+      "NormalizedSha256": "6b0eaf65948f56320ad25a261dab4ec4d49cf55b8e2fe03fab8905d593909c28"
+    },
+    {
+      "Path": "Source/Models/Media/LiveSeekableRange.cs",
+      "Sha256": "4bbc1b7b75a731396c3180bb04daceae2643da6037defa394511b39e5692c0f8",
+      "GitBlob": "63a8c5b55fbfb6080b43f92d9635431a992e0e41",
+      "UpstreamPath": "Sharpcaster/Models/Media/LiveSeekableRange.cs",
+      "NormalizedSha256": "4bbc1b7b75a731396c3180bb04daceae2643da6037defa394511b39e5692c0f8"
+    },
+    {
+      "Path": "Source/Models/Media/Media.cs",
+      "Sha256": "9b051d44f59b8a0aaadd7ac1135dba7db812a990ef4c64e0e215f20d4e3c9c2e",
+      "GitBlob": "e9ef45f691d14bc1ee5c5cae6ecfd2c5149b49eb",
+      "UpstreamPath": "Sharpcaster/Models/Media/Media.cs",
+      "NormalizedSha256": "9b051d44f59b8a0aaadd7ac1135dba7db812a990ef4c64e0e215f20d4e3c9c2e"
+    },
+    {
+      "Path": "Source/Models/Media/MediaCommand.cs",
+      "Sha256": "ff71ff4fc8f3ffba486335824898f9f2d01608c88e64e25ba2fd385ac9437a5d",
+      "GitBlob": "88f87275451d3a9e8f2d3b99a2efa698beb4ea03",
+      "UpstreamPath": "Sharpcaster/Models/Media/MediaCommand.cs",
+      "NormalizedSha256": "ff71ff4fc8f3ffba486335824898f9f2d01608c88e64e25ba2fd385ac9437a5d"
+    },
+    {
+      "Path": "Source/Models/Media/MediaMetadata.cs",
+      "Sha256": "f1fe1689ea44d456f9ce8ef49d016e393305c74b6b3763ca578d737716d9251e",
+      "GitBlob": "9fdf7dc9cc1102dc272d55fac1dabb529e14839a",
+      "UpstreamPath": "Sharpcaster/Models/Media/MediaMetadata.cs",
+      "NormalizedSha256": "f1fe1689ea44d456f9ce8ef49d016e393305c74b6b3763ca578d737716d9251e"
+    },
+    {
+      "Path": "Source/Models/Media/MediaStatus.cs",
+      "Sha256": "8a8fdcbfa068a53d3df70b8da62b52024e134cc0aa424dd63f4e38d42c6f2864",
+      "GitBlob": "0f6b100f0b0455531285ae243ed69cb8ce078470",
+      "UpstreamPath": "Sharpcaster/Models/Media/MediaStatus.cs",
+      "NormalizedSha256": "8a8fdcbfa068a53d3df70b8da62b52024e134cc0aa424dd63f4e38d42c6f2864"
+    },
+    {
+      "Path": "Source/Models/Media/MetadataType.cs",
+      "Sha256": "4d0f07ca31ace0d98a845ff5ecea7175dccce9da407d89d238c5f75528205b63",
+      "GitBlob": "ff29190253c8429ba509ea12b2066944a80b7471",
+      "UpstreamPath": "Sharpcaster/Models/Media/MetadataType.cs",
+      "NormalizedSha256": "4d0f07ca31ace0d98a845ff5ecea7175dccce9da407d89d238c5f75528205b63"
+    },
+    {
+      "Path": "Source/Models/Media/MovieMetadata.cs",
+      "Sha256": "feea6bdd82ee7ed621e5b425b0b11c3f02e8e56acad2cdad5e76816f0f5d275f",
+      "GitBlob": "20ebbaad410bb9bb5b8657e39403067a6ea9e37b",
+      "UpstreamPath": "Sharpcaster/Models/Media/MovieMetadata.cs",
+      "NormalizedSha256": "feea6bdd82ee7ed621e5b425b0b11c3f02e8e56acad2cdad5e76816f0f5d275f"
+    },
+    {
+      "Path": "Source/Models/Media/MusicTrackMetadata.cs",
+      "Sha256": "fa569cd824fa032c739508fe46e07f7ab1f73151c0cd1c163ef250b3e3b59ae3",
+      "GitBlob": "a3bfa7440adea95fb295b26e581c553e3941f4fb",
+      "UpstreamPath": "Sharpcaster/Models/Media/MusicTrackMetadata.cs",
+      "NormalizedSha256": "fa569cd824fa032c739508fe46e07f7ab1f73151c0cd1c163ef250b3e3b59ae3"
+    },
+    {
+      "Path": "Source/Models/Media/PhotoMetadata.cs",
+      "Sha256": "4e26816c9c2f666d37c3fc346f4657adafbfda8f4553db79179ff2ab8d713255",
+      "GitBlob": "508a32b3da56737fa17dbe07eb004c9a94c20cde",
+      "UpstreamPath": "Sharpcaster/Models/Media/PhotoMetadata.cs",
+      "NormalizedSha256": "4e26816c9c2f666d37c3fc346f4657adafbfda8f4553db79179ff2ab8d713255"
+    },
+    {
+      "Path": "Source/Models/Media/PlayerStateType.cs",
+      "Sha256": "38614347ab47051b9497940f7f2ea48abc376332325620a3f146c61fcfaf110b",
+      "GitBlob": "b58c53dd11062ddc609fee7561b4c98e383b4e72",
+      "UpstreamPath": "Sharpcaster/Models/Media/PlayerStateType.cs",
+      "NormalizedSha256": "38614347ab47051b9497940f7f2ea48abc376332325620a3f146c61fcfaf110b"
+    },
+    {
+      "Path": "Source/Models/Media/QueueType.cs",
+      "Sha256": "899de3f1384744843f97bf31ed6695ff093406b7aec36b1d991138b8ad717d04",
+      "GitBlob": "1b4d3af04f3566f6025422e0c679473b80074b98",
+      "UpstreamPath": "Sharpcaster/Models/Media/QueueType.cs",
+      "NormalizedSha256": "899de3f1384744843f97bf31ed6695ff093406b7aec36b1d991138b8ad717d04"
+    },
+    {
+      "Path": "Source/Models/Media/RepeatModeType.cs",
+      "Sha256": "2b26fce463495e6260dfe3ac7a71e990c7d2012245d713435ca5b5b2aa45077d",
+      "GitBlob": "d56fb2a5650480503da6d24002d31dfdee1e151c",
+      "UpstreamPath": "Sharpcaster/Models/Media/RepeatModeType.cs",
+      "NormalizedSha256": "2b26fce463495e6260dfe3ac7a71e990c7d2012245d713435ca5b5b2aa45077d"
+    },
+    {
+      "Path": "Source/Models/Media/ResumeState.cs",
+      "Sha256": "b3950d241d82cda6bcceac783b4f7f5d74aa2dda83a972584f1a1c17239582f9",
+      "GitBlob": "b02479be364a0ef2620e07a33315b4a8cac60778",
+      "UpstreamPath": "Sharpcaster/Models/Media/ResumeState.cs",
+      "NormalizedSha256": "b3950d241d82cda6bcceac783b4f7f5d74aa2dda83a972584f1a1c17239582f9"
+    },
+    {
+      "Path": "Source/Models/Media/StreamType.cs",
+      "Sha256": "b8dd17b9c57097d62e345973f244a365ef307bfe95c052ce11ac87df9d220e5d",
+      "GitBlob": "ef450361734cb05e3f690162a3944e5a72f94bff",
+      "UpstreamPath": "Sharpcaster/Models/Media/StreamType.cs",
+      "NormalizedSha256": "b8dd17b9c57097d62e345973f244a365ef307bfe95c052ce11ac87df9d220e5d"
+    },
+    {
+      "Path": "Source/Models/Media/TVShowMetadata.cs",
+      "Sha256": "39725aab0619b683aa27de7288bae7a6db530979ca20aec975e6821b4d61e659",
+      "GitBlob": "ac95b02d50f0b424fe81a2cdde10b31a3816e02b",
+      "UpstreamPath": "Sharpcaster/Models/Media/TVShowMetadata.cs",
+      "NormalizedSha256": "39725aab0619b683aa27de7288bae7a6db530979ca20aec975e6821b4d61e659"
+    },
+    {
+      "Path": "Source/Models/Media/TextTrackStyle.cs",
+      "Sha256": "944b5d56210f96a5a319949f65761e174ad71495fe2a239c759cce891f6eac9c",
+      "GitBlob": "197dfc4b589e09203fc34eb7f41584e4c7580c0a",
+      "UpstreamPath": "Sharpcaster/Models/Media/TextTrackStyle.cs",
+      "NormalizedSha256": "944b5d56210f96a5a319949f65761e174ad71495fe2a239c759cce891f6eac9c"
+    },
+    {
+      "Path": "Source/Models/Media/TextTrackType.cs",
+      "Sha256": "94b5692a9b72722cc4b2530c4e4deef72dd41ff47ea2d5cb385b54f9dbc2f988",
+      "GitBlob": "f57b18bc95e98b4531dd04ea9a668d374ab8bf50",
+      "UpstreamPath": "Sharpcaster/Models/Media/TextTrackType.cs",
+      "NormalizedSha256": "94b5692a9b72722cc4b2530c4e4deef72dd41ff47ea2d5cb385b54f9dbc2f988"
+    },
+    {
+      "Path": "Source/Models/Media/Track.cs",
+      "Sha256": "5761679f5282e91a6d158e789755ffc5dff96bcee32fc2083babe70ccac1c246",
+      "GitBlob": "ce67a711fe66984b725522890d4485cb2ab872dd",
+      "UpstreamPath": "Sharpcaster/Models/Media/Track.cs",
+      "NormalizedSha256": "5761679f5282e91a6d158e789755ffc5dff96bcee32fc2083babe70ccac1c246"
+    },
+    {
+      "Path": "Source/Models/Media/TrackType.cs",
+      "Sha256": "94a9bb4840a6233c658e278eac3cf127bed77f6f02e3a954a5eefaf2917d7dab",
+      "GitBlob": "6e7e192fa5967e9e4f664c8cd201ba55ecfbdd43",
+      "UpstreamPath": "Sharpcaster/Models/Media/TrackType.cs",
+      "NormalizedSha256": "94a9bb4840a6233c658e278eac3cf127bed77f6f02e3a954a5eefaf2917d7dab"
+    },
+    {
+      "Path": "Source/Models/Media/UserAction.cs",
+      "Sha256": "6859bbd77abecfce6facda2a3faac3cc64319eae7d0c75ac8d4f69471e00c097",
+      "GitBlob": "951a9db413baf6b16c00ee36f439eaca538fec4f",
+      "UpstreamPath": "Sharpcaster/Models/Media/UserAction.cs",
+      "NormalizedSha256": "6859bbd77abecfce6facda2a3faac3cc64319eae7d0c75ac8d4f69471e00c097"
+    },
+    {
+      "Path": "Source/Models/Media/UserActionState.cs",
+      "Sha256": "71d5001075676abfd4b27b4a970c5f5b2b512f00b9533c1fd52ae9c61f3e8c7d",
+      "GitBlob": "d804827aef2d40360c36fe4fcab01f7546aef50c",
+      "UpstreamPath": "Sharpcaster/Models/Media/UserActionState.cs",
+      "NormalizedSha256": "71d5001075676abfd4b27b4a970c5f5b2b512f00b9533c1fd52ae9c61f3e8c7d"
+    },
+    {
+      "Path": "Source/Models/Media/VastAdsRequest.cs",
+      "Sha256": "5fd32370a4a12e71bceecbff839cac38a7f6e3c97ad6e73467c57b538fccafab",
+      "GitBlob": "857b8bb94461e36ad253413fb3f631254ae2a85d",
+      "UpstreamPath": "Sharpcaster/Models/Media/VastAdsRequest.cs",
+      "NormalizedSha256": "5fd32370a4a12e71bceecbff839cac38a7f6e3c97ad6e73467c57b538fccafab"
+    },
+    {
+      "Path": "Source/Models/Media/VideoInformation.cs",
+      "Sha256": "12a6f6ada13a9758fdf27d9c6862908fc4aada48e3c676f4fcf3de4bee444f2c",
+      "GitBlob": "15ee546e1250940876bc9f67585364b0ec565b94",
+      "UpstreamPath": "Sharpcaster/Models/Media/VideoInformation.cs",
+      "NormalizedSha256": "12a6f6ada13a9758fdf27d9c6862908fc4aada48e3c676f4fcf3de4bee444f2c"
+    },
+    {
+      "Path": "Source/Models/MultiZone/DeviceModel.cs",
+      "Sha256": "4df09e8e228681e20f19079d14e52f121738c1f97c4d9f71d5efc169daa4e245",
+      "GitBlob": "7e8a7cf1eda8b3af308ba81df24a8d760b5e2f13",
+      "UpstreamPath": "Sharpcaster/Models/MultiZone/DeviceModel.cs",
+      "NormalizedSha256": "4df09e8e228681e20f19079d14e52f121738c1f97c4d9f71d5efc169daa4e245"
+    },
+    {
+      "Path": "Source/Models/MultiZone/MultiZoneStatus.cs",
+      "Sha256": "dc47f84e06cc71c6529def5c7754866dfaf70e2836fc8e9c20b13aeca2ffd462",
+      "GitBlob": "d0da2f55e5a552719688c454fb987d7faa2c9632",
+      "UpstreamPath": "Sharpcaster/Models/MultiZone/MultiZoneStatus.cs",
+      "NormalizedSha256": "dc47f84e06cc71c6529def5c7754866dfaf70e2836fc8e9c20b13aeca2ffd462"
+    },
+    {
+      "Path": "Source/Models/MultiZone/PlaybackSessionModel.cs",
+      "Sha256": "0047a58b4674299a697be8965465bfb7798dd8f1500ce8dcc76e88042d9e675f",
+      "GitBlob": "c09ab7347f3be191e83abe64af3d1076df9bb716",
+      "UpstreamPath": "Sharpcaster/Models/MultiZone/PlaybackSessionModel.cs",
+      "NormalizedSha256": "0047a58b4674299a697be8965465bfb7798dd8f1500ce8dcc76e88042d9e675f"
+    },
+    {
+      "Path": "Source/Models/Protobuf/CastChannel.cs",
+      "Sha256": "0e49f53ed48d2068d9dfaa02168aee32d3f20caca85000d4b4f75a7d431d4a39",
+      "GitBlob": "d558a6b430f859e7e159598219246bdae99f344a",
+      "UpstreamPath": "Sharpcaster/Models/Protobuf/CastChannel.cs",
+      "NormalizedSha256": "0e49f53ed48d2068d9dfaa02168aee32d3f20caca85000d4b4f75a7d431d4a39"
+    },
+    {
+      "Path": "Source/Models/Protobuf/Logging.cs",
+      "Sha256": "2a2f6d5c4acfefa8b2a23cd452206e63a99faaa3209249a2d8c03df0e6e29114",
+      "GitBlob": "697adbf9aa113bf121fe945f18796e722308638f",
+      "UpstreamPath": "Sharpcaster/Models/Protobuf/Logging.cs",
+      "NormalizedSha256": "2a2f6d5c4acfefa8b2a23cd452206e63a99faaa3209249a2d8c03df0e6e29114"
+    },
+    {
+      "Path": "Source/Models/Queue/QueueData.cs",
+      "Sha256": "c6bd983c64b9655d3ef1d71f5d7d1d37288e61dc96cf078153371f9bd3676d45",
+      "GitBlob": "0af4c9066443d2a6520c107f5c5d4630eab02e7b",
+      "UpstreamPath": "Sharpcaster/Models/Queue/QueueData.cs",
+      "NormalizedSha256": "c6bd983c64b9655d3ef1d71f5d7d1d37288e61dc96cf078153371f9bd3676d45"
+    },
+    {
+      "Path": "Source/Models/Queue/QueueItem.cs",
+      "Sha256": "edb8c1e27bee60b68138b8f42d91e6a64734303e96e64576ee88e7289253642e",
+      "GitBlob": "e8c1eb177d8eff25d5acc55ec800db1ea37ca98f",
+      "UpstreamPath": "Sharpcaster/Models/Queue/QueueItem.cs",
+      "NormalizedSha256": "edb8c1e27bee60b68138b8f42d91e6a64734303e96e64576ee88e7289253642e"
+    },
+    {
+      "Path": "Source/Models/SharpCasterTaskCompletionSource.cs",
+      "Sha256": "195482c117b2f1d390e61402c57477ab51ad806cf31ca5b0759c57969e8cc177",
+      "GitBlob": "aae620d7987bb0cf1da68801e6dec79d0ab15711",
+      "UpstreamPath": "Sharpcaster/Models/SharpCasterTaskCompletionSource.cs",
+      "NormalizedSha256": "195482c117b2f1d390e61402c57477ab51ad806cf31ca5b0759c57969e8cc177"
+    },
+    {
+      "Path": "Source/Models/Spotify/SpotifyStatus.cs",
+      "Sha256": "ee0f76f1021b67649e42ff1ca028befe9f1e3a1746b525551e6c83d1b2d443a4",
+      "GitBlob": "8e0d1d388492dce98553155c85345e7f81841bff",
+      "UpstreamPath": "Sharpcaster/Models/Spotify/SpotifyStatus.cs",
+      "NormalizedSha256": "ee0f76f1021b67649e42ff1ca028befe9f1e3a1746b525551e6c83d1b2d443a4"
+    },
+    {
+      "Path": "Source/Models/Volume.cs",
+      "Sha256": "cd68cd35016b8ddc53ebce088ebe865d9227de973fff909b68830cf434261ea6",
+      "GitBlob": "0d8feafe2bf79ca049be0d22647430ac5ffbc09a",
+      "UpstreamPath": "Sharpcaster/Models/Volume.cs",
+      "NormalizedSha256": "cd68cd35016b8ddc53ebce088ebe865d9227de973fff909b68830cf434261ea6"
+    }
+  ],
+  "ArchiveSha256": "ac1afa1a21f8b4c731cd466c00d200ff87188b566883a0f8baf43447a33e8320",
+  "UpstreamRepository": "https://github.com/Tapanila/SharpCaster",
+  "License": "MIT",
+  "HashNormalization": "UTF-8 source with CRLF normalized to LF; BOM is retained when present. GitBlob and Sha256 describe the original upstream bytes."
+}
