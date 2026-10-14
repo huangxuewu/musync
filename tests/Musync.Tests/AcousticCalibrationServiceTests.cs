@@ -30,14 +30,16 @@ public sealed class AcousticCalibrationServiceTests
         public bool ReceivesPcm => device.Transport != SpeakerTransport.Chromecast || source.IsStreaming || source.IsCapture;
         public TimeSpan EstimatedLatency => TimeSpan.FromMilliseconds(device.Transport == SpeakerTransport.Chromecast ? 100 : 0);
         public TaskCompletionSource? Preparation, Cleanup;
+        public Exception? PreparationFailure, ActivationFailure;
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public bool Began, Stopped, Disposed, ReadPreparedWave;
         public async Task StartAsync(CancellationToken token)
         {
             Entered.TrySetResult(); if (Preparation is not null) await Preparation.Task.WaitAsync(token);
+            if (PreparationFailure is not null) throw PreparationFailure;
             if (!ReceivesPcm) { Assert.True(File.Exists(source.Path)); ReadPreparedWave = true; }
         }
-        public Task BeginPlaybackAsync(CancellationToken token) { token.ThrowIfCancellationRequested(); Began = true; return Task.CompletedTask; }
+        public Task BeginPlaybackAsync(CancellationToken token) { token.ThrowIfCancellationRequested(); if (ActivationFailure is not null) throw ActivationFailure; Began = true; return Task.CompletedTask; }
         public async Task StopAsync() { Stopped = true; if (Cleanup is not null) await Cleanup.Task; }
         public ValueTask DisposeAsync() { Disposed = true; return ValueTask.CompletedTask; }
     }
@@ -116,6 +118,48 @@ public sealed class AcousticCalibrationServiceTests
             Assert.Empty(Directory.EnumerateFileSystemEntries(folder));
         }
         finally { preparation.TrySetResult(); if (Directory.Exists(folder)) Directory.Delete(folder, true); }
+    }
+    [Theory]
+    [InlineData("prepare")]
+    [InlineData("reported")]
+    [InlineData("activate")]
+    public async Task ReceiverFailureIdentifiesTheSpeakerAndClosesPreparedOutputs(string stage)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "Musync-Cal-Service-" + Guid.NewGuid().ToString("N")); var inputs = new Inputs(); var outputs = new List<Output>();
+        try
+        {
+            var service = Service(folder, inputs, outputs, (device, source) => new(device, source)
+            {
+                PreparationFailure = device.Id == "cast" && stage == "prepare" ? new IOException("RAW_RECEIVER_FAILURE") : null,
+                ActivationFailure = device.Id == "cast" && stage == "activate" ? new IOException("RAW_RECEIVER_FAILURE") : null,
+                Error = device.Id == "cast" && stage == "reported" ? "RAW_RECEIVER_FAILURE" : null
+            });
+            var error = await Assert.ThrowsAnyAsync<IOException>(() => service.RunAsync(Request(), null, default));
+            Assert.All(outputs, o => { Assert.True(o.Stopped); Assert.True(o.Disposed); });
+            Assert.Equal(stage == "activate" ? 1 : 0, inputs.Opens);
+            if (inputs.Opens > 0) Assert.True(inputs.Capture.Disposed);
+            Assert.Empty(Directory.EnumerateFileSystemEntries(folder));
+            Assert.Contains("Onkyo test", error.Message);
+            var receiver = Assert.IsType<CalibrationSpeakerException>(error); Assert.Equal("cast", receiver.SpeakerId);
+            Assert.Equal(stage == "activate" ? CalibrationPhase.StartingPlayback : CalibrationPhase.PreparingSpeakers, receiver.Phase);
+            Assert.Equal("RAW_RECEIVER_FAILURE", receiver.InnerException!.Message);
+        }
+        finally { if (Directory.Exists(folder)) Directory.Delete(folder, true); }
+    }
+    [Fact]
+    public async Task PcmReceiverFailureIdentifiesTheSpeakerAndPreventsARecommendation()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "Musync-Cal-Service-" + Guid.NewGuid().ToString("N")); var inputs = new Inputs(); var outputs = new List<Output>();
+        var service = new AcousticCalibrationService(inputs, (device, source) => { var output = new Output(device, source); outputs.Add(output); return output; }, folder,
+            async (probe, sinks, seconds, token) => { outputs.Single(o => o.Device.Id == "cast").Error = "RAW_RECEIVER_FAILURE"; await AcousticCalibrationService.EmitAsync(probe, sinks, .01, token); });
+        try
+        {
+            var error = await Assert.ThrowsAnyAsync<IOException>(() => service.RunAsync(Request("stream"), null, default));
+            Assert.True(inputs.Capture.Disposed); Assert.All(outputs, o => Assert.True(o.Disposed));
+            Assert.Empty(Directory.EnumerateFileSystemEntries(folder)); Assert.Contains("Onkyo test", error.Message);
+            var receiver = Assert.IsType<CalibrationSpeakerException>(error); Assert.Equal("cast", receiver.SpeakerId); Assert.Equal(CalibrationPhase.Recording, receiver.Phase);
+        }
+        finally { if (Directory.Exists(folder)) Directory.Delete(folder, true); }
     }
     [Fact]
     public async Task FailedEmissionClosesTheMicrophoneAndDoesNotReturnARecommendation()

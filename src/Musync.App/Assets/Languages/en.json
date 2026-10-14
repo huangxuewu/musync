@@ -246,5 +246,8 @@
   "CalibrationIssue_InvalidCapture": "Microphone audio was interrupted or distorted.",
   "CalibrationIssue_DelayOutOfRange": "The required delay exceeds the supported range.",
   "CalibrationRetry": "Test again",
-  "CalibrationChangeSettings": "Change setup"
+  "CalibrationChangeSettings": "Change setup",
+  "CalibrationPreparingSpeaker": "Preparing {0}… ({1}/{2} ready)",
+  "CalibrationSpeakerPreparingFailed": "{0} could not be prepared. Check its connection and try again.",
+  "CalibrationSpeakerPlaybackFailed": "{0} could not play the test sounds. Check its connection and try again."
 }

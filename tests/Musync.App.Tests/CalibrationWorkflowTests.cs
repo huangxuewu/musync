@@ -15,13 +15,18 @@ public sealed partial class SpotifyPlaybackTests
     {
         public int Runs, InputReads;
         public bool Pending, Unreliable, NoInputs;
+        public CalibrationProgress? ReportedProgress;
+        public Exception? Failure;
+        public TaskCompletionSource? Continue;
         public CalibrationRequest? Request;
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public IReadOnlyList<AcousticInputDevice> GetInputs() { InputReads++; return NoInputs ? [] : [new("test-mic", "Synthetic USB microphone")]; }
         public async Task<CalibrationRunResult> RunAsync(CalibrationRequest request, IProgress<CalibrationProgress>? progress, CancellationToken token)
         {
-            Runs++; Request = request; Entered.TrySetResult(); progress?.Report(new(CalibrationPhase.Recording, 0, request.Speakers.Count));
+            Runs++; Request = request; Entered.TrySetResult(); progress?.Report(ReportedProgress ?? new(CalibrationPhase.Recording, 0, request.Speakers.Count));
             if (Pending) await Task.Delay(Timeout.Infinite, token);
+            if (Continue is not null) await Continue.Task.WaitAsync(token);
+            if (Failure is not null) throw Failure;
             var status = Unreliable ? AcousticMeasurementStatus.MissingSignal : AcousticMeasurementStatus.Reliable;
             var rows = request.Speakers.Select(s => new AcousticSpeakerMeasurement(s.Device.Id, status, s.Device.Id == "test-output" ? 0 : 100, 1.5, .8)).ToArray();
             var delays = Unreliable ? new Dictionary<string, int>() : request.Speakers.ToDictionary(s => s.Device.Id, s => s.Device.Id == "test-output" ? 100 : 0);
@@ -146,6 +151,41 @@ public sealed partial class SpotifyPlaybackTests
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         while (fixture.Backend.Position != 0) await Task.Delay(5, timeout.Token);
         Assert.Equal(0, fixture.Backend.Position);
+    }
+    [AvaloniaTheory]
+    [InlineData("en", true)]
+    [InlineData("zh-Hans", true)]
+    [InlineData("ja", true)]
+    [InlineData("en", false)]
+    [InlineData("zh-Hans", false)]
+    [InlineData("ja", false)]
+    public async Task CalibrationWorkflowNamesPendingAndFailedReceiverWithoutApplyingOrShowingProtocolErrors(string language, bool preparation)
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var phase = preparation ? CalibrationPhase.PreparingSpeakers : CalibrationPhase.Recording;
+        var service = new CalibrationStub { Continue = release, ReportedProgress = new(CalibrationPhase.PreparingSpeakers, 1, 2, CalibrationReceiver.Name),
+            Failure = new CalibrationSpeakerException(CalibrationReceiver, phase, new IOException("RAW_RECEIVER_FAILURE")) };
+        await using var fixture = new PresentationFixture(language, calibration: service,
+            discoverNetwork: _ => Task.FromResult<IReadOnlyList<SpeakerDevice>>([CalibrationReceiver]));
+        await PrepareCalibrationFixture(fixture); var model = fixture.Model;
+        var window = new MainWindow { DataContext = model, Width = 1120, Height = 720 }; window.Show();
+        try
+        {
+            model.OpenCalibration.Execute(null); await CommandFinished(model.OpenCalibration); model.StartCalibration.Execute(null);
+            await service.Entered.Task.WaitAsync(TimeSpan.FromSeconds(3)); await Task.Delay(20);
+            using (var pending = CaptureTrackReviewFrame(window)) SaveReviewFrame(pending, $"device-{language}-{preparation}-preparing.png");
+            Assert.Contains(CalibrationReceiver.Name, model.CalibrationStatus);
+            release.TrySetResult(); await CommandFinished(model.StartCalibration);
+            using (var failed = CaptureTrackReviewFrame(window)) SaveReviewFrame(failed, $"device-{language}-{preparation}-failed.png");
+            var key = preparation ? "CalibrationSpeakerPreparingFailed" : "CalibrationSpeakerPlaybackFailed";
+            Assert.Equal(string.Format(model.Text[key], CalibrationReceiver.Name), model.CalibrationError);
+            Assert.DoesNotContain("RAW_RECEIVER_FAILURE", model.CalibrationError); Assert.False(model.CalibrationRunning); Assert.False(model.Busy);
+            Assert.Empty(fixture.Settings.Links[0].Calibrations); Assert.False(model.CanApplyCalibration);
+            var retry = window.FindControl<Button>("StartCalibrationButton")!; Assert.True(retry.IsEffectivelyEnabled); Assert.True(retry.IsEffectivelyVisible);
+            service.Failure = null; service.Continue = null; ClickPlaylistControl(window, retry); await CommandFinished(model.StartCalibration);
+            Assert.True(model.CanApplyCalibration); Assert.Empty(fixture.Settings.Links[0].Calibrations);
+        }
+        finally { release.TrySetResult(); window.Close(); }
     }
     [AvaloniaFact]
     public async Task CalibrationWorkflowMissingMicrophoneAndMissingSpeakerKeepTheStartActionDisabled()

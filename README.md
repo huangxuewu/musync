@@ -32,6 +32,8 @@ To calibrate, select a saved link containing at least two online, unmuted speake
 
 Applying a reliable result saves total speaker delays separately for local files, network radio and Windows audio capture. The active source uses its matching profile, and the delay controls still allow fine adjustment. Changing the linked device set or protocol invalidates the profile; Reset delays clears the current source's profile. Microphone capture starts only after an explicit test request, never at application startup. Physical Onkyo/HomePod calibration and long-term drift remain unverified. Codec tests allow a 2 ms measurement tolerance; they do not establish real speaker accuracy or sample-accurate synchronization.
 
+During preparation, calibration names the receiver currently being prepared and shows how many are ready. A receiver failure identifies the speaker and distinguishes preparation from test-playback failure, with a localized retry instruction. Raw protocol errors stay out of the dialog; failed tests do not apply delay recommendations.
+
 ## Spotify setup
 
 1. Use your own Spotify Developer app and a Spotify Premium account.

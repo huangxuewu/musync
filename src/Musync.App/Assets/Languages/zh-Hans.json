@@ -246,5 +246,8 @@
   "CalibrationIssue_InvalidCapture": "麦克风声音发生中断或失真。",
   "CalibrationIssue_DelayOutOfRange": "需要的延迟超出支持范围。",
   "CalibrationRetry": "重新测试",
-  "CalibrationChangeSettings": "更改设置"
+  "CalibrationChangeSettings": "更改设置",
+  "CalibrationPreparingSpeaker": "正在准备 {0}…（{1}/{2} 已就绪）",
+  "CalibrationSpeakerPreparingFailed": "无法准备 {0}。请检查它的连接后重试。",
+  "CalibrationSpeakerPlaybackFailed": "{0} 无法播放测试音。请检查它的连接后重试。"
 }

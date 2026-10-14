@@ -45,7 +45,9 @@ public sealed partial class MainViewModel
         : Text["NoActiveLink"];
     public string CalibrationStatus => CalibrationRunning
         ? _calibrationProgress.Phase == CalibrationPhase.PreparingSpeakers
-            ? string.Format(Text["CalibrationPreparing"], _calibrationProgress.Completed, _calibrationProgress.Total)
+            ? string.IsNullOrEmpty(_calibrationProgress.SpeakerName)
+                ? string.Format(Text["CalibrationPreparing"], _calibrationProgress.Completed, _calibrationProgress.Total)
+                : string.Format(Text["CalibrationPreparingSpeaker"], _calibrationProgress.SpeakerName, _calibrationProgress.Completed, _calibrationProgress.Total)
             : Text[_calibrationProgress.Phase switch
             {
                 CalibrationPhase.OpeningMicrophone => "CalibrationOpeningMic",
@@ -113,7 +115,13 @@ public sealed partial class MainViewModel
             _calibrationResult = result; RefreshCalibrationResults();
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
-        catch (Exception ex) { LogError(ex); CalibrationError = Text[ex.Message.StartsWith("Calibration", StringComparison.Ordinal) ? ex.Message : "CalibrationFailed"]; }
+        catch (Exception ex)
+        {
+            LogError(ex);
+            CalibrationError = ex is CalibrationSpeakerException receiver
+                ? string.Format(Text[receiver.Phase == CalibrationPhase.PreparingSpeakers ? "CalibrationSpeakerPreparingFailed" : "CalibrationSpeakerPlaybackFailed"], receiver.SpeakerName)
+                : Text[ex.Message.StartsWith("Calibration", StringComparison.Ordinal) ? ex.Message : "CalibrationFailed"];
+        }
         finally
         {
             if (sourceVersion == _sourceVersion) { Position = oldPosition; _calibrationResumeTrack = _current?.Id; _calibrationResumePosition = YouTubeMode ? 0 : oldPosition; }

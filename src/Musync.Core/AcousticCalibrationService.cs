@@ -6,7 +6,14 @@ namespace Musync.Core;
 public sealed record CalibrationSpeaker(SpeakerDevice Device, SpeakerPreferences Preferences);
 public sealed record CalibrationRequest(string LinkId, string Path, string InputId, IReadOnlyList<CalibrationSpeaker> Speakers, double MasterVolume);
 public enum CalibrationPhase { PreparingSpeakers, OpeningMicrophone, StartingPlayback, Recording, Analyzing, Closing }
-public sealed record CalibrationProgress(CalibrationPhase Phase, int Completed, int Total);
+public sealed record CalibrationProgress(CalibrationPhase Phase, int Completed, int Total, string? SpeakerName = null);
+public sealed class CalibrationSpeakerException(SpeakerDevice speaker, CalibrationPhase phase, Exception inner)
+    : IOException("CalibrationSpeakerFailed: " + speaker.Name, inner)
+{
+    public string SpeakerId { get; } = speaker.Id;
+    public string SpeakerName { get; } = speaker.Name;
+    public CalibrationPhase Phase { get; } = phase;
+}
 public sealed record CalibrationRunResult(CalibrationRequest Request, AcousticAnalysis Analysis, IReadOnlyDictionary<string, int> Delays)
 {
     public bool CanApply => Analysis.CanApply && Delays.Count == Request.Speakers.Count && Delays.Values.All(v => v is >= 0 and <= 10000);
@@ -55,16 +62,15 @@ public sealed class AcousticCalibrationService : IAcousticCalibrationService
             Directory.CreateDirectory(folder);
             for (var i = 0; i < speakers.Length; i++)
             {
-                progress?.Report(new(CalibrationPhase.PreparingSpeakers, i, speakers.Length));
                 var speaker = speakers[i]; var wave = System.IO.Path.Combine(folder, i + ".wav");
+                progress?.Report(new(CalibrationPhase.PreparingSpeakers, i, speakers.Length, speaker.Device.Name));
                 if (request.Path == "file" && speaker.Device.Transport == SpeakerTransport.Chromecast)
                     await Task.Run(() => probe.WriteSpeakerWave(speaker.Device.Id, wave, lifetime.Token), lifetime.Token);
                 var output = _factory(speaker.Device, new(wave, request.Path == "capture", 0, request.Path == "stream"));
                 outputs.Add(output);
                 output.Control.DelayMs = speaker.Preferences.DelayMs;
                 output.Control.Gain = (float)Math.Min(.3, speaker.Preferences.Volume * request.MasterVolume / 10000);
-                await output.StartAsync(lifetime.Token).WaitAsync(TimeSpan.FromSeconds(45), lifetime.Token);
-                if (output.Error is { } error) throw new IOException(error);
+                await RunReceiverAsync(output, CalibrationPhase.PreparingSpeakers, TimeSpan.FromSeconds(45), output.StartAsync, lifetime.Token);
                 // FileCastOutput owns its prepared asset after StartAsync. The
                 // generated WAV is no longer needed and does not accumulate.
                 if (File.Exists(wave)) File.Delete(wave);
@@ -82,11 +88,11 @@ public sealed class AcousticCalibrationService : IAcousticCalibrationService
             capture = await _inputs.StartAsync(request.InputId, TimeSpan.FromSeconds(recordingSeconds + 10), lifetime.Token);
             var origin = checked((int)capture.SamplesCaptured);
             progress?.Report(new(CalibrationPhase.StartingPlayback, 0, speakers.Length));
-            await Task.WhenAll(outputs.Select(o => o.BeginPlaybackAsync(lifetime.Token).WaitAsync(TimeSpan.FromSeconds(6), lifetime.Token)));
+            await Task.WhenAll(outputs.Select(o => RunReceiverAsync(o, CalibrationPhase.StartingPlayback, TimeSpan.FromSeconds(6), o.BeginPlaybackAsync, lifetime.Token)));
             lifetime.CancelAfter(TimeSpan.FromSeconds(recordingSeconds + 8));
             progress?.Report(new(CalibrationPhase.Recording, 0, speakers.Length));
             await _emit(probe, outputs, recordingSeconds, lifetime.Token);
-            foreach (var output in outputs) if (output.Error is { } error) throw new IOException(error);
+            foreach (var output in outputs) if (output.Error is { } error) throw new CalibrationSpeakerException(output.Device, CalibrationPhase.Recording, new IOException(error));
             recording = await capture.CompleteAsync(lifetime.Token);
             progress?.Report(new(CalibrationPhase.Analyzing, 0, speakers.Length));
             var analysis = await Task.Run(() => AcousticAnalyzer.Analyze(probe, recording, origin, arrival, lifetime.Token), lifetime.Token);
@@ -118,6 +124,16 @@ public sealed class AcousticCalibrationService : IAcousticCalibrationService
             if (failure is null && cleanupError is not null) throw new IOException("CalibrationCleanupFailed", cleanupError);
         }
     }
+    private static async Task RunReceiverAsync(IAudioOutput output, CalibrationPhase phase, TimeSpan timeout, Func<CancellationToken, Task> action, CancellationToken token)
+    {
+        try
+        {
+            await action(token).WaitAsync(timeout, token);
+            if (output.Error is { } error) throw new IOException(error);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception ex) { throw new CalibrationSpeakerException(output.Device, phase, ex); }
+    }
     internal static async Task EmitAsync(AcousticProbe probe, IReadOnlyList<IAudioOutput> outputs, double seconds, CancellationToken token)
     {
         var sources = outputs.Where(o => o.ReceivesPcm).ToDictionary(o => o, o => probe.Markers.Where(m => m.SpeakerId == o.Device.Id)
@@ -128,7 +144,7 @@ public sealed class AcousticCalibrationService : IAcousticCalibrationService
             token.ThrowIfCancellationRequested();
             foreach (var output in outputs)
             {
-                if (output.Error is { } error) throw new IOException(error);
+                if (output.Error is { } error) throw new CalibrationSpeakerException(output.Device, CalibrationPhase.Recording, new IOException(error));
                 if (!output.ReceivesPcm) continue;
                 block.AsSpan().Clear();
                 foreach (var signal in sources[output])

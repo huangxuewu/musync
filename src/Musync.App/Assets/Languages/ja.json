@@ -246,5 +246,8 @@
   "CalibrationIssue_InvalidCapture": "マイクの音声に途切れや歪みがありました。",
   "CalibrationIssue_DelayOutOfRange": "必要な遅延が対応範囲を超えています。",
   "CalibrationRetry": "再テスト",
-  "CalibrationChangeSettings": "設定を変更"
+  "CalibrationChangeSettings": "設定を変更",
+  "CalibrationPreparingSpeaker": "{0} を準備中…（{1}/{2} 台準備完了）",
+  "CalibrationSpeakerPreparingFailed": "{0} を準備できませんでした。接続を確認して再試行してください。",
+  "CalibrationSpeakerPlaybackFailed": "{0} でテスト音を再生できませんでした。接続を確認して再試行してください。"
 }

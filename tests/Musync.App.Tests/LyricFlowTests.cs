@@ -141,11 +141,13 @@ public sealed partial class SpotifyPlaybackTests
         {
             window.ApplyMotionPreference(true); await Task.Delay(650);
             fixture.Backend.Seek(12); await PollPlayback(model); await Task.Delay(25);
-            using (var first = window.CaptureRenderedFrame()) Assert.True(window.IsLyricFlowRunning);
+            // A Skia capture under load can outlast the 220 ms motion itself.
+            Assert.True(window.IsLyricFlowRunning);
+            using (var first = window.CaptureRenderedFrame()) Assert.NotNull(first);
             fixture.Backend.Seek(23); await PollPlayback(model); await Task.Delay(25);
+            Assert.True(window.IsLyricFlowRunning);
             using (var latest = window.CaptureRenderedFrame())
             {
-                Assert.True(window.IsLyricFlowRunning);
                 Assert.Equal("此刻一起听见音乐", window.FindControl<TextBlock>("PreviousLyric")!.Text);
                 Assert.Equal("Next original test line", window.FindControl<TextBlock>("CurrentLyric")!.Text);
             }
