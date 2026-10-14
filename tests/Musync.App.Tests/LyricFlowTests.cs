@@ -36,13 +36,15 @@ public sealed partial class SpotifyPlaybackTests
             var oldCurrent = current.Text; var oldNext = next.Text;
             using (var before = window.CaptureRenderedFrame()) SaveReviewFrame(before, $"lyric-flow-{language}-{width}-before.png");
             fixture.Backend.Seek(12); await PollPlayback(model); await Task.Delay(25);
-            using (var moving = window.CaptureRenderedFrame()) SaveReviewFrame(moving, $"lyric-flow-{language}-{width}-moving.png");
             Assert.Equal(oldCurrent, previous.Text); Assert.Equal(oldNext, current.Text);
             var previousTransform = previous.RenderTransform?.Value ?? Matrix.Identity;
             var currentTransform = current.RenderTransform?.Value ?? Matrix.Identity;
             Assert.True(previousTransform.M32 > 0, "The outgoing current line must travel to its previous-line role.");
             Assert.True(previousTransform.M11 > 1, "The outgoing current line must settle from its highlighted scale.");
             Assert.True(currentTransform.M32 > 0 && currentTransform.M11 < 1, "The incoming line must travel from the next-line role to the current highlight.");
+            // Rendering a large Skia snapshot can outlast the 220 ms movement.
+            // Check its live transforms first; the capture still verifies layout.
+            using (var moving = window.CaptureRenderedFrame()) SaveReviewFrame(moving, $"lyric-flow-{language}-{width}-moving.png");
             Assert.True(lyrics.ClipToBounds); Assert.Equal(bounds[0], lyrics.Bounds);
             var rows = new[] { previous, current, next };
             for (var i = 0; i < rows.Length; i++)
@@ -173,7 +175,8 @@ public sealed partial class SpotifyPlaybackTests
         {
             window.ApplyMotionPreference(true); await Task.Delay(650);
             fixture.Backend.Seek(23); await PollPlayback(model); await Task.Delay(25);
-            using var repeating = window.CaptureRenderedFrame(); Assert.True(window.IsLyricFlowRunning);
+            Assert.True(window.IsLyricFlowRunning);
+            using var repeating = window.CaptureRenderedFrame();
             Assert.Equal("One moment", model.LyricPrevious); Assert.Equal("One moment", model.LyricCurrent); Assert.Equal("One moment", model.LyricNext);
             model.PlayCommand.Execute(null); await CommandFinished(model.PlayCommand); Assert.False(model.IsPlaying); AssertLyricsAtRest(window);
             await model.SeekAsync(3); await Task.Delay(25); AssertLyricsAtRest(window);
