@@ -162,6 +162,70 @@ public sealed class CastRequestOwnershipTests
         Assert.Contains("audio stream failed", session.Error); Assert.False(session.ConnectionLost);
     }
 
+    [Theory]
+    [InlineData("CANCELLED", "stopped on the receiver")]
+    [InlineData("INTERRUPTED", "replaced by another source")]
+    public async Task ExternalStopOfTheOwnedPlaybackRemainsVisibleAndReleasesReceiverControls(string reason, string detail)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver); var request = await PrepareAsync(session, receiver);
+        await receiver.BroadcastAsync(request, new { mediaSessionId = 102, playerState = "IDLE", idleReason = reason });
+        await session.ReadVolumeAsync().WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Contains(detail, session.Error); Assert.False(session.ConnectionLost); Assert.True(session.ControlLost);
+        var volumeWrites = receiver.VolumeWrites; var mediaCommands = receiver.MediaCommands;
+        await Assert.ThrowsAsync<IOException>(() => session.SetVolumeAsync(.25));
+        await Assert.ThrowsAsync<IOException>(() => session.PlayPreparedAsync());
+        await session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        await session.ReadVolumeAsync().WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Equal(volumeWrites, receiver.VolumeWrites); Assert.Equal(mediaCommands, receiver.MediaCommands);
+        Assert.Contains(detail, session.Error);
+        await PrepareAsync(session, receiver, 103); Assert.Null(session.Error); Assert.False(session.ControlLost);
+    }
+
+    [Theory]
+    [InlineData("CANCELLED")]
+    [InlineData("INTERRUPTED")]
+    public async Task UnrelatedTerminalBroadcastDoesNotRelinquishTheAcceptedPlayback(string reason)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver); var request = await PrepareAsync(session, receiver);
+        await receiver.BroadcastAsync(request, new { mediaSessionId = 101, playerState = "IDLE", idleReason = reason });
+        await receiver.BroadcastAsync(request, new { mediaSessionId = 999, playerState = "IDLE", idleReason = reason });
+        await session.ReadVolumeAsync().WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Null(session.Error); Assert.False(session.ControlLost);
+        var pending = session.PlayPreparedAsync(); var play = await receiver.NextAsync("PLAY");
+        Assert.Equal(102, play.Payload.GetProperty("mediaSessionId").GetInt64());
+        await receiver.ReplyStatusAsync(play, 102, "PLAYING"); await pending.WaitAsync(TimeSpan.FromSeconds(3));
+    }
+
+    [Theory]
+    [InlineData("CANCELLED")]
+    [InlineData("INTERRUPTED")]
+    public async Task ExternalStopBeforeLoadReplyFailsOnlyItsMatchingPreparation(string reason)
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver);
+        var pending = session.PrepareFileAsync("http://127.0.0.1/music.mp3", 120, 0, default);
+        var request = await receiver.NextAsync("LOAD");
+        await receiver.BroadcastAsync(request, new { mediaSessionId = 102, playerState = "IDLE", idleReason = reason });
+        await receiver.ReplyStatusAsync(request, 102);
+        var error = await Assert.ThrowsAsync<IOException>(() => pending.WaitAsync(TimeSpan.FromSeconds(3)));
+        Assert.Equal(session.Error, error.Message); Assert.True(session.ControlLost);
+        await session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        await session.ReadVolumeAsync().WaitAsync(TimeSpan.FromSeconds(3)); Assert.Equal(1, receiver.MediaCommands);
+    }
+
+    [Fact]
+    public async Task ExpectedStopReplyAndBroadcastDoNotReportExternalInterruption()
+    {
+        await using var receiver = new FakeCastReceiver(); await using var lease = new SessionLease(); var session = lease.Player;
+        await ConnectAsync(session, receiver); var load = await PrepareAsync(session, receiver);
+        var pending = session.StopMediaAsync(); var stop = await receiver.NextAsync("STOP");
+        await receiver.BroadcastAsync(load, new { mediaSessionId = 102, playerState = "IDLE", idleReason = "CANCELLED" });
+        await receiver.ReplyStatusAsync(stop, 102, "IDLE"); await pending.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Null(session.Error); Assert.False(session.ControlLost);
+    }
+
     [Fact]
     public async Task AStoppedPendingLoadCannotRearmItsControlsWhenItsStatusArrivesLater()
     {

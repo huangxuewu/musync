@@ -123,8 +123,10 @@ public sealed class CastLifecycleTests
     {
         public string? Error { get; set; }
         public bool ConnectionLost { get; set; }
+        public bool ControlLost { get; set; }
         public Task? CleanupReply;
         public bool DropDuringStop;
+        public bool LoseControlDuringStop;
         public readonly List<string> Events = [];
         public readonly List<double> Levels = [];
         public readonly List<string> Urls = [];
@@ -152,10 +154,33 @@ public sealed class CastLifecycleTests
         {
             Events.Add("stop");
             if (DropDuringStop) { ConnectionLost = true; Error = "Synthetic connection lost"; return Task.CompletedTask; }
+            if (LoseControlDuringStop) { ControlLost = true; Error = "Synthetic playback replaced"; return Task.CompletedTask; }
             return CleanupReply ?? Task.CompletedTask;
         }
         public Task DisconnectAsync() { Events.Add("disconnect"); return Task.CompletedTask; }
         public ValueTask DisposeAsync() { Events.Add("dispose"); return ValueTask.CompletedTask; }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExternalPlaybackReplacementRevokesTheStreamWithoutStoppingOrChangingTheNewSourcesVolume(bool duringStop)
+    {
+        await using var server = new LocalStreamServer(); var session = new Session();
+        await using var output = new CastOutput(new("cast", "Test Cast", SpeakerTransport.Chromecast, "127.0.0.1", 8009), server, new Encoder(), session);
+        await output.StartAsync(default);
+        session.ControlLost = !duringStop; session.Error = duringStop ? null : "Synthetic playback replaced";
+        session.LoseControlDuringStop = duringStop; var levels = session.Levels.Count;
+        if (!duringStop)
+        {
+            output.Control.Gain = .25f;
+            await Assert.ThrowsAsync<IOException>(() => output.UpdateControlsAsync());
+            await Assert.ThrowsAsync<IOException>(() => output.SetPausedAsync(true));
+        }
+        await output.StopAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        Assert.Equal(duringStop ? 1 : 0, session.Events.Count(e => e == "stop")); Assert.Equal(levels, session.Levels.Count);
+        Assert.Contains("disconnect", session.Events); Assert.Equal(session.Error, output.Error);
+        using var http = new HttpClient(); Assert.Equal(HttpStatusCode.NotFound, (await http.GetAsync(Assert.Single(session.Urls))).StatusCode);
     }
 
     [Theory]

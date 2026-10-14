@@ -12,7 +12,7 @@ internal readonly record struct CastMediaBinding(long Load, long Session, string
 internal sealed partial class CastSession
 {
     private CastMediaBinding RequireMediaBinding() => _media.Binding
-        ?? throw new InvalidOperationException("Chromecast music is not prepared.");
+        ?? throw (_media.ControlLost ? new IOException(_media.Error) : new InvalidOperationException("Chromecast music is not prepared."));
 
     private async Task<(CastMediaBinding Binding, MediaStatus Status)> LoadMediaAsync(Media media, bool autoPlay, CancellationToken token)
     {
@@ -94,5 +94,6 @@ internal sealed partial class CastSession
     private void EnsureCurrentLoad(long load)
     {
         if (!_media.IsCurrent(load)) throw new OperationCanceledException("Chromecast playback was stopped or replaced.");
+        if (_media.ControlLost) throw new IOException(_media.Error);
     }
 }

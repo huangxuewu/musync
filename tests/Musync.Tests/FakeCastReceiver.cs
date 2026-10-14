@@ -32,6 +32,9 @@ internal sealed class FakeCastReceiver : IAsyncDisposable
     private SslStream? _stream;
     private bool _launched;
     private object[] _statuses = [];
+    private int _volumeWrites, _mediaCommands;
+    public int VolumeWrites => Volatile.Read(ref _volumeWrites);
+    public int MediaCommands => Volatile.Read(ref _mediaCommands);
     public object[]? StatusReplyOverride { get; set; }
     public TaskCompletionSource MediaPolled { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public SpeakerDevice Device => new("loopback-cast", "Loopback Cast", SpeakerTransport.Chromecast,
@@ -100,6 +103,7 @@ internal sealed class FakeCastReceiver : IAsyncDisposable
                 if (type == "PING") { await SendAsync(envelope, new { type = "PONG" }); continue; }
                 if (envelope.Namespace == "urn:x-cast:com.google.cast.receiver")
                 {
+                    if (type == "SET_VOLUME") Interlocked.Increment(ref _volumeWrites);
                     if (type == "LAUNCH") _launched = true;
                     await SendAsync(envelope, new { type = "RECEIVER_STATUS", requestId = id, status = new
                     { volume = new { level = .5, muted = false }, applications = _launched ? new[] { new
@@ -113,7 +117,11 @@ internal sealed class FakeCastReceiver : IAsyncDisposable
                         await SendAsync(envelope, new { type = "MEDIA_STATUS", requestId = id, status = StatusReplyOverride ?? _statuses });
                         if (_statuses.Length > 0) MediaPolled.TrySetResult();
                     }
-                    else await _requests.Writer.WriteAsync(new(envelope, payload.Clone()), token);
+                    else
+                    {
+                        Interlocked.Increment(ref _mediaCommands);
+                        await _requests.Writer.WriteAsync(new(envelope, payload.Clone()), token);
+                    }
                 }
             }
         }

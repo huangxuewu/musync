@@ -14,8 +14,10 @@ public sealed partial class FileCastOutputTests
     {
         public string? Error { get; set; }
         public bool ConnectionLost { get; set; }
+        public bool ControlLost { get; set; }
         public Task? CleanupReply;
         public bool DropDuringStop;
+        public bool LoseControlDuringStop;
         public Task? DisposalReply;
         public string? Url;
         public double Duration, Position;
@@ -41,6 +43,7 @@ public sealed partial class FileCastOutputTests
         {
             Stops++;
             if (DropDuringStop) { ConnectionLost = true; Error = "Synthetic connection lost"; return Task.CompletedTask; }
+            if (LoseControlDuringStop) { ControlLost = true; Error = "Synthetic playback replaced"; return Task.CompletedTask; }
             return CleanupReply ?? Task.CompletedTask;
         }
         public Task DisconnectAsync() { Disconnects++; return Task.CompletedTask; }
@@ -58,6 +61,28 @@ public sealed partial class FileCastOutputTests
     }
     private static FileCastOutput Output(LocalStreamServer server, Preparer preparer, Session session, double position = 0)
         => new(new("cast", "Cast", SpeakerTransport.Chromecast, "127.0.0.1", 8009), new("song.flac", false, position), server, preparer, session);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExternalPlaybackReplacementRevokesTheFileWithoutStoppingOrChangingTheNewSourcesVolume(bool duringStop)
+    {
+        await using var server = new LocalStreamServer(); using var preparer = new Preparer(); var session = new Session();
+        await using var output = Output(server, preparer, session);
+        await output.StartAsync(default); await output.BeginPlaybackAsync(default);
+        session.ControlLost = !duringStop; session.Error = duringStop ? null : "Synthetic playback replaced";
+        session.LoseControlDuringStop = duringStop; var levels = session.Volumes.Count;
+        if (!duringStop)
+        {
+            output.Control.Gain = .25f;
+            await Assert.ThrowsAsync<IOException>(() => output.UpdateControlsAsync());
+            await Assert.ThrowsAsync<IOException>(() => output.PrepareResumeAsync(default));
+        }
+        await output.StopAsync().WaitAsync(TimeSpan.FromSeconds(1));
+        Assert.Equal(duringStop ? 1 : 0, session.Stops); Assert.Equal(levels, session.Volumes.Count);
+        Assert.Equal(1, session.Disconnects); Assert.Equal(1, preparer.Releases); Assert.Equal(session.Error, output.Error);
+        using var http = new HttpClient(); Assert.Equal(HttpStatusCode.NotFound, (await http.GetAsync(session.Url)).StatusCode);
+    }
 
     [Theory]
     [InlineData(false)]

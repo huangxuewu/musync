@@ -208,6 +208,7 @@ public sealed class CastOutput : IAudioOutput
         try
         {
             if (!_connected || paused == _paused) return;
+            if (_session.ControlLost) throw new IOException(_session.Error);
             Buffer.SetTransportPaused(true);
             var token = _lifetime!.Token;
             if (paused)
@@ -234,7 +235,11 @@ public sealed class CastOutput : IAudioOutput
         await _gate.WaitAsync();
         try
         {
-            if (_connected) await ApplyVolume(_lifetime!.Token);
+            if (_connected)
+            {
+                if (_session.ControlLost) throw new IOException(_session.Error);
+                await ApplyVolume(_lifetime!.Token);
+            }
         }
         finally { _gate.Release(); }
     }
@@ -260,12 +265,12 @@ public sealed class CastOutput : IAudioOutput
     {
         _lifetime?.Cancel();
         await EndStream();
-        if (_mediaLoaded && !_session.ConnectionLost) try { await _session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch (Exception) { }
+        if (_mediaLoaded && !_session.ConnectionLost && !_session.ControlLost) try { await _session.StopMediaAsync().WaitAsync(TimeSpan.FromSeconds(3)); } catch (Exception) { }
         _mediaLoaded = false;
-        if (_originalLevel is { } level && !_session.ConnectionLost)
+        if (_originalLevel is { } level && !_session.ConnectionLost && !_session.ControlLost)
             try { await _session.SetVolumeAsync(level).WaitAsync(TimeSpan.FromSeconds(3)); } catch (Exception) { }
         _originalLevel = null; _appliedLevel = null;
-        if (_session.ConnectionLost) _error ??= _session.Error;
+        if (_session.ConnectionLost || _session.ControlLost) _error ??= _session.Error;
         if (_connected) try { await _session.DisconnectAsync().WaitAsync(TimeSpan.FromSeconds(5)); } catch (Exception) { }
         _connected = false; _paused = false;
         _lifetime?.Dispose(); _lifetime = null;

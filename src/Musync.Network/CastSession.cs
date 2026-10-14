@@ -10,6 +10,7 @@ internal interface ICastSession : IAsyncDisposable
 {
     string? Error { get; }
     bool ConnectionLost => false;
+    bool ControlLost => false;
     Task ConnectAsync(SpeakerDevice device);
     Task<double?> ReadVolumeAsync();
     Task LaunchAsync();
@@ -31,6 +32,7 @@ internal sealed partial class CastSession : ICastSession
     private readonly CastMediaFeedback _media = new();
     public string? Error => _connection.Error ?? _media.Error;
     public bool ConnectionLost => _connection.ConnectionLost;
+    public bool ControlLost => _media.ControlLost;
     public CastSession()
     {
         _client.Disconnected += OnDisconnected;
@@ -44,6 +46,7 @@ internal sealed partial class CastSession : ICastSession
     public async Task ConnectAsync(SpeakerDevice device)
     {
         _connection.BeginConnect();
+        _media.BeginConnection();
         await _client.ConnectChromecast(new ChromecastReceiver
         {
             Name = device.Name, DeviceUri = new Uri("http://" + device.Host), Port = device.Port
@@ -52,7 +55,11 @@ internal sealed partial class CastSession : ICastSession
     }
     public async Task<double?> ReadVolumeAsync() => (await _client.ReceiverChannel.GetChromecastStatusAsync())?.Volume?.Level;
     public async Task LaunchAsync() => await _client.LaunchApplicationAsync("CC1AD845");
-    public async Task SetVolumeAsync(double level) => await _client.ReceiverChannel.SetVolume(level);
+    public async Task SetVolumeAsync(double level)
+    {
+        if (_media.ControlLost) throw new IOException(_media.Error);
+        await _client.ReceiverChannel.SetVolume(level);
+    }
     internal static Media CreateMedia(string url) => new()
     {
         ContentId = url,
@@ -171,18 +178,29 @@ internal sealed class CastMediaFeedback
     private long _loadVersion;
     private long? _mediaSessionId;
     private string? _transportId;
-    private readonly HashSet<long?> _pendingFailures = [];
+    private sealed record MediaFailure(long? Session, string Message, bool ControlLost);
+    private readonly List<MediaFailure> _pendingFailures = [];
+    private bool _controlLost;
     private string? _error;
     public string? Error { get { lock (_gate) return _error; } }
+    public bool ControlLost { get { lock (_gate) return _controlLost; } }
     public CastMediaBinding? Binding { get { lock (_gate) return CurrentBinding(); } }
-    private CastMediaBinding? CurrentBinding() => _expectedMedia && _mediaSessionId is { } session && _transportId is { } transport
+    private CastMediaBinding? CurrentBinding() => _expectedMedia && !_controlLost && _mediaSessionId is { } session && _transportId is { } transport
         ? new(_loadVersion, session, transport) : null;
     public bool IsCurrent(long load) { lock (_gate) return _expectedMedia && _loadVersion == load; }
+    public void BeginConnection()
+    {
+        lock (_gate)
+        {
+            _error = null; _expectedMedia = false; _controlLost = false; _mediaSessionId = null; _transportId = null;
+            _pendingFailures.Clear(); ++_loadVersion;
+        }
+    }
     public long BeginLoad(string? transportId = null)
     {
         lock (_gate)
         {
-            _error = null; _expectedMedia = true; _mediaSessionId = null; _transportId = transportId; _pendingFailures.Clear();
+            _error = null; _expectedMedia = true; _controlLost = false; _mediaSessionId = null; _transportId = transportId; _pendingFailures.Clear();
             return ++_loadVersion;
         }
     }
@@ -205,7 +223,8 @@ internal sealed class CastMediaFeedback
             // Bind to the response to our LOAD, never an unsolicited broadcast
             // that can still describe a previous playback during this wait.
             _mediaSessionId = status.MediaSessionId;
-            if (_pendingFailures.Contains(_mediaSessionId)) _error ??= StreamFailure;
+            if (_pendingFailures.FirstOrDefault(failure => failure.Session == _mediaSessionId) is { } pending)
+            { _error ??= pending.Message; _controlLost |= pending.ControlLost; }
             _pendingFailures.Clear();
             ObserveError(status);
         }
@@ -219,7 +238,12 @@ internal sealed class CastMediaFeedback
             {
                 // An actual failure can precede its LOAD response. Keep only
                 // its session ID until the response identifies our playback.
-                if (IsFailure(status)) _pendingFailures.Add(status.MediaSessionId);
+                if (ReadFailure(status) is { } failure)
+                {
+                    var index = _pendingFailures.FindIndex(pending => pending.Session == failure.Session);
+                    if (index < 0) _pendingFailures.Add(failure);
+                    else if (failure.ControlLost) _pendingFailures[index] = _pendingFailures[index] with { ControlLost = true };
+                }
                 return;
             }
             if (status.MediaSessionId != _mediaSessionId) return;
@@ -228,8 +252,20 @@ internal sealed class CastMediaFeedback
     }
     private void ObserveError(MediaStatus status)
     {
-        if (IsFailure(status)) _error = StreamFailure;
+        if (ReadFailure(status) is { } failure)
+        { _error ??= failure.Message; _controlLost |= failure.ControlLost; }
     }
-    private static bool IsFailure(MediaStatus status) => status.PlayerState == PlayerStateType.Idle
-        && string.Equals(status.IdleReason, "ERROR", StringComparison.OrdinalIgnoreCase);
+    private static MediaFailure? ReadFailure(MediaStatus status)
+    {
+        if (status.PlayerState != PlayerStateType.Idle) return null;
+        // A terminal status for our accepted media can also mean another
+        // sender stopped or replaced it. FINISHED is normal completion.
+        return status.IdleReason?.ToUpperInvariant() switch
+        {
+            "ERROR" => new(status.MediaSessionId, StreamFailure, false),
+            "CANCELLED" => new(status.MediaSessionId, "Chromecast playback was stopped on the receiver.", true),
+            "INTERRUPTED" => new(status.MediaSessionId, "Chromecast playback was replaced by another source.", true),
+            _ => null
+        };
+    }
 }
