@@ -28,19 +28,21 @@ public sealed partial class SpotifyPlaybackTests
         {
             model.LinkPanelOpen = true;
             using (var initial = CaptureTrackReviewFrame(window)) SaveReviewFrame(initial, $"delay-tuning-{language}-{width}-initial.png");
-            var panel = window.FindControl<Border>("SpeakerPanel")!;
             var selector = window.FindControl<ComboBox>("DelayStepSelector")!;
             var speaker = Assert.Single(model.LinkedSpeakers);
+            Assert.True(selector.IsEffectivelyVisible);
+            model.SpeakerControlsOpen = true;
+            using var controls = window.CaptureRenderedFrame();
+            var panel = window.FindControl<Border>("SpeakerControlsPanel")!;
             var numeric = panel.GetVisualDescendants().OfType<NumericUpDown>().Single();
             var minus = panel.GetVisualDescendants().OfType<Button>().Single(b => b.Command == speaker.Minus);
             var plus = panel.GetVisualDescendants().OfType<Button>().Single(b => b.Command == speaker.Plus);
-            Assert.True(selector.IsEffectivelyVisible);
             Assert.Equal(model.Text["DelayStep"], AutomationProperties.GetName(selector));
             Assert.Equal(model.Text["DelayTuningHint"], ToolTip.GetTip(selector));
             Assert.Equal(model.Text["DelayTuningHint"], AutomationProperties.GetHelpText(selector));
             Assert.False(minus.IsEffectivelyEnabled); Assert.True(plus.IsEffectivelyEnabled); Assert.Equal(10m, numeric.Increment);
-            var list = window.FindControl<ScrollViewer>("LinkDeviceList")!;
-            var row = list.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("linkDeviceRow"));
+            var list = window.FindControl<ScrollViewer>("SpeakerControlsList")!;
+            var row = list.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("speakerControlRow"));
             Assert.True(row.Bounds.Height <= list.Bounds.Height + 1, "The single speaker's delay controls must fit in the list viewport.");
             selector.SelectedItem = model.DelaySteps.Single(c => c.Id == "100");
             using (var step = window.CaptureRenderedFrame()) Assert.Equal(100m, numeric.Increment);
@@ -48,10 +50,12 @@ public sealed partial class SpotifyPlaybackTests
             Assert.Equal(string.Format(model.Text["DecreaseDelay"], 100), AutomationProperties.GetName(minus));
             ClickPlaylistControl(window, plus); await CommandFinished(speaker.Plus);
             Assert.Equal(100, speaker.DelayMs); Assert.True(minus.IsEffectivelyEnabled);
+            model.LinkPanelOpen = true; window.CaptureRenderedFrame()?.Dispose();
             selector.Focus(); selector.IsDropDownOpen = true;
             using (var popup = CaptureTrackReviewFrame(window)) SaveReviewFrame(popup, $"delay-tuning-{language}-{width}-choices.png");
             selector.IsDropDownOpen = false;
             selector.SelectedItem = model.DelaySteps.Single(c => c.Id == "1");
+            model.SpeakerControlsOpen = true; window.CaptureRenderedFrame()?.Dispose();
             using (var fine = window.CaptureRenderedFrame()) Assert.Equal(1m, numeric.Increment);
             var editor = numeric.GetVisualDescendants().OfType<TextBox>().Single(); Assert.True(editor.Focus());
             window.KeyPressQwerty(PhysicalKey.ArrowUp, RawInputModifiers.None);
@@ -59,13 +63,16 @@ public sealed partial class SpotifyPlaybackTests
             Assert.Equal(101, speaker.DelayMs);
             Assert.Equal(101, fixture.Settings.Links[0].Speakers[speaker.Id].Preferences.DelayMs);
             using (var tuned = CaptureTrackReviewFrame(window)) SaveReviewFrame(tuned, $"delay-tuning-{language}-{width}-tuned.png");
-            var test = panel.GetVisualDescendants().OfType<Button>().Single(b => b.Command == model.CalibrateCommand);
+            model.LinkPanelOpen = true; window.CaptureRenderedFrame()?.Dispose();
+            var config = window.FindControl<Border>("SpeakerPanel")!;
+            var test = config.GetVisualDescendants().OfType<Button>().Single(b => b.Command == model.CalibrateCommand);
             Assert.Equal(model.Text["Calibrate"], test.Content);
             Assert.Equal(model.Text["CalibrationInfo"], ToolTip.GetTip(test));
-            var reset = panel.GetVisualDescendants().OfType<Button>().Single(b => b.Command == model.ResetDelays);
+            var reset = config.GetVisualDescendants().OfType<Button>().Single(b => b.Command == model.ResetDelays);
             Assert.Equal(model.Text["ResetSyncDelays"], AutomationProperties.GetName(reset));
             Assert.Equal(model.Text["ResetSyncDelays"], ToolTip.GetTip(reset));
             ClickPlaylistControl(window, reset); await CommandFinished(model.ResetDelays);
+            model.SpeakerControlsOpen = true; window.CaptureRenderedFrame()?.Dispose();
             Assert.Equal(0, speaker.DelayMs); using var resetFrame = window.CaptureRenderedFrame(); Assert.False(minus.IsEffectivelyEnabled);
             Assert.False(fixture.Backend.Started.Task.IsCompleted);
         }

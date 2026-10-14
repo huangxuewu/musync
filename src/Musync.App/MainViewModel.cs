@@ -54,7 +54,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _preparingPlayback, _preparationCancelled;
     private int _preparationTotal;
     private SpeakerLink? _linkDraft;
-    private bool _linkEditing, _linkPanelOpen, _applyingLink;
+    private bool _linkEditing, _linkPanelOpen, _speakerControlsOpen, _applyingLink;
     private string _linkName = "", _linkEditError = "";
 
     internal Task<string?> ReadLosslessSourceAsync(MusicTrack track, CancellationToken token) =>
@@ -158,7 +158,16 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     public bool HasActiveLink => ActiveLinkProfile is not null;
     public bool NoLinks => Links.Count == 0;
-    public bool LinkPanelOpen { get => _linkPanelOpen; set => Set(ref _linkPanelOpen, value); }
+    public bool LinkPanelOpen
+    {
+        get => _linkPanelOpen;
+        set { if (Set(ref _linkPanelOpen, value) && value) SpeakerControlsOpen = false; }
+    }
+    public bool SpeakerControlsOpen
+    {
+        get => _speakerControlsOpen;
+        set { if (Set(ref _speakerControlsOpen, value) && value) LinkPanelOpen = false; }
+    }
     public bool IsLinkEditing
     {
         get => _linkEditing;
@@ -170,7 +179,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool HasLinkEditError => !string.IsNullOrEmpty(LinkEditError);
     public bool NoDraftSpeakers => IsLinkEditing && DraftSpeakers.Count == 0;
     public string LinkSelectionSummary => string.Format(Text["LinkSelectionSummary"], DraftSpeakers.Count(s => s.Selected), DraftSpeakers.Count);
-    public string LinkPopoverTitle => Text[IsLinkEditing ? "LinkConfiguration" : "Links"];
+    public string LinkPopoverTitle => Text["LinkConfiguration"];
     public IEnumerable<SpeakerViewModel> VisibleLinkSpeakers => IsLinkEditing ? DraftSpeakers : LinkedSpeakers;
     public string PlaybackTargetLabel => SpotifyMode ? "Spotify" : ActiveLinkProfile?.Name ?? Text["NoActiveLink"];
     public string LinkSummary => ActiveLinkProfile is { } link
@@ -297,7 +306,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool SettingsOpen
     {
         get => _settingsOpen;
-        set { if (Set(ref _settingsOpen, value)) { RefreshNavigationState(); UpdatePlaylistSelection(); if (value) _ = RunSafely(RefreshArtworkCacheAsync); } }
+        set { if (Set(ref _settingsOpen, value)) { RefreshNavigationState(); UpdatePlaylistSelection(); if (value) { LinkPanelOpen = SpeakerControlsOpen = false; _ = RunSafely(RefreshArtworkCacheAsync); } } }
     }
     public bool PlaylistOpen { get => _playlistOpen; set => Set(ref _playlistOpen, value); }
     public string PlaylistName { get => _playlistName; set { if (Set(ref _playlistName, value)) PlaylistError = ""; } }

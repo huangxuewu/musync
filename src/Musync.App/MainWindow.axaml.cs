@@ -24,6 +24,7 @@ public partial class MainWindow : Window
         // Disabled volume controls cannot take focus; Escape must also work
         // while focus remains on the mini player's disclosure button.
         AddHandler(KeyDownEvent, MiniVolumeKeyDown, RoutingStrategies.Tunnel);
+        FullPlayerView.AddHandler(PointerPressedEvent, DismissUtilityPopovers, RoutingStrategies.Tunnel);
         UpdateWindowFrame();
         InitializePosterRotation();
         HeroScene.EffectiveViewportChanged += (_, _) => UpdateLyricMotionState();
@@ -41,6 +42,7 @@ public partial class MainWindow : Window
             if (IsMiniPlayer && WindowState == WindowState.Maximized && !_changingPlayerMode) RestoreFullPlayer(returnFocus: false);
             UpdateWindowFrame();
             SpeakerToggle.IsChecked = false;
+            LinkConfigurationToggle.IsChecked = false;
             MiniVolumeToggle.IsChecked = false;
         };
         DataContextChanged += (_, _) =>
@@ -101,7 +103,7 @@ public partial class MainWindow : Window
         {
             SettlePosterLayers();
             foreach (var control in _reveals.Keys.ToArray()) SettleReveal(control);
-            foreach (var control in new Control[] { SpeakerPanel, MiniVolumePanel, SettingsPanel, PlaylistPanel, CalibrationPanel }) SettleReveal(control);
+            foreach (var control in new Control[] { SpeakerPanel, SpeakerControlsPanel, MiniVolumePanel, SettingsPanel, PlaylistPanel, CalibrationPanel }) SettleReveal(control);
         }
     }
     private void WireSeekSlider(PlaybackSlider slider)
@@ -200,7 +202,7 @@ public partial class MainWindow : Window
     {
         UpdateCalibrationSurface(e.PropertyName);
         if (e.PropertyName == nameof(MainViewModel.CalibrationOpen)) { UpdatePosterRotation(); UpdateLyricMotionState(); }
-        if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsSwitchingSource) or nameof(MainViewModel.IsMusicView) or nameof(MainViewModel.IsRadioPage))
+        if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.SpeakerControlsOpen) or nameof(MainViewModel.IsSwitchingSource) or nameof(MainViewModel.IsMusicView) or nameof(MainViewModel.IsRadioPage))
             UpdatePreparationMotion();
         if (e.PropertyName == nameof(MainViewModel.IsPreparingPlayback))
         {
@@ -220,13 +222,13 @@ public partial class MainWindow : Window
         }
         if (e.PropertyName is nameof(MainViewModel.ShowHero) or nameof(MainViewModel.ShowArtist)
             or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen)
-            or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.Busy)
+            or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.SpeakerControlsOpen) or nameof(MainViewModel.Busy)
             or nameof(MainViewModel.IsPreparingPlayback)) UpdatePosterRotation();
         if (e.PropertyName == nameof(MainViewModel.HasSyncedLyrics))
             Avalonia.Threading.Dispatcher.UIThread.Post(AdvanceLyricRows, Avalonia.Threading.DispatcherPriority.Loaded);
         if (e.PropertyName is nameof(MainViewModel.IsPlaying) or nameof(MainViewModel.ShowHero)
             or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen)
-            or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsPreparingPlayback)) UpdateLyricMotionState();
+            or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.SpeakerControlsOpen) or nameof(MainViewModel.IsPreparingPlayback)) UpdateLyricMotionState();
         if (e.PropertyName == nameof(MainViewModel.SettingsOpen) && _linkModel?.SettingsOpen == true)
         {
             _settingsReturnFocus = FocusManager?.GetFocusedElement() as Control;
@@ -266,8 +268,8 @@ public partial class MainWindow : Window
                 target.Focus(); _playlistReturnFocus = null;
             }, Avalonia.Threading.DispatcherPriority.Loaded);
         }
-        if (IsMiniPlayer && e.PropertyName is (nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen))
-            && _linkModel is { } model && (model.LinkPanelOpen || model.SettingsOpen || model.PlaylistOpen))
+        if (IsMiniPlayer && e.PropertyName is (nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.SpeakerControlsOpen) or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen))
+            && _linkModel is { } model && (model.LinkPanelOpen || model.SpeakerControlsOpen || model.SettingsOpen || model.PlaylistOpen))
             RestoreFullPlayer(returnFocus: false);
         if (e.PropertyName is nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkSummary)) UpdateSpeakerPanelSize();
         if (e.PropertyName == nameof(MainViewModel.IsLinkEditing)
@@ -322,8 +324,10 @@ public partial class MainWindow : Window
         SpeakerPanel.Width = _linkModel?.IsLinkEditing == true ? 440 : 336;
         SpeakerPanel.MaxHeight = maximum;
         var content = _linkModel is null || _linkModel.IsLinkEditing ? 640
-            : 360 + (_linkModel.HasDelayControls ? 8 : 0) + _linkModel.LinkedSpeakers.Count * 150;
+            : 240 + _linkModel.LinkedSpeakers.Count * 90;
         SpeakerPanel.Height = _linkModel is { NoLinks: true, IsLinkEditing: false } ? double.NaN : Math.Min(maximum, content);
+        SpeakerControlsPanel.MaxHeight = maximum;
+        SpeakerControlsPanel.Height = Math.Min(maximum, _linkModel?.HasActiveLink == true ? 80 + _linkModel.LinkedSpeakers.Count * 148 : 124);
     }
     private void SpeakerPopoverOpened(object? sender, EventArgs e)
     {
@@ -347,15 +351,15 @@ public partial class MainWindow : Window
     {
         SettleReveal(SpeakerPanel);
         if (DataContext is MainViewModel model) model.DiscardLinkDraft();
-        SpeakerToggle.IsChecked = false;
+        LinkConfigurationToggle.IsChecked = false;
         UpdatePreparationMotion();
-        SpeakerToggle.Focus();
+        if (_linkModel is not { SettingsOpen: true } and not { SpeakerControlsOpen: true } and not { CalibrationOpen: true }) LinkConfigurationToggle.Focus();
     }
-    private void CloseSpeakers(object? sender, RoutedEventArgs e) => SpeakerToggle.IsChecked = false;
+    private void CloseSpeakers(object? sender, RoutedEventArgs e) => LinkConfigurationToggle.IsChecked = false;
     private void SpeakerPopoverKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key != Key.Escape) return;
-        SpeakerToggle.IsChecked = false;
+        LinkConfigurationToggle.IsChecked = false;
         e.Handled = true;
     }
     private void SettingsPanelKeyDown(object? sender, KeyEventArgs e)

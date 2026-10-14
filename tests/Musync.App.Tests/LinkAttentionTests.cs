@@ -33,7 +33,7 @@ public sealed partial class SpotifyPlaybackTests
         {
             await model.PlayTrackAsync(fixture.First, 12); await PollPlayback(model);
             var toggle = window.FindControl<ToggleButton>("SpeakerToggle")!;
-            Assert.Equal(model.Text["Links"], AutomationProperties.GetName(toggle));
+            Assert.Equal(model.Text["SpeakerControls"], AutomationProperties.GetName(toggle));
             outputs[receiver.Id].Error = "Synthetic receiver connection lost. Rescan to reconnect.";
             await PollPlayback(model); Assert.True(model.IsPlaying); Assert.True(model.HasToast);
             await Task.Delay(5300); Assert.False(model.HasToast);
@@ -47,21 +47,23 @@ public sealed partial class SpotifyPlaybackTests
             Assert.InRange(point.X, 0, toggle.Bounds.Width - badge.Bounds.Width);
             Assert.InRange(point.Y, 0, toggle.Bounds.Height - badge.Bounds.Height);
             Assert.True(toggle.Focus()); window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None); window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
-            await Task.Delay(220); Assert.True(model.LinkPanelOpen);
-            var issue = window.FindControl<Border>("SpeakerPanel")!.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("speakerIssue") && t.IsEffectivelyVisible);
-            Assert.Equal(outputs[receiver.Id].Error, issue.Text);
-            var list = window.FindControl<ScrollViewer>("LinkDeviceList")!;
-            var row = list.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("linkDeviceRow") && b.DataContext is SpeakerViewModel speaker && speaker.Id == receiver.Id);
+            await Task.Delay(220); Assert.True(model.SpeakerControlsOpen); Assert.False(model.LinkPanelOpen);
+            var list = window.FindControl<ScrollViewer>("SpeakerControlsList")!;
+            var row = list.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("speakerControlRow") && b.DataContext is SpeakerViewModel speaker && speaker.Id == receiver.Id);
+            Assert.Contains(row.GetVisualDescendants().OfType<TextBlock>(), t => Equals(ToolTip.GetTip(t), outputs[receiver.Id].Error));
             var delay = Assert.Single(row.GetVisualDescendants().OfType<NumericUpDown>());
             var rowPoint = row.TranslatePoint(default, list)!.Value; var delayPoint = delay.TranslatePoint(default, list)!.Value;
             Assert.InRange(rowPoint.Y, 0, list.Bounds.Height - row.Bounds.Height);
             Assert.InRange(delayPoint.Y, 0, list.Bounds.Height - delay.Bounds.Height);
             Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Hidden, list.VerticalScrollBarVisibility);
-            Assert.Equal(336, window.FindControl<Border>("SpeakerPanel")!.Bounds.Width);
+            Assert.Equal(336, window.FindControl<Border>("SpeakerControlsPanel")!.Bounds.Width);
             using (var panel = CaptureTrackReviewFrame(window)) SaveReviewFrame(panel, $"link-attention-{language}-{width}-panel.png");
+            ClickPlaylistControl(window, window.FindControl<ToggleButton>("LinkConfigurationToggle")!);
+            window.CaptureRenderedFrame()?.Dispose();
+            Assert.True(model.LinkPanelOpen); Assert.False(model.SpeakerControlsOpen);
             ClickPlaylistControl(window, window.FindControl<Button>("OverviewRescanButton")!); await CommandFinished(model.ScanCommand);
             await Until(() => !model.Busy && !model.LinkedSpeakers.Any(s => s.HasIssue)); await PollPlayback(model);
-            Assert.False(badge.IsEffectivelyVisible); Assert.Equal(model.Text["Links"], AutomationProperties.GetName(toggle));
+            Assert.False(badge.IsEffectivelyVisible); Assert.Equal(model.Text["SpeakerControls"], AutomationProperties.GetName(toggle));
             Assert.Equal(model.LinkSummary, ToolTip.GetTip(toggle)); Assert.True(model.IsPlaying); Assert.Equal(12, model.Position);
             model.LinkPanelOpen = false; await Task.Delay(220);
             using (var recovered = CaptureTrackReviewFrame(window)) SaveReviewFrame(recovered, $"link-attention-{language}-{width}-recovered.png");
@@ -93,7 +95,7 @@ public sealed partial class SpotifyPlaybackTests
             model.Language = model.Languages.First(l => l.Id == (language == "ja" ? "en" : "ja"));
             Assert.Equal(string.Format(model.Text["LinkAttentionMany"], 2), AutomationProperties.GetName(toggle));
             model.Source = model.Sources.First(s => s.Id == "spotify"); await SourceTransitionSettled(model);
-            Assert.False(badge.IsVisible); Assert.Equal(model.Text["Links"], AutomationProperties.GetName(toggle));
+            Assert.False(badge.IsVisible); Assert.Equal(model.Text["SpeakerControls"], AutomationProperties.GetName(toggle));
             model.Source = model.Sources.First(s => s.Id == "local"); await SourceTransitionSettled(model);
             Assert.True(badge.IsVisible); // The offline linked receiver still needs attention after leaving Spotify.
             model.LinkedSpeakers.Remove(unrelated); linked.UpdateStatus(false, null);

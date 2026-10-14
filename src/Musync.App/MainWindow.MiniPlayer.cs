@@ -42,6 +42,7 @@ public partial class MainWindow
             _seekingSlider = null;
             if (_linkModel is { } model) model.IsSeeking = false;
             SpeakerToggle.IsChecked = false;
+            LinkConfigurationToggle.IsChecked = false;
             MiniVolumeToggle.IsChecked = false;
             MusicSourceSelector.IsDropDownOpen = false;
             WindowState = WindowState.Normal;

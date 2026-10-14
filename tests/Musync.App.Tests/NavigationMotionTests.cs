@@ -165,18 +165,19 @@ public sealed partial class SpotifyPlaybackTests
         try
         {
             using var initial = window.CaptureRenderedFrame();
-            window.FindControl<ToggleButton>("SpeakerToggle")!.IsChecked = true;
-            await Task.Delay(50); using var opening = window.CaptureRenderedFrame();
+            window.FindControl<ToggleButton>("LinkConfigurationToggle")!.IsChecked = true;
+            await Task.Delay(50);
             var panel = window.FindControl<Border>("SpeakerPanel")!;
             Assert.InRange(panel.Opacity, .820001, .999999);
             Assert.InRange(panel.RenderTransform!.Value.M32, .001, 8);
+            using var opening = window.CaptureRenderedFrame();
             SaveReviewFrame(opening, "navigation-en-1120-link-opening.png");
-            window.FindControl<ToggleButton>("SpeakerToggle")!.IsChecked = false;
-            window.FindControl<ToggleButton>("SpeakerToggle")!.IsChecked = true;
+            window.FindControl<ToggleButton>("LinkConfigurationToggle")!.IsChecked = false;
+            window.FindControl<ToggleButton>("LinkConfigurationToggle")!.IsChecked = true;
             await Task.Delay(300); using var settled = window.CaptureRenderedFrame();
             Assert.Equal(1, panel.Opacity); Assert.Equal(0, panel.RenderTransform!.Value.M32);
             SaveReviewFrame(settled, "navigation-en-1120-link-popover.png");
-            window.FindControl<ToggleButton>("SpeakerToggle")!.IsChecked = false;
+            window.FindControl<ToggleButton>("LinkConfigurationToggle")!.IsChecked = false;
             fixture.Model.SettingsOpen = true;
             using var firstSettings = window.CaptureRenderedFrame();
             var settingsPanel = window.FindControl<Border>("SettingsPanel")!;

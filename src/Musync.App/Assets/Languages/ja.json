@@ -6,6 +6,8 @@
   "PlaylistTrackSingular": "曲",
   "PlaylistTrackPlural": "曲",
   "Settings": "設定",
+  "SpeakerControls": "スピーカー調整",
+  "SpeakerControlsEmpty": "上部のリンク設定からスピーカーを選んでください。",
   "Import": "フォルダーを追加",
   "FoldersImported": "{0} 曲を追加 · フォルダー別プレイリスト {1} 件",
   "ImportSkipped": "読み込めないフォルダー・ファイル {0} 件をスキップ",

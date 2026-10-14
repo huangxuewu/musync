@@ -15,7 +15,7 @@ public partial class MainWindow
     private bool CanAnimateLyrics => !_closing && IsVisible && !IsMiniPlayer && WindowState != WindowState.Minimized
         && _posterInViewport && HeroScene.IsEffectivelyVisible && Classes.Contains("motionEnabled")
         && _linkModel is { IsPlaying: true, HasSyncedLyrics: true, ShowHero: true,
-            SettingsOpen: false, PlaylistOpen: false, LinkPanelOpen: false, IsPreparingPlayback: false, CalibrationOpen: false };
+            SettingsOpen: false, PlaylistOpen: false, LinkPanelOpen: false, SpeakerControlsOpen: false, IsPreparingPlayback: false, CalibrationOpen: false };
 
     private void UpdateLyricMotionState()
     {

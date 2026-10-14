@@ -69,7 +69,7 @@
               <GradientStop Color="#F5F4F7" Offset="1"/>
             </LinearGradientBrush>
           </Border.Background>
-          <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+          <Grid RowDefinitions="Auto,Auto,Auto,*">
             <Image x:Name="BrandWordmark" Width="164" Height="44" Stretch="Uniform"
                    HorizontalAlignment="Left" Margin="8,0,0,26" AutomationProperties.Name="Musync"
                    RenderOptions.BitmapInterpolationMode="HighQuality"
@@ -125,14 +125,10 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
             </ScrollViewer>
-            <StackPanel Grid.Row="4" Spacing="12" Margin="0,16,0,0">
-              <Border Height="1" Background="#E5DFEA" Margin="12,0"/>
-              <Button x:Name="SettingsNav" Classes="nav sidebarSettings" Classes.active="{Binding SettingsOpen}" Command="{Binding SettingsCommand}" AutomationProperties.Name="{Binding Text[Settings]}"><StackPanel Orientation="Horizontal" Spacing="12"><icons:LucideIcon Kind="settings" Classes="navGlyph"/><TextBlock Text="{Binding Text[Settings]}" VerticalAlignment="Center"/></StackPanel></Button>
-            </StackPanel>
           </Grid>
         </Border>
         <Grid Grid.Column="1" ZIndex="30" RowDefinitions="Auto,*" Margin="32,32,28,12" MaxWidth="1240" IsVisible="{Binding !IsRadioPage}">
-          <Grid RowDefinitions="Auto,Auto" Margin="0,0,0,16">
+          <Grid RowDefinitions="Auto,Auto" Margin="0,0,96,16">
             <TextBox x:Name="MusicSearchBox" Theme="{StaticResource MusyncSearchBox}"
                      Text="{Binding Search, Mode=TwoWay}" PlaceholderText="{Binding SearchPlaceholder}"
                      AutomationProperties.Name="{Binding SearchPlaceholder}" KeyDown="SearchKeyDown">
@@ -290,7 +286,20 @@
             </StackPanel>
           </ScrollViewer>
         </Grid>
-        <local:RadioView x:Name="RadioPage" Grid.Column="1" ZIndex="30" Margin="32,44,28,12" MaxWidth="1240" IsVisible="{Binding IsRadioPage}"/>
+        <local:RadioView x:Name="RadioPage" Grid.Column="1" ZIndex="30" Margin="32,90,28,12" MaxWidth="1240" IsVisible="{Binding IsRadioPage}"/>
+        <Grid x:Name="WorkspaceUtilities" Grid.Column="1" ZIndex="35" ColumnDefinitions="36,36" ColumnSpacing="8"
+              Height="46" Margin="0,32,28,0" HorizontalAlignment="Right" VerticalAlignment="Top">
+          <ToggleButton x:Name="LinkConfigurationToggle" Classes="headerUtility" Theme="{StaticResource MusyncToggle}"
+                        IsChecked="{Binding LinkPanelOpen, Mode=TwoWay}" Width="36" Height="36" Padding="0"
+                        AutomationProperties.Name="{Binding Text[LinkConfiguration]}" ToolTip.Tip="{Binding Text[LinkConfiguration]}">
+            <icons:LucideIcon Kind="link-2" Width="20" Height="20"/>
+          </ToggleButton>
+          <Button x:Name="SettingsNav" Grid.Column="1" Classes="ghost headerUtility" Classes.active="{Binding SettingsOpen}"
+                  Command="{Binding SettingsCommand}" Width="36" Height="36" Padding="0"
+                  AutomationProperties.Name="{Binding Text[Settings]}" ToolTip.Tip="{Binding Text[Settings]}">
+            <icons:LucideIcon Kind="settings" Width="20" Height="20"/>
+          </Button>
+        </Grid>
       </Grid>
       <Border Grid.Row="1" ZIndex="10" Background="#251A35" Padding="24,12">
         <Grid ZIndex="30" ColumnDefinitions="220,Auto,*,Auto,Auto" ColumnSpacing="16" MaxWidth="1664">
@@ -331,7 +340,7 @@
                         IsVisible="{Binding IsSwitchingSource}" IsHitTestVisible="False"
                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
               <ToggleButton x:Name="SpeakerToggle" Grid.Column="1" Classes="playerUtility" Theme="{StaticResource MusyncPlayerToggle}"
-                          IsChecked="{Binding LinkPanelOpen, Mode=TwoWay}"
+                          IsChecked="{Binding SpeakerControlsOpen, Mode=TwoWay}"
                           AutomationProperties.Name="{Binding LinkControlName}" ToolTip.Tip="{Binding LinkControlHint}">
                 <Grid Width="20" Height="20">
                   <icons:LucideIcon Kind="link-2"/>
@@ -349,12 +358,12 @@
         </Grid>
       </Border>
     </Grid>
-    <Popup x:Name="SpeakerPopover" ZIndex="40" PlacementTarget="{Binding ElementName=SpeakerToggle}"
-           Placement="TopEdgeAlignedRight" VerticalOffset="-10" ShouldUseOverlayLayer="True"
-           IsOpen="{Binding IsChecked, ElementName=SpeakerToggle, Mode=TwoWay}"
-           IsLightDismissEnabled="True"
+    <Popup x:Name="SpeakerPopover" ZIndex="40" PlacementTarget="{Binding ElementName=LinkConfigurationToggle}"
+           Placement="BottomEdgeAlignedRight" VerticalOffset="10" ShouldUseOverlayLayer="True"
+           IsOpen="{Binding IsChecked, ElementName=LinkConfigurationToggle, Mode=TwoWay}"
+           IsLightDismissEnabled="True" OverlayInputPassThroughElement="{Binding ElementName=FullPlayerView}"
            Opened="SpeakerPopoverOpened" Closed="SpeakerPopoverClosed">
-      <Border x:Name="SpeakerPanel" ZIndex="40" Width="336" Height="640" Background="{DynamicResource LinkSurfaceBrush}" CornerRadius="16" Padding="20" BoxShadow="0 10 28 0 #60251A35" KeyDown="SpeakerPopoverKeyDown" KeyboardNavigation.TabNavigation="Cycle">
+      <Border x:Name="SpeakerPanel" Classes="linkSurface" ZIndex="40" Width="336" Height="640" Background="{DynamicResource LinkSurfaceBrush}" CornerRadius="16" Padding="20" BoxShadow="0 10 28 0 #60251A35" KeyDown="SpeakerPopoverKeyDown" KeyboardNavigation.TabNavigation="Cycle">
         <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <TextBlock Text="{Binding LinkPopoverTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
@@ -418,9 +427,9 @@
                             </Grid>
                             <TextBlock Classes="speakerIssue" Text="{Binding Details}" IsVisible="{Binding HasIssue}" Foreground="#FFC970" FontSize="11" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Details}"/>
                           </StackPanel>
-                          <Button Grid.Column="1" Classes="ghost iconButton" IsVisible="{Binding ControlsVisible}" Command="{Binding MuteCommand}" AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}" VerticalAlignment="Top"><icons:LucideIcon Kind="{Binding MuteIcon}"/></Button>
+                          <Button Grid.Column="1" Classes="ghost iconButton" IsVisible="{Binding DraftControlsVisible}" Command="{Binding MuteCommand}" AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}" VerticalAlignment="Top"><icons:LucideIcon Kind="{Binding MuteIcon}"/></Button>
                         </Grid>
-                        <StackPanel Grid.Column="1" Grid.Row="1" IsVisible="{Binding ControlsVisible}" Spacing="8" Margin="0,8,0,0">
+                        <StackPanel Grid.Column="1" Grid.Row="1" IsVisible="{Binding DraftControlsVisible}" Spacing="8" Margin="0,8,0,0">
                           <Grid ColumnDefinitions="Auto,*,36" ColumnSpacing="8">
                             <TextBlock Text="{Binding VolumeLabel}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" VerticalAlignment="Center"/>
                             <Slider Grid.Column="1" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" Height="28" MinHeight="28" ToolTip.Tip="{Binding VolumeLabel}" AutomationProperties.Name="{Binding VolumeLabel}"/>
@@ -469,18 +478,59 @@
               </Grid>
             </Border>
             <StackPanel IsVisible="{Binding LinkOverview}" Spacing="10">
-              <StackPanel IsVisible="{Binding HasActiveLink}" Spacing="10">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                  <TextBlock Text="{Binding Text[MasterVolume]}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
-                  <Slider Grid.Column="1" Value="{Binding MasterVolume}" Minimum="0" Maximum="100" AutomationProperties.Name="{Binding Text[MasterVolume]}"/>
-                  <TextBlock Grid.Column="2" Text="{Binding MasterVolume, StringFormat={}{0:0}%}" Classes="muted" FontSize="12" VerticalAlignment="Center"/>
-                </Grid>
-                <Button Classes="primary" Content="{Binding Text[PlayLink]}" Command="{Binding PlayEverywhere}" IsEnabled="{Binding CanPlayLink}" HorizontalAlignment="Stretch" FontSize="12" Padding="10,12"/>
-              </StackPanel>
               <TextBlock Text="{Binding Text[SpotifyBoundary]}" IsVisible="{Binding SpotifyMode}" Classes="muted" FontSize="10" TextWrapping="Wrap"/>
-              <TextBlock Text="{Binding Text[Experimental]}" Classes="muted" FontSize="10" TextWrapping="Wrap"/>
             </StackPanel>
           </StackPanel>
+        </Grid>
+      </Border>
+    </Popup>
+    <Popup x:Name="SpeakerControlsPopover" ZIndex="40" PlacementTarget="{Binding ElementName=SpeakerToggle}"
+           Placement="TopEdgeAlignedRight" VerticalOffset="-10" ShouldUseOverlayLayer="True"
+           IsOpen="{Binding IsChecked, ElementName=SpeakerToggle, Mode=TwoWay}" IsLightDismissEnabled="True" OverlayInputPassThroughElement="{Binding ElementName=FullPlayerView}"
+           Opened="SpeakerControlsOpened" Closed="SpeakerControlsClosed">
+      <Border x:Name="SpeakerControlsPanel" Classes="linkSurface" Width="336" Background="{DynamicResource LinkSurfaceBrush}"
+              CornerRadius="16" Padding="20" BoxShadow="0 10 28 0 #60251A35" KeyDown="SpeakerControlsKeyDown" KeyboardNavigation.TabNavigation="Cycle">
+        <Grid RowDefinitions="Auto,*" RowSpacing="8">
+          <Grid ColumnDefinitions="*,36">
+            <TextBlock Text="{Binding Text[SpeakerControls]}" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Button x:Name="CloseSpeakerControlsButton" Grid.Column="1" Classes="ghost iconButton" Click="CloseSpeakerControls"
+                    AutomationProperties.Name="{Binding Text[Close]}" ToolTip.Tip="{Binding Text[Close]}"><icons:LucideIcon Kind="x"/></Button>
+          </Grid>
+          <ScrollViewer x:Name="SpeakerControlsList" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+            <ItemsControl ItemsSource="{Binding LinkedSpeakers}" IsEnabled="{Binding RoutingAvailable}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="local:SpeakerViewModel">
+                  <Border Classes="speakerControlRow" BorderBrush="{DynamicResource LinkDividerBrush}" BorderThickness="0,0,0,1" Padding="0,12">
+                    <StackPanel Spacing="8">
+                      <Grid ColumnDefinitions="*,36" ColumnSpacing="8">
+                        <Grid ColumnDefinitions="*,6" ColumnSpacing="8" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Details}" AutomationProperties.HelpText="{Binding Details}"/>
+                          <Ellipse Grid.Column="1" Width="6" Height="6" Fill="{Binding StatusColor}" VerticalAlignment="Center" ToolTip.Tip="{Binding Details}"/>
+                        </Grid>
+                        <Button Grid.Column="1" Classes="ghost iconButton" Command="{Binding MuteCommand}" AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}"><icons:LucideIcon Kind="{Binding MuteIcon}"/></Button>
+                      </Grid>
+                      <Grid ColumnDefinitions="Auto,*,36" ColumnSpacing="8">
+                        <TextBlock Text="{Binding VolumeLabel}" FontSize="11" Foreground="{DynamicResource LinkMutedBrush}" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Value="{Binding Volume, Mode=TwoWay}" Minimum="0" Maximum="100" Height="28" MinHeight="28" AutomationProperties.Name="{Binding VolumeLabel}" ToolTip.Tip="{Binding VolumeLabel}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Volume, StringFormat={}{0:0}%}" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Text="{Binding DelayLabel}" FontSize="11" Foreground="{DynamicResource LinkMutedBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <Grid Grid.Column="1" ColumnDefinitions="36,72,36,Auto" ColumnSpacing="4">
+                          <Button Classes="delayStep" Command="{Binding Minus}" AutomationProperties.Name="{Binding DecreaseDelayLabel}" ToolTip.Tip="{Binding DecreaseDelayLabel}"><icons:LucideIcon Kind="minus" Classes="compact"/></Button>
+                          <NumericUpDown Grid.Column="1" Value="{Binding DelayMs, Mode=TwoWay}" Minimum="0" Maximum="10000" Increment="{Binding DelayStepMs}" ShowButtonSpinner="False" FormatString="0" FontSize="12" MinHeight="36" Height="36" Padding="8,4" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource LinkFieldBorderBrush}" VerticalContentAlignment="Center" TextAlignment="Center" AutomationProperties.Name="{Binding DelayLabel}"/>
+                          <Button Grid.Column="2" Classes="delayStep" Command="{Binding Plus}" AutomationProperties.Name="{Binding IncreaseDelayLabel}" ToolTip.Tip="{Binding IncreaseDelayLabel}"><icons:LucideIcon Kind="plus" Classes="compact"/></Button>
+                          <TextBlock Grid.Column="3" Text="ms" FontSize="10" Foreground="{DynamicResource LinkMutedBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                      </Grid>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <TextBlock Grid.Row="1" Text="{Binding Text[SpeakerControlsEmpty]}" IsVisible="{Binding NoLinks}" FontSize="12"
+                     Foreground="{DynamicResource LinkMutedBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
         </Grid>
       </Border>
     </Popup>

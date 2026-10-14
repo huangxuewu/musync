@@ -11,7 +11,7 @@ public sealed partial class MainViewModel
     {
         get
         {
-            if (!HasLinkIssue) return Text["Links"];
+            if (!HasLinkIssue) return Text["SpeakerControls"];
             var count = LinkedSpeakers.Count(s => s.HasIssue);
             return string.Format(Text[count == 1 ? "LinkAttentionOne" : "LinkAttentionMany"], count);
         }

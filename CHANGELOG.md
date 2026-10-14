@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Settings and link configuration move beside the library search scope at the top right, with the same controls available on the Radio page. Link selection, scanning, draft edits and calibration stay in the upper popover; the bottom link icon opens a compact list of speaker volume, mute and delay controls. Popovers switch on one click, dismiss with Escape or outside interaction, and keep their own focus targets and saved preferences.
 - Local music rows show a small localized lossless badge beside the artist for verified lossless source files, with the codec in its tooltip. Header inspection runs lazily off the UI thread and reuses a bounded cache keyed by file size and modification time; AAC, compressed WAV, unknown and damaged sources do not gain the badge. The badge describes the source file, independent of speaker transport encoding.
 - Settings use one fixed panel height across General, Audio and Spotify. Switching sections keeps the panel and Save button in place while longer content scrolls inside the existing viewport.
 - Music lists use a custom macOS-style rounded scroll thumb in the existing right margin. It appears on hover, fades out over 180 ms, stays visible during dragging and hides when the content fits. Wheel, gesture and page scrolling retain their existing behavior; reduced motion removes the fade, and other panels keep their hidden scrollbars.

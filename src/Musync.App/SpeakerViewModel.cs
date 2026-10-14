@@ -35,8 +35,9 @@ public sealed class SpeakerViewModel : ObservableObject
     public string RoomLabel => _text["Room"];
     public bool Available => Device.UnsupportedReason is null;
     public bool SelectionVisible { get; }
-    public bool Selected { get => Preferences.Selected; set { if (value == Preferences.Selected) return; Preferences.Selected = value; Raise(); Raise(nameof(ControlsVisible)); _changed(this, true); } }
+    public bool Selected { get => Preferences.Selected; set { if (value == Preferences.Selected) return; Preferences.Selected = value; Raise(); Raise(nameof(ControlsVisible)); Raise(nameof(DraftControlsVisible)); _changed(this, true); } }
     public bool ControlsVisible => !SelectionVisible || Selected;
+    public bool DraftControlsVisible => SelectionVisible && Selected;
     public double Volume { get => Preferences.Volume; set { Preferences.Volume = Math.Clamp(value, 0, 100); Raise(); _changed(this, false); } }
     public decimal DelayMs
     {

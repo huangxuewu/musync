@@ -6,6 +6,8 @@
   "PlaylistTrackSingular": "track",
   "PlaylistTrackPlural": "tracks",
   "Settings": "Settings",
+  "SpeakerControls": "Speaker controls",
+  "SpeakerControlsEmpty": "Choose speakers using Link configuration above.",
   "Import": "Import folders",
   "FoldersImported": "Added {0} songs · {1} folder playlists",
   "ImportSkipped": "Skipped {0} unavailable folders or files",

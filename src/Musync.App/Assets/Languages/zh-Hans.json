@@ -6,6 +6,8 @@
   "PlaylistTrackSingular": "首歌曲",
   "PlaylistTrackPlural": "首歌曲",
   "Settings": "设置",
+  "SpeakerControls": "音响调节",
+  "SpeakerControlsEmpty": "请在上方链接设置中选择音响。",
   "Import": "导入文件夹",
   "FoldersImported": "已添加 {0} 首歌曲 · {1} 个文件夹歌单",
   "ImportSkipped": "已跳过 {0} 个无法读取的文件夹或文件",

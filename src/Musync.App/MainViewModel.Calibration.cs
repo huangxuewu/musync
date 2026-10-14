@@ -78,7 +78,7 @@ public sealed partial class MainViewModel
     {
         if (Busy || !HasCalibrationService || !HasActiveLink) return;
         _calibrationPath = CurrentCalibrationPath; Raise(nameof(CalibrationPath));
-        SettingsOpen = false; PlaylistOpen = false; LinkPanelOpen = false;
+        SettingsOpen = false; PlaylistOpen = false; LinkPanelOpen = SpeakerControlsOpen = false;
         ClearCalibrationResult(); LoadCalibrationInputs(); CalibrationOpen = true; Raise(nameof(CalibrationDevices)); RefreshCalibrationAvailability();
     }
     private void LoadCalibrationInputs()

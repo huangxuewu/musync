@@ -23,7 +23,7 @@ public partial class MainWindow
         if (property == nameof(MainViewModel.CalibrationOpen) && _linkModel?.CalibrationOpen == false)
         {
             SettleReveal(CalibrationPanel);
-            Dispatcher.UIThread.Post(() => { if (_linkModel?.CalibrationOpen != true) SpeakerToggle.Focus(); });
+            Dispatcher.UIThread.Post(() => { if (_linkModel?.CalibrationOpen != true) LinkConfigurationToggle.Focus(); });
         }
         CalibrationPanel.MaxHeight = Math.Max(320, Bounds.Height - 100);
         CalibrationWave.Active = IsVisible && IsActive && WindowState != WindowState.Minimized && _linkModel is { CalibrationOpen: true, CalibrationRunning: true };
