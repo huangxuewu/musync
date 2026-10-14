@@ -301,8 +301,8 @@
             <Button Classes="transport" Command="{Binding NextCommand}" ToolTip.Tip="{Binding Text[Next]}" AutomationProperties.Name="{Binding Text[Next]}"><icons:LucideIcon Kind="skip-forward"/></Button>
             <Button Classes="transport" Command="{Binding RepeatCommand}" Foreground="{Binding RepeatColor}" ToolTip.Tip="{Binding Text[Repeat]}" AutomationProperties.Name="{Binding Text[Repeat]}"><icons:LucideIcon Kind="repeat"/></Button>
           </StackPanel>
-          <Grid Grid.Column="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" MinWidth="180" VerticalAlignment="Center">
-            <TextBlock Text="{Binding PositionText}" Foreground="#AEA5BD" FontSize="11" VerticalAlignment="Center"/>
+          <Grid Grid.Column="2" ColumnDefinitions="44,*,44" ColumnSpacing="12" MinWidth="180" VerticalAlignment="Center">
+            <TextBlock Text="{Binding PositionText}" Foreground="#AEA5BD" FontSize="11" TextAlignment="Right" VerticalAlignment="Center"/>
             <icons:PlaybackSlider x:Name="SeekSlider" Grid.Column="1" PlaybackPosition="{Binding Position}" IsAdvancing="{Binding IsPlaying}" ProgressEpoch="{Binding ProgressEpoch}" Maximum="{Binding Duration}" Minimum="0" IsEnabled="{Binding Seekable}" Height="32" AutomationProperties.Name="{Binding Text[Seek]}"/>
             <TextBlock Grid.Column="2" Text="{Binding DurationText}" Foreground="#AEA5BD" FontSize="11" VerticalAlignment="Center"/>
           </Grid>
