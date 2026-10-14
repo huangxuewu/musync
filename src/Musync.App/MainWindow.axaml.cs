@@ -27,7 +27,7 @@ public partial class MainWindow : Window
         UpdateWindowFrame();
         InitializePosterRotation();
         HeroScene.EffectiveViewportChanged += (_, _) => UpdateLyricMotionState();
-        SizeChanged += (_, _) => { UpdateSpeakerPanelSize(); TrackFullPlayerBounds(); };
+        SizeChanged += (_, _) => { UpdateSpeakerPanelSize(); UpdateCalibrationSurface(null); TrackFullPlayerBounds(); };
         PositionChanged += (_, _) => TrackFullPlayerBounds();
         Opened += (_, _) => { UpdateSpeakerPanelSize(); TrackFullPlayerBounds(); AnimatePosterLayers(); };
         PropertyChanged += (_, e) =>
@@ -92,7 +92,7 @@ public partial class MainWindow : Window
         HeroSurface.MotionEnabled = HeroArtwork.MotionEnabled = HeroSpotifyArtwork.MotionEnabled = enabled;
         RadioPage.ApplyMotionPreference(enabled);
         PlayerArtwork.MotionEnabled = MiniPlayerArtwork.MotionEnabled = enabled;
-        FullPreparationWave.MotionEnabled = MiniPreparationWave.MotionEnabled = NetworkScanWave.MotionEnabled = MusicSourceWave.MotionEnabled = enabled;
+        FullPreparationWave.MotionEnabled = MiniPreparationWave.MotionEnabled = NetworkScanWave.MotionEnabled = MusicSourceWave.MotionEnabled = CalibrationWave.MotionEnabled = enabled;
         if (!enabled) UpdatePlaylistDisclosure(animate: false);
         UpdatePreparationMotion();
         UpdatePosterRotation();
@@ -101,7 +101,7 @@ public partial class MainWindow : Window
         {
             SettlePosterLayers();
             foreach (var control in _reveals.Keys.ToArray()) SettleReveal(control);
-            foreach (var control in new Control[] { SpeakerPanel, MiniVolumePanel, SettingsPanel, PlaylistPanel }) SettleReveal(control);
+            foreach (var control in new Control[] { SpeakerPanel, MiniVolumePanel, SettingsPanel, PlaylistPanel, CalibrationPanel }) SettleReveal(control);
         }
     }
     private void WireSeekSlider(PlaybackSlider slider)
@@ -198,6 +198,8 @@ public partial class MainWindow : Window
     }
     private void LinkLayoutChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        UpdateCalibrationSurface(e.PropertyName);
+        if (e.PropertyName == nameof(MainViewModel.CalibrationOpen)) { UpdatePosterRotation(); UpdateLyricMotionState(); }
         if (e.PropertyName is nameof(MainViewModel.IsScanning) or nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.IsSwitchingSource) or nameof(MainViewModel.IsMusicView) or nameof(MainViewModel.IsRadioPage))
             UpdatePreparationMotion();
         if (e.PropertyName == nameof(MainViewModel.IsPreparingPlayback))
@@ -303,6 +305,7 @@ public partial class MainWindow : Window
     }
     private void UpdatePreparationMotion()
     {
+        UpdateCalibrationSurface(null);
         var visible = !_closing && IsVisible && WindowState != WindowState.Minimized;
         Classes.Set("trackPlaybackVisible", visible && !IsMiniPlayer && _linkModel?.IsMusicView == true);
         Classes.Set("radioPlaybackVisible", visible && !IsMiniPlayer && _linkModel?.IsRadioPage == true);

@@ -13,6 +13,7 @@ public sealed class SpeakerViewModel : ObservableObject
     private string? _error;
     private SpeakerPlaybackPhase _phase;
     private int _delayStepMs = 10;
+    private int? _calibratedDelay;
     public SpeakerViewModel(SpeakerDevice device, SpeakerPreferences preferences, Localizer text, Action<SpeakerViewModel, bool> changed, bool selectionVisible = false)
     {
         Device = device; Preferences = preferences; _text = text; _changed = changed;
@@ -30,7 +31,7 @@ public sealed class SpeakerViewModel : ObservableObject
     public string Transport => Device.Transport.ToString();
     public string Icon => Device.Transport switch { SpeakerTransport.Bluetooth => "bluetooth", SpeakerTransport.AirPlay => "airplay", SpeakerTransport.Chromecast => "cast", _ => "monitor" };
     public string VolumeLabel => _text["Volume"];
-    public string DelayLabel => _text["SyncDelay"];
+    public string DelayLabel => _text[_calibratedDelay.HasValue ? "CalibratedDelay" : "SyncDelay"];
     public string RoomLabel => _text["Room"];
     public bool Available => Device.UnsupportedReason is null;
     public bool SelectionVisible { get; }
@@ -39,15 +40,23 @@ public sealed class SpeakerViewModel : ObservableObject
     public double Volume { get => Preferences.Volume; set { Preferences.Volume = Math.Clamp(value, 0, 100); Raise(); _changed(this, false); } }
     public decimal DelayMs
     {
-        get => Preferences.DelayMs;
+        get => _calibratedDelay ?? Preferences.DelayMs;
         set
         {
             var delay = (int)Math.Clamp(value, 0, 10000);
-            if (delay == Preferences.DelayMs) return;
-            Preferences.DelayMs = delay; Raise();
+            if (delay == DelayMs) return;
+            if (_calibratedDelay.HasValue) _calibratedDelay = delay; else Preferences.DelayMs = delay;
+            Raise();
             ((AsyncCommand)Minus).RefreshAvailability(); ((AsyncCommand)Plus).RefreshAvailability();
             _changed(this, false);
         }
+    }
+    public bool HasCalibratedDelay => _calibratedDelay.HasValue;
+    public void SetCalibratedDelay(int? value)
+    {
+        if (_calibratedDelay == value) return;
+        _calibratedDelay = value; Raise(nameof(DelayMs)); Raise(nameof(DelayLabel)); Raise(nameof(HasCalibratedDelay));
+        ((AsyncCommand)Minus).RefreshAvailability(); ((AsyncCommand)Plus).RefreshAvailability();
     }
     public int DelayStepMs
     {

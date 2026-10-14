@@ -31,15 +31,17 @@ public sealed partial class App : Application
             }
             var bundledNode = Path.Combine(bridgeDirectory, "node.exe");
             var bridge = new AirPlayBridge(bridgeDirectory, File.Exists(bundledNode) ? bundledNode : "node");
-            var player = new PlaybackCoordinator(backend, (device, source) => device.Transport switch
+            Func<SpeakerDevice, PlaybackSource, IAudioOutput> createOutput = (device, source) => device.Transport switch
             {
                 SpeakerTransport.Chromecast when !source.IsCapture && !source.IsStreaming => new FileCastOutput(device, source, server, preparedMusic),
                 SpeakerTransport.Chromecast => new CastOutput(device, server, encoder),
                 SpeakerTransport.AirPlay when device.Properties?.GetValueOrDefault("ap2") == "true" => new AirPlay2Output(device, bridge),
                 SpeakerTransport.AirPlay => new RaopOutput(device),
                 _ => backend.CreateOutput(device)
-            });
-            var viewModel = new MainViewModel(backend, player, new SpotifyClient(new WindowsTokenVault(Path.Combine(data, "spotify.tokens"))), store, store.Load(), data);
+            };
+            var player = new PlaybackCoordinator(backend, createOutput);
+            var calibration = new AcousticCalibrationService(new WindowsAcousticInputProvider(), createOutput, Path.Combine(data, "calibration-temp"));
+            var viewModel = new MainViewModel(backend, player, new SpotifyClient(new WindowsTokenVault(Path.Combine(data, "spotify.tokens"))), store, store.Load(), data, calibration: calibration);
             var window = new MainWindow { DataContext = viewModel };
             window.Cleanup = async () => { await viewModel.DisposeAsync(); await preparedMusic.DisposeAsync(); await bridge.DisposeAsync(); await server.DisposeAsync(); };
             desktop.MainWindow = window;

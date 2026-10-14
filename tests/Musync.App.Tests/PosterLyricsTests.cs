@@ -52,7 +52,7 @@ public sealed partial class SpotifyPlaybackTests
         public PresentationBackend Backend { get; } = new();
         public PresentationFixture(string language = "en", int palette = 0, Func<SpeakerDevice, IAudioOutput>? outputFactory = null,
             Func<CancellationToken, Task<IReadOnlyList<SpeakerDevice>>>? discoverNetwork = null, Handler? spotifyHandler = null,
-            string? title = null, string? lrc = null)
+            string? title = null, string? lrc = null, IAcousticCalibrationService? calibration = null)
         {
             Directory.CreateDirectory(DirectoryPath);
             var path = Path.Combine(DirectoryPath, "Original test.mp3"); File.WriteAllText(path, "mock audio");
@@ -66,7 +66,7 @@ public sealed partial class SpotifyPlaybackTests
             var backend = Backend;
             Model = new(backend, new PlaybackCoordinator(backend, outputFactory ?? backend.CreateOutput),
                 Client(spotifyHandler ?? new Handler((_, _) => Task.FromResult(Response(HttpStatusCode.NoContent)))),
-                new SettingsStore(Path.Combine(DirectoryPath, "settings.json")), Settings, DirectoryPath, discoverNetwork);
+                new SettingsStore(Path.Combine(DirectoryPath, "settings.json")), Settings, DirectoryPath, discoverNetwork, calibration);
             Model.Speakers.Add(new(backend.GetDevices()[0], preferences, Model.Text, (_, _) => { }));
         }
         private static int PaletteFor(string id)

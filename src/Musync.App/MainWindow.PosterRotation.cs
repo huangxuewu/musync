@@ -14,7 +14,7 @@ public partial class MainWindow
         && WindowState != WindowState.Minimized && _posterInViewport && HeroScene.IsEffectivelyVisible
         && Classes.Contains("motionEnabled") && !MusicSourceSelector.IsDropDownOpen
         && _linkModel is { ShowHero: true, ShowArtist: true, SettingsOpen: false, PlaylistOpen: false,
-            LinkPanelOpen: false, Busy: false, IsPreparingPlayback: false };
+            LinkPanelOpen: false, Busy: false, IsPreparingPlayback: false, CalibrationOpen: false };
 
     private void InitializePosterRotation()
     {

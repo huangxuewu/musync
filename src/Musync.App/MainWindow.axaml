@@ -55,7 +55,7 @@
     <Grid x:Name="LayerRoot">
     <Border ZIndex="0" Background="#251A35" IsHitTestVisible="False" />
     <Grid x:Name="FullPlayerView" IsVisible="{Binding !IsMiniPlayer, ElementName=MusyncWindow}">
-    <Grid RowDefinitions="*,96" ZIndex="30">
+    <Grid RowDefinitions="*,96" ZIndex="30" IsEnabled="{Binding !CalibrationOpen, FallbackValue=True}">
       <Grid x:Name="WorkspaceColumns" ColumnDefinitions="1*,4.236*" MaxWidth="1720" Background="White">
         <Border x:Name="SidebarSurface" ZIndex="10" Padding="16,28,16,18">
           <Border.Background>
@@ -440,7 +440,10 @@
           <StackPanel Grid.Row="3" Spacing="12">
             <Grid x:Name="SyncTuningControls" IsVisible="{Binding HasDelayControls}" ColumnDefinitions="*,108,Auto" ColumnSpacing="8">
                 <TextBlock Text="{Binding Text[DelayStep]}" IsVisible="{Binding IsLinkEditing}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="12" VerticalAlignment="Center"/>
-                <Button Classes="ghost" IsVisible="{Binding LinkOverview}" Content="{Binding Text[Calibrate]}" Command="{Binding CalibrateCommand}" IsEnabled="{Binding CanPlayLink}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationInfo]}"/>
+                <Grid IsVisible="{Binding LinkOverview}">
+                  <Button Classes="ghost" IsVisible="{Binding !HasCalibrationService}" Content="{Binding Text[Calibrate]}" Command="{Binding CalibrateCommand}" IsEnabled="{Binding CanPlayLink}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationInfo]}"/>
+                  <Button x:Name="OpenCalibrationButton" Classes="ghost" IsVisible="{Binding HasCalibrationService}" Content="{Binding Text[AutomaticCalibration]}" Command="{Binding OpenCalibration}" IsEnabled="{Binding CanPlayLink}" FontSize="11" ToolTip.Tip="{Binding Text[CalibrationIntro]}"/>
+                </Grid>
                 <ComboBox x:Name="DelayStepSelector" Grid.Column="1" ItemsSource="{Binding DelaySteps}" SelectedItem="{Binding DelayStep, Mode=TwoWay}" HorizontalAlignment="Stretch" MinHeight="36" AutomationProperties.Name="{Binding Text[DelayStep]}" AutomationProperties.HelpText="{Binding Text[DelayTuningHint]}" ToolTip.Tip="{Binding Text[DelayTuningHint]}">
                   <ComboBox.Resources>
                     <SolidColorBrush x:Key="MusyncComboPopupSurfaceBrush" Color="#342741"/>
@@ -545,6 +548,70 @@
             <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="16">
               <TextBlock Text="{Binding Status}" Foreground="#8E2E43" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" FontSize="12" VerticalAlignment="Center" ToolTip.Tip="{Binding Status}"/>
               <Button x:Name="SettingsSaveButton" Grid.Column="1" Classes="primary" Content="{Binding Text[Save]}" Command="{Binding CloseSettings}" Padding="26,10" Height="40"/>
+            </Grid>
+          </Grid>
+        </Grid>
+      </Border>
+    </Border>
+    <Border x:Name="CalibrationLayer" ZIndex="50" IsVisible="{Binding CalibrationOpen, FallbackValue=False}" Background="#A0251A35">
+      <Border x:Name="CalibrationPanel" Width="560" MaxHeight="600" Margin="24,48,24,24" Background="#F8FBF9FD" CornerRadius="16" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center"
+              KeyboardNavigation.TabNavigation="Cycle" KeyDown="CalibrationDialogKeyDown" BoxShadow="0 12 32 0 #40251A35">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="20">
+          <StackPanel Spacing="6">
+            <TextBlock Text="{Binding Text[AutomaticCalibration]}" FontSize="23" FontWeight="Bold"/>
+            <TextBlock Text="{Binding CalibrationDevices}" Foreground="#655971" FontSize="12" TextWrapping="Wrap"/>
+          </StackPanel>
+          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Spacing="18">
+              <TextBlock Text="{Binding Text[CalibrationIntro]}" IsVisible="{Binding CalibrationSetup}" FontSize="13" TextWrapping="Wrap" Foreground="#655971"/>
+              <StackPanel IsVisible="{Binding CalibrationSetup}" Spacing="14">
+                <StackPanel Spacing="7">
+                  <TextBlock Text="{Binding Text[CalibrationMusicPath]}" FontSize="12" FontWeight="SemiBold"/>
+                  <ComboBox x:Name="CalibrationPathSelector" ItemsSource="{Binding CalibrationPaths}" SelectedItem="{Binding CalibrationPath, Mode=TwoWay}" HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Text[CalibrationMusicPath]}"/>
+                </StackPanel>
+                <StackPanel Spacing="7">
+                  <TextBlock Text="{Binding Text[CalibrationMicrophone]}" FontSize="12" FontWeight="SemiBold"/>
+                  <Grid ColumnDefinitions="*,36" ColumnSpacing="8">
+                    <ComboBox x:Name="CalibrationInputSelector" ItemsSource="{Binding CalibrationInputs}" SelectedItem="{Binding CalibrationInput, Mode=TwoWay}" HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Text[CalibrationMicrophone]}"/>
+                    <Button Grid.Column="1" Classes="ghost iconButton" Command="{Binding RefreshCalibrationInputs}" AutomationProperties.Name="{Binding Text[Rescan]}" ToolTip.Tip="{Binding Text[Rescan]}"><icons:LucideIcon Kind="refresh-cw"/></Button>
+                  </Grid>
+                </StackPanel>
+                <TextBlock Text="{Binding Text[CalibrationPrivacy]}" FontSize="11" Foreground="#655971" TextWrapping="Wrap"/>
+              </StackPanel>
+              <Grid IsVisible="{Binding CalibrationRunning}" ColumnDefinitions="24,*" ColumnSpacing="12">
+                <icons:PreparationIndicator x:Name="CalibrationWave" Width="24" Height="22"/>
+                <TextBlock x:Name="CalibrationLiveStatus" Grid.Column="1" Text="{Binding CalibrationStatus}" FontSize="14" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+              </Grid>
+              <StackPanel IsVisible="{Binding CalibrationHasResults}" Spacing="12">
+                <TextBlock Text="{Binding CalibrationStatus}" FontSize="13" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <ItemsControl ItemsSource="{Binding CalibrationResults}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="local:CalibrationResultRow">
+                      <Border Padding="0,12" BorderBrush="#D9D1DF" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                          <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="#655971" TextWrapping="Wrap"/>
+                          </StackPanel>
+                          <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+              <TextBlock Text="{Binding CalibrationError}" IsVisible="{Binding CalibrationHasError}" Foreground="#A72644" FontSize="12" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+            </StackPanel>
+          </ScrollViewer>
+          <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <Grid>
+              <Button Classes="ghost" Content="{Binding Text[Calibrate]}" Command="{Binding ListenCalibration}" IsVisible="{Binding CalibrationSetup}" FontSize="11" HorizontalAlignment="Left" Padding="0,8"/>
+              <Button Classes="ghost" Content="{Binding Text[CalibrationChangeSettings]}" Command="{Binding ChangeCalibrationSettings}" IsVisible="{Binding CalibrationHasResults}" FontSize="11" HorizontalAlignment="Left" Padding="0,8"/>
+            </Grid>
+            <Button x:Name="CloseCalibrationButton" Grid.Column="1" Classes="ghost" Content="{Binding CalibrationCloseLabel}" Command="{Binding CloseCalibration}"/>
+            <Grid Grid.Column="2">
+              <Button x:Name="StartCalibrationButton" Classes="primary" Content="{Binding CalibrationStartLabel}" Command="{Binding StartCalibration}" IsEnabled="{Binding CanStartCalibration}" IsVisible="{Binding CalibrationShowStart}"/>
+              <Button x:Name="ApplyCalibrationButton" Classes="primary" Content="{Binding Text[CalibrationApply]}" Command="{Binding ApplyCalibration}" IsEnabled="{Binding CanApplyCalibration}" IsVisible="{Binding CalibrationShowApply}"/>
             </Grid>
           </Grid>
         </Grid>

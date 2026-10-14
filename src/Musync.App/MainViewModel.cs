@@ -58,9 +58,10 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     public MainViewModel(IAudioBackend backend, PlaybackCoordinator player, SpotifyClient spotify,
         SettingsStore store, AppSettings settings, string dataDirectory,
-        Func<CancellationToken, Task<IReadOnlyList<SpeakerDevice>>>? discoverNetwork = null)
+        Func<CancellationToken, Task<IReadOnlyList<SpeakerDevice>>>? discoverNetwork = null, IAcousticCalibrationService? calibration = null)
     {
         _backend = backend; _player = player; _spotify = spotify; _store = store; _settings = settings; _dataDirectory = dataDirectory;
+        _calibrationService = calibration;
         _discoverNetwork = discoverNetwork ?? new NetworkDiscovery().DiscoverAsync;
         settings.ArtworkCacheLimitMb = settings.ArtworkCacheLimitMb is < 50 or > 10000 ? 500 : settings.ArtworkCacheLimitMb;
         _listArtwork = new(spotify, Path.Combine(dataDirectory, "artwork-cache"), settings.ArtworkCacheLimitMb * 1024L * 1024);
@@ -70,6 +71,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         _language = Languages.First(l => l.Id == Text.Language);
         _settings.Language = Text.Language;
         SpeakerLinks.MigrateLegacy(settings, Text["MainLink"]);
+        foreach (var link in settings.Links) link.Calibrations ??= new();
         Text.Changed += RefreshText;
         _library.AddRange(settings.Library.Where(t => t.FilePath is not null && File.Exists(t.FilePath)));
         _library.AddRange(DemoMusic.EnsureLibrary(Path.Combine(dataDirectory, "Demos")).Where(t => _library.All(l => l.Id != t.Id)));
@@ -106,7 +108,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         ShuffleCommand = new AsyncCommand(_ => ToggleSpotifyOptionAsync(shuffle: true), ShowError);
         RepeatCommand = new AsyncCommand(_ => ToggleSpotifyOptionAsync(shuffle: false), ShowError);
         MuteCommand = new AsyncCommand(_ => { TogglePlayerMute(); return WaitForVolumeAsync(); }, ShowError);
-        ResetDelays = new AsyncCommand(_ => { foreach (var speaker in LinkedSpeakers) speaker.DelayMs = 0; return Task.CompletedTask; }, ShowError);
+        ResetDelays = new AsyncCommand(_ => { ResetCalibrationDelays(); return Task.CompletedTask; }, ShowError);
         CalibrateCommand = new AsyncCommand(_ => CalibrateAsync(), ShowError);
         LikeCurrent = new AsyncCommand(_ => { if (CanLikeCurrent) ToggleLike(_current!.Id); return Task.CompletedTask; }, ShowError);
         TogglePlaylists = new AsyncCommand(_ => { PlaylistsExpanded = !PlaylistsExpanded; return Task.CompletedTask; }, ShowError);
@@ -206,6 +208,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (_disposed || value is null || value.Id == _source?.Id) return;
             _source = value;
+            InvalidateCalibration();
             var version = ++_sourceVersion;
             _sourceLookup?.Cancel();
             _radioRequest?.Cancel();
@@ -222,6 +225,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (value.Id == "youtube") { _view = "radio"; _playlistFilter = null; Raise(nameof(IsRadioPage)); Raise(nameof(IsMusicView)); }
             if (value.Id == "capture") Duration = 0;
             Raise(); RefreshTracks(); Raise(nameof(SpotifyMode)); Raise(nameof(YouTubeMode)); Raise(nameof(IsLocal)); Raise(nameof(RoutingAvailable)); RefreshCurrent();
+            RefreshActiveCalibration();
             Raise(nameof(PlaybackTargetLabel)); Raise(nameof(CanPlayLink));
             _sourceTransition = SwitchSourceAsync(version);
         }
@@ -387,7 +391,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             _settings.MasterVolume = Math.Clamp(value, 0, 100); Raise();
             if (_settings.MasterVolume > 0) _localVolumeBeforeMute = _settings.MasterVolume;
             if (!_applyingLink && ActiveLinkProfile is { } link) link.MasterVolume = _settings.MasterVolume;
-            foreach (var speaker in Speakers) _player.Update(speaker.Id, speaker.Preferences, _settings.MasterVolume);
+            foreach (var speaker in Speakers) _player.Update(speaker.Id, PlaybackPreferences(speaker), _settings.MasterVolume);
             if (!SpotifyMode) RefreshVolumeProperties();
             SaveSoon();
         }
@@ -441,6 +445,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             var link = ActiveLinkProfile;
             foreach (var speaker in Speakers)
             {
+                speaker.SetCalibratedDelay(null);
                 speaker.DelayStepMs = _delayStepMs;
                 if (link is not null && link.Speakers.TryGetValue(speaker.Id, out var member))
                 {
@@ -464,6 +469,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             }
         }
         finally { _applyingLink = false; }
+        RefreshActiveCalibration();
         RefreshLinks(); Raise(nameof(SelectedCount)); Raise(nameof(VisibleLinkSpeakers)); Raise(nameof(HasDelayControls));
     }
     private void BeginLinkEdit(SpeakerLink? link)
@@ -534,6 +540,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         var id = _source?.Id ?? "local";
         Raise(nameof(Text));
         RefreshDelaySteps();
+        RefreshCalibrationText();
         Raise(nameof(InterfaceFont)); Raise(nameof(InterfaceFontSize));
         Sources.Clear();
         Sources.Add(new("local", Text["Local"])); Sources.Add(new("capture", Text["Capture"])); Sources.Add(new("spotify", "Spotify"));
@@ -735,7 +742,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             member.Preferences = SpeakerLinks.Copy(speaker.Preferences);
             member.Name = speaker.Name; member.Transport = speaker.Device.Transport;
         }
-        _player.Update(speaker.Id, speaker.Preferences, MasterVolume); Raise(nameof(SelectedCount)); SaveSoon();
+        if (speaker.HasCalibratedDelay && CurrentCalibration is { } calibration && calibration.Speakers.TryGetValue(speaker.Id, out var calibrated))
+            calibrated.DelayMs = (int)speaker.DelayMs;
+        _player.Update(speaker.Id, PlaybackPreferences(speaker), MasterVolume); Raise(nameof(SelectedCount)); SaveSoon();
         if (!routeChanged || _changingSelection) return;
         if (speaker.Selected)
         {
@@ -773,6 +782,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public async Task PlayTrackAsync(MusicTrack? track, double resumePosition = 0, bool startPaused = false)
     {
         if (_disposed || Busy) return;
+        _calibrationResumeTrack = null;
         if (YouTubeMode && track?.FilePath is { } localPath && !YouTubeAddress.TryParse(localPath, out _))
         { Source = Sources.First(s => s.Id == "local"); await _sourceTransition; }
         var sourceVersion = _sourceVersion;
@@ -807,7 +817,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 var capture = Source?.Id == "capture";
                 if (!capture && track?.FilePath is null) throw new InvalidOperationException(Text["NoTracks"]);
-                var selected = SpeakerLinks.Resolve(ActiveLinkProfile!, Speakers.Select(s => s.Device));
+                var selected = SpeakerLinks.Resolve(ActiveLinkProfile!, Speakers.Select(s => s.Device), CurrentCalibrationPath);
                 if (selected.Count == 0) { await _player.StopAsync(); throw new InvalidOperationException(Text["LinkOffline"]); }
                 if (YouTubeMode)
                 {
@@ -867,7 +877,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (YouTubeMode && _current is null && _settings.RadioStations.FirstOrDefault() is { } station)
                 await PlayRadioAsync(station);
-            else await PlayTrackAsync(_current);
+            else await PlayTrackAsync(_current, _calibrationResumeTrack == _current?.Id ? _calibrationResumePosition : 0);
             return;
         }
         await _playGate.WaitAsync(_lifetime.Token);
@@ -1090,7 +1100,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private async Task TickAsync()
     {
-        if (_disposed || _ending) return;
+        if (_disposed || _ending || CalibrationRunning) return;
         if (IsPreparingPlayback) { RefreshPreparationFeedback(); RefreshSpeakerPlaybackStatus(); return; }
         if (_tickRunning)
         {
@@ -1209,6 +1219,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         _disposed = true; _timer.Stop(); _toastTimer.Stop(); ToastMessage = "";
         DetachLinkFeedback();
         _lifetime.Cancel(); _saveDelay?.Cancel(); _routeDelay?.Cancel();
+        _calibrationCancellation?.Cancel();
         _searchRequest?.Cancel(); _artworkRequest?.Cancel(); _lyricsRequest?.Cancel();
         _radioRequest?.Cancel();
         _player.CancelPreparation();

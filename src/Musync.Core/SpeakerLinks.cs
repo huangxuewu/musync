@@ -6,6 +6,7 @@ public sealed class SpeakerLink
     public string Name { get; set; } = "";
     public double MasterVolume { get; set; } = 65;
     public Dictionary<string, LinkedSpeaker> Speakers { get; set; } = new();
+    public Dictionary<string, CalibrationProfile> Calibrations { get; set; } = new();
 }
 
 public sealed class LinkedSpeaker
@@ -26,6 +27,7 @@ public static class SpeakerLinks
     public static SpeakerLink Draft(SpeakerLink? source) => source is null ? new() : new()
     {
         Id = source.Id, Name = source.Name, MasterVolume = source.MasterVolume,
+        Calibrations = CalibrationProfiles.Copy(source.Calibrations),
         Speakers = source.Speakers.ToDictionary(s => s.Key, s => new LinkedSpeaker
         {
             Name = s.Value.Name, Transport = s.Value.Transport,
@@ -55,12 +57,18 @@ public static class SpeakerLinks
     }
 
     public static IReadOnlyList<(SpeakerDevice Device, SpeakerPreferences Preferences)> Resolve(
-        SpeakerLink link, IEnumerable<SpeakerDevice> discovered)
+        SpeakerLink link, IEnumerable<SpeakerDevice> discovered, string? calibrationPath = null)
     {
+        var devices = discovered.ToArray();
+        var calibration = calibrationPath is null ? null : CalibrationProfiles.Active(link, calibrationPath, devices);
         // Never connect to stale saved addresses. Only current discovery can supply a route.
-        var routes = discovered.Where(d => d.UnsupportedReason is null && link.Speakers.ContainsKey(d.Id))
+        var routes = devices.Where(d => d.UnsupportedReason is null && link.Speakers.ContainsKey(d.Id))
             .Select(d => (Device: d, Preferences: Copy(link.Speakers[d.Id].Preferences))).ToArray();
-        foreach (var route in routes) route.Preferences.Selected = true;
+        foreach (var route in routes)
+        {
+            route.Preferences.Selected = true;
+            if (calibration is not null) route.Preferences.DelayMs = calibration.Speakers[route.Device.Id].DelayMs;
+        }
         return ReceiverRoutes.Choose(routes);
     }
 }
