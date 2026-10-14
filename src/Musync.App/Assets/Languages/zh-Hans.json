@@ -33,7 +33,7 @@
   "SpeakerConnecting": "连接中…",
   "SpeakerWaitingForSync": "等待同步",
   "Playing": "播放中",
-  "DeviceError": "连接错误",
+  "DeviceError": "需要处理",
   "MasterVolume": "总音量",
   "PlayEverywhere": "在所选扬声器播放",
   "Calibrate": "试听同步",
@@ -253,5 +253,14 @@
   "CalibrationChangeSettings": "更改设置",
   "CalibrationPreparingSpeaker": "正在准备 {0}…（{1}/{2} 已就绪）",
   "CalibrationSpeakerPreparingFailed": "无法准备 {0}。请检查它的连接后重试。",
-  "CalibrationSpeakerPlaybackFailed": "{0} 无法播放测试音。请检查它的连接后重试。"
+  "CalibrationSpeakerPlaybackFailed": "{0} 无法播放测试音。请检查它的连接后重试。",
+  "SpeakerDisconnected": "音响连接已断开。检查连接后重新扫描。",
+  "SpeakerStreamInterrupted": "音频流中断。重新扫描以重试。",
+  "SpeakerPlaybackStopped": "音响已停止播放。请重新扫描后再次播放。",
+  "SpeakerPlaybackReplaced": "音响正在播放其他内容。重新扫描以重试 Musync。",
+  "SpeakerLoadFailed": "音响无法加载歌曲。重新扫描以重试。",
+  "SpeakerLoadUnconfirmed": "音响未确认歌曲。重新扫描后再试。",
+  "SpeakerRequestRejected": "音响未执行此操作。请重试。",
+  "SpeakerDelayUnavailable": "无法读取音响进度。请再次调整延迟。",
+  "TechnicalDetails": "技术详情"
 }

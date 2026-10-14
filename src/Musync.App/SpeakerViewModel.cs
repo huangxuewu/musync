@@ -84,7 +84,9 @@ public sealed class SpeakerViewModel : ObservableObject
     public bool HasIssue => _error is not null || Device.UnsupportedReason is not null;
     public string StatusColor => HasIssue ? "#FFC970" : _phase == SpeakerPlaybackPhase.Playing ? "#64E8AD"
         : _phase is SpeakerPlaybackPhase.Connecting or SpeakerPlaybackPhase.WaitingForSync ? "#FF91A5" : "#CABFD4";
-    public string Details => _error ?? Status;
+    public string Details => _error is { } error ? PlaybackErrorPresentation.Format(error, _text) : Status;
+    public string DiagnosticDetails => _error is { } error && Details != error
+        ? Details + "\n\n" + _text["TechnicalDetails"] + "\n" + error : Details;
     public ObservableCollection<Choice> Rooms { get; } = new();
     public Choice? Room
     {
@@ -98,7 +100,7 @@ public sealed class SpeakerViewModel : ObservableObject
     {
         Rooms.Clear();
         foreach (var id in new[] { "all", "living", "bedroom", "kitchen" }) Rooms.Add(new(id, _text[id]));
-        foreach (var name in new[] { nameof(VolumeLabel), nameof(DelayLabel), nameof(RoomLabel), nameof(MuteLabel), nameof(DecreaseDelayLabel), nameof(IncreaseDelayLabel), nameof(Status), nameof(Details), nameof(Room) }) Raise(name);
+        foreach (var name in new[] { nameof(VolumeLabel), nameof(DelayLabel), nameof(RoomLabel), nameof(MuteLabel), nameof(DecreaseDelayLabel), nameof(IncreaseDelayLabel), nameof(Status), nameof(Details), nameof(DiagnosticDetails), nameof(Room) }) Raise(name);
     }
     public void UpdateStatus(bool playing, string? error)
         => UpdateStatus(playing ? SpeakerPlaybackPhase.Playing : SpeakerPlaybackPhase.Available, error);
@@ -106,12 +108,12 @@ public sealed class SpeakerViewModel : ObservableObject
     {
         if (_phase == phase && _error == error) return;
         _phase = phase; _error = error;
-        Raise(nameof(Status)); Raise(nameof(StatusColor)); Raise(nameof(Details)); Raise(nameof(HasIssue));
+        Raise(nameof(Status)); Raise(nameof(StatusColor)); Raise(nameof(Details)); Raise(nameof(DiagnosticDetails)); Raise(nameof(HasIssue));
     }
     public void UpdateDevice(SpeakerDevice device)
     {
         Device = device;
-        foreach (var name in new[] { nameof(Name), nameof(Transport), nameof(Icon), nameof(Available), nameof(Status), nameof(StatusColor), nameof(Details), nameof(HasIssue) }) Raise(name);
+        foreach (var name in new[] { nameof(Name), nameof(Transport), nameof(Icon), nameof(Available), nameof(Status), nameof(StatusColor), nameof(Details), nameof(DiagnosticDetails), nameof(HasIssue) }) Raise(name);
     }
     public void Detach() => _text.Changed -= RefreshText;
 }

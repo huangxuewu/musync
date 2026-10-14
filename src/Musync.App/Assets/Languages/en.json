@@ -33,7 +33,7 @@
   "SpeakerConnecting": "Connecting…",
   "SpeakerWaitingForSync": "Waiting for sync",
   "Playing": "Playing",
-  "DeviceError": "Connection error",
+  "DeviceError": "Needs attention",
   "MasterVolume": "Master volume",
   "PlayEverywhere": "Play on selected speakers",
   "Calibrate": "Test sync",
@@ -118,7 +118,7 @@
   "ResetSyncDelays": "Reset delays",
   "Links": "Links",
   "MainLink": "Main link",
-  "LinkConfiguration": "Link configuration",
+  "LinkConfiguration": "Link setup",
   "CreateLink": "Create link",
   "ConfigureLink": "Configure link",
   "ActiveLink": "Active link",
@@ -253,5 +253,14 @@
   "CalibrationChangeSettings": "Change setup",
   "CalibrationPreparingSpeaker": "Preparing {0}… ({1}/{2} ready)",
   "CalibrationSpeakerPreparingFailed": "{0} could not be prepared. Check its connection and try again.",
-  "CalibrationSpeakerPlaybackFailed": "{0} could not play the test sounds. Check its connection and try again."
+  "CalibrationSpeakerPlaybackFailed": "{0} could not play the test sounds. Check its connection and try again.",
+  "SpeakerDisconnected": "Speaker disconnected. Check its connection and rescan.",
+  "SpeakerStreamInterrupted": "Audio stream interrupted. Rescan to retry.",
+  "SpeakerPlaybackStopped": "Playback stopped on this speaker. Rescan and try playback again.",
+  "SpeakerPlaybackReplaced": "Another source is playing on this speaker. Rescan to retry Musync.",
+  "SpeakerLoadFailed": "The speaker could not load the music. Rescan to retry.",
+  "SpeakerLoadUnconfirmed": "The speaker did not confirm the song. Rescan and try again.",
+  "SpeakerRequestRejected": "The speaker could not apply the change. Try again.",
+  "SpeakerDelayUnavailable": "The speaker's position is unavailable. Try adjusting the delay again.",
+  "TechnicalDetails": "Technical details"
 }

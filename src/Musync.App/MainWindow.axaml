@@ -364,7 +364,7 @@
            IsLightDismissEnabled="True" OverlayInputPassThroughElement="{Binding ElementName=FullPlayerView}"
            Opened="SpeakerPopoverOpened" Closed="SpeakerPopoverClosed">
       <Border x:Name="SpeakerPanel" Classes="linkSurface" ZIndex="40" Width="336" Height="640" Background="{DynamicResource LinkSurfaceBrush}" CornerRadius="16" Padding="20" BoxShadow="0 10 28 0 #60251A35" KeyDown="SpeakerPopoverKeyDown" KeyboardNavigation.TabNavigation="Cycle">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
+        <Grid x:Name="LinkConfigurationLayout" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <TextBlock Text="{Binding LinkPopoverTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
@@ -425,7 +425,7 @@
                                 <TextBlock Classes="speakerStatus" Grid.Column="1" Text="{Binding Status}" Foreground="{DynamicResource LinkMutedBrush}" FontSize="11" TextWrapping="Wrap" ToolTip.Tip="{Binding Details}" AutomationProperties.LiveSetting="Polite"/>
                               </Grid>
                             </Grid>
-                            <TextBlock Classes="speakerIssue" Text="{Binding Details}" IsVisible="{Binding HasIssue}" Foreground="#FFC970" FontSize="11" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Details}"/>
+                            <TextBlock Classes="speakerIssue" Text="{Binding Details}" IsVisible="{Binding HasIssue}" Foreground="#FFC970" FontSize="11" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding DiagnosticDetails}" AutomationProperties.HelpText="{Binding Details}"/>
                           </StackPanel>
                           <Button Grid.Column="1" Classes="ghost iconButton" IsVisible="{Binding DraftControlsVisible}" Command="{Binding MuteCommand}" AutomationProperties.Name="{Binding MuteLabel}" ToolTip.Tip="{Binding MuteLabel}" VerticalAlignment="Top"><icons:LucideIcon Kind="{Binding MuteIcon}"/></Button>
                         </Grid>

@@ -33,7 +33,7 @@
   "SpeakerConnecting": "接続中…",
   "SpeakerWaitingForSync": "同期を待機中",
   "Playing": "再生中",
-  "DeviceError": "接続エラー",
+  "DeviceError": "確認が必要",
   "MasterVolume": "マスター音量",
   "PlayEverywhere": "選択したスピーカーで再生",
   "Calibrate": "同期を試聴",
@@ -253,5 +253,14 @@
   "CalibrationChangeSettings": "設定を変更",
   "CalibrationPreparingSpeaker": "{0} を準備中…（{1}/{2} 台準備完了）",
   "CalibrationSpeakerPreparingFailed": "{0} を準備できませんでした。接続を確認して再試行してください。",
-  "CalibrationSpeakerPlaybackFailed": "{0} でテスト音を再生できませんでした。接続を確認して再試行してください。"
+  "CalibrationSpeakerPlaybackFailed": "{0} でテスト音を再生できませんでした。接続を確認して再試行してください。",
+  "SpeakerDisconnected": "接続が切れました。接続を確認し、再検索してください。",
+  "SpeakerStreamInterrupted": "音声が途切れました。再検索して再試行してください。",
+  "SpeakerPlaybackStopped": "スピーカーで再生が停止されました。再検索して再生してください。",
+  "SpeakerPlaybackReplaced": "別の音源を再生中です。再検索して Musync を再試行してください。",
+  "SpeakerLoadFailed": "曲を読み込めませんでした。再検索して再試行してください。",
+  "SpeakerLoadUnconfirmed": "曲を確認できませんでした。再検索して再試行してください。",
+  "SpeakerRequestRejected": "操作を実行できませんでした。再試行してください。",
+  "SpeakerDelayUnavailable": "再生位置を確認できません。遅延をもう一度調整してください。",
+  "TechnicalDetails": "技術情報"
 }

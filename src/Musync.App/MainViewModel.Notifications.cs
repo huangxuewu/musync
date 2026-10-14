@@ -11,6 +11,7 @@ public sealed partial class MainViewModel
     private bool _toastTimerWired;
     private bool _toastIsImportSummary;
     private string? _reportedPlayerError;
+    private string? _reportedPlayerMessage;
     private long _playerErrorToastEpoch;
     private long _scanToastEpoch = -1;
 
@@ -57,8 +58,9 @@ public sealed partial class MainViewModel
     private void ReportPlayerError(string error)
     {
         _reportedPlayerError = error;
-        Status = error;
-        _playerErrorToastEpoch = ToastMessage == error ? ToastEpoch : -1;
+        _reportedPlayerMessage = PlaybackErrorPresentation.Format(error, Text);
+        Status = _reportedPlayerMessage;
+        _playerErrorToastEpoch = ToastMessage == _reportedPlayerMessage ? ToastEpoch : -1;
     }
     private void ShowScanToast(bool failed)
     {
@@ -74,11 +76,24 @@ public sealed partial class MainViewModel
     }
     private void ClearReportedPlayerError()
     {
-        if (_reportedPlayerError is { } error && ToastMessage == error && ToastEpoch == _playerErrorToastEpoch)
+        if (_reportedPlayerMessage is { } message && ToastMessage == message && ToastEpoch == _playerErrorToastEpoch)
         {
             _toastTimer.Stop(); _toastIsImportSummary = false; ToastMessage = "";
         }
         _reportedPlayerError = null;
+        _reportedPlayerMessage = null;
+    }
+    private void RefreshReportedPlayerErrorText()
+    {
+        if (_reportedPlayerError is not { } error || _reportedPlayerMessage is not { } previous) return;
+        var message = PlaybackErrorPresentation.Format(error, Text);
+        var ownsStatus = Status == previous;
+        var ownsToast = HasToast && ToastMessage == previous && ToastEpoch == _playerErrorToastEpoch;
+        _reportedPlayerMessage = message;
+        // Language changes preserve the existing notification's timer and
+        // ownership. Expired or newer notices must not be replayed or replaced.
+        if (ownsStatus) Set(ref _status, message, nameof(Status));
+        if (ownsToast) ToastMessage = message;
     }
     private void ShowPlaybackStatus()
     {
@@ -95,7 +110,7 @@ public sealed partial class MainViewModel
         {
             if (_reportedPlayerError != error) ReportPlayerError(error);
         }
-        else if (_reportedPlayerError is { } previous)
+        else if (_reportedPlayerMessage is { } previous)
         {
             var restoreStatus = Status == previous;
             ClearReportedPlayerError();

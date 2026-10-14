@@ -570,7 +570,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         foreach (var playlist in Playlists) playlist.RefreshText();
         RefreshRadioText();
         Raise(nameof(ArtworkCacheUsage));
-        if (!_session) Status = Text[IsSwitchingSource ? "SwitchingSource" : "Idle"];
+        if (_reportedPlayerError is not null) RefreshReportedPlayerErrorText();
+        else if (!_session) Status = Text[IsSwitchingSource ? "SwitchingSource" : "Idle"];
     }
     private void RefreshTracks()
     {
@@ -1212,7 +1213,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void LogError(Exception exception) => File.AppendAllText(Path.Combine(_dataDirectory, "musync.log"),
         DateTime.UtcNow.ToString("O") + " " + exception.GetType().Name + ": " + exception.Message + Environment.NewLine);
     private string ErrorMessage(Exception exception) => exception is SpotifyApiException spotifyError
-        ? Text[spotifyError.ErrorKey] : exception.Message == "NoOutputs" ? Text["NoOutputs"] : exception.Message;
+        ? Text[spotifyError.ErrorKey] : exception.Message == "NoOutputs" ? Text["NoOutputs"] : PlaybackErrorPresentation.Format(exception.Message, Text);
     private static void OpenBrowser(Uri uri) => Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
     internal CancellationToken ArtworkLifetime => _lifetime.Token;
     internal Task<TrackArtwork> ResolveListArtworkAsync(MusicTrack track, CancellationToken token) => _cacheOmittedTracks.Contains(track.Id)

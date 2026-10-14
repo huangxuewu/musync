@@ -271,7 +271,7 @@ public partial class MainWindow : Window
         if (IsMiniPlayer && e.PropertyName is (nameof(MainViewModel.LinkPanelOpen) or nameof(MainViewModel.SpeakerControlsOpen) or nameof(MainViewModel.SettingsOpen) or nameof(MainViewModel.PlaylistOpen))
             && _linkModel is { } model && (model.LinkPanelOpen || model.SpeakerControlsOpen || model.SettingsOpen || model.PlaylistOpen))
             RestoreFullPlayer(returnFocus: false);
-        if (e.PropertyName is nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkSummary)) UpdateSpeakerPanelSize();
+        if (e.PropertyName is nameof(MainViewModel.IsLinkEditing) or nameof(MainViewModel.LinkSummary) or nameof(MainViewModel.IsScanning)) UpdateSpeakerPanelSize();
         if (e.PropertyName == nameof(MainViewModel.IsLinkEditing)
             || (e.PropertyName == nameof(MainViewModel.HasLinkEditError) && _linkModel?.HasLinkEditError == true))
             Avalonia.Threading.Dispatcher.UIThread.Post(() => { if (SpeakerPopover.IsOpen) FocusLinkPanel(); });
@@ -323,9 +323,10 @@ public partial class MainWindow : Window
         var maximum = Math.Clamp(Bounds.Height - 152, 360, 740);
         SpeakerPanel.Width = _linkModel?.IsLinkEditing == true ? 440 : 336;
         SpeakerPanel.MaxHeight = maximum;
-        var content = _linkModel is null || _linkModel.IsLinkEditing ? 640
-            : 240 + _linkModel.LinkedSpeakers.Count * 90;
-        SpeakerPanel.Height = _linkModel is { NoLinks: true, IsLinkEditing: false } ? double.NaN : Math.Min(maximum, content);
+        var editing = _linkModel?.IsLinkEditing == true;
+        LinkConfigurationLayout.RowDefinitions[2].Height = editing ? new GridLength(1, GridUnitType.Star) : GridLength.Auto;
+        LinkDeviceList.MaxHeight = editing ? double.PositiveInfinity : Math.Max(100, maximum - 240 - (_linkModel?.IsScanning == true ? 36 : 0));
+        SpeakerPanel.Height = editing ? Math.Min(maximum, 640) : double.NaN;
         SpeakerControlsPanel.MaxHeight = maximum;
         SpeakerControlsPanel.Height = Math.Min(maximum, _linkModel?.HasActiveLink == true ? 80 + _linkModel.LinkedSpeakers.Count * 148 : 124);
     }
