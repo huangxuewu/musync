@@ -20,7 +20,9 @@ if (-not (Test-Path -LiteralPath (Join-Path $taskDestination 'AirPlayBridge/node
     Copy-Item -LiteralPath (Join-Path $taskNode 'node.exe') -Destination $taskOutput -Force
     Copy-Item -LiteralPath (Join-Path $taskNode 'LICENSE') -Destination (Join-Path $taskOutput 'NODE-LICENSE.txt') -Force
 }
-@'
+[xml]$taskProperties = Get-Content -LiteralPath (Join-Path $taskRoot 'Directory.Build.props') -Raw
+$taskVersion = [string]$taskProperties.Project.PropertyGroup.Version
+@"
 yt-dlp 2026.08.19 (unmodified separate executable):
 https://github.com/yt-dlp/yt-dlp/releases/tag/2026.08.19
 https://github.com/yt-dlp/yt-dlp/tree/2026.08.19
@@ -31,9 +33,9 @@ https://github.com/FFmpeg/FFmpeg/tree/46d899d7a0
 https://github.com/BtbN/FFmpeg-Builds
 Shared libraries remain replaceable. See FFMPEG-LICENSE.txt and FFMPEG-GPL-3.0.txt for terms.
 The matching FFmpeg source and build recipes are also supplied as
-FFmpeg-Sources-1.0.1.zip with the Musync 1.0.1 release:
-https://github.com/huangxuewu/musync/releases/tag/v1.0.1
+FFmpeg-Sources-$taskVersion.zip with the Musync $taskVersion release:
+https://github.com/huangxuewu/musync/releases/tag/v$taskVersion
 
 The Node runtime and its license are in RadioTools or AirPlayBridge.
-'@ | Set-Content -LiteralPath (Join-Path $taskOutput 'SOURCES.txt') -Encoding utf8
+"@ | Set-Content -LiteralPath (Join-Path $taskOutput 'SOURCES.txt') -Encoding utf8
 Write-Output "Radio helpers and licenses copied to $taskOutput"

@@ -9,8 +9,8 @@ These unmodified executables run as separate processes. RadioTools contains
 their license texts, third-party notices and source links. FFmpeg shared
 libraries remain replaceable. Radio reuses the bundled Node runtime.
 The LGPL v3 and incorporated GPL v3 license texts are included. Matching
-FFmpeg source and build recipes are provided as FFmpeg-Sources-1.0.1.zip:
-https://github.com/huangxuewu/musync/releases/tag/v1.0.1
+FFmpeg source and build recipes are provided as FFmpeg-Sources-1.0.2.zip:
+https://github.com/huangxuewu/musync/releases/tag/v1.0.2
 
 Avalonia 12.1.4 — MIT
 https://github.com/AvaloniaUI/Avalonia/blob/master/licence.md
@@ -35,6 +35,10 @@ https://developer.spotify.com/images/guidelines/design/2024-spotify-logo-icon.zi
 
 SharpCaster 3.0.0 — MIT
 https://github.com/Tapanila/SharpCaster/blob/d04aa95f8a518c6b0434012e3feee7ce3f36ef61/LICENSE.txt
+The pinned source dependency carries one Musync patch forwarding every
+MEDIA_STATUS entry. Its MIT license, upstream hashes and patch are retained
+in Licenses/third-party/SharpCaster; source is in third-party/SharpCaster
+in the Musync repository. No other upstream transport code is modified.
 
 Makaretu.Dns.Multicast 0.27.0 — MIT
 https://github.com/richardschneider/net-mdns
