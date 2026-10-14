@@ -339,14 +339,15 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public bool PlayEnabled => !Busy && !IsPreparingPlayback && (!YouTubeMode || _current is not null || RadioStations.Count > 0);
     private bool PreparingRadioAudio => YouTubeMode && _startingPlayback && !RadioLoading
         && (!_player.IsPreparing || _player.PreparingOutputs == 0);
-    public string PreparationHeadline => Text[_player.IsActivating ? "StartingPlayback" : YouTubeMode && RadioLoading ? "RadioLoadingTitle" : PreparingRadioAudio ? "RadioBuffering" : "PreparingSpeakers"];
-    public string PreparationSummary => _player.IsActivating || YouTubeMode && (RadioLoading || PreparingRadioAudio) ? PreparationHeadline : PreparationDetail;
+    private bool StartingPreparedPlayback => _player.IsInitializingSource || _player.IsActivating;
+    public string PreparationHeadline => Text[StartingPreparedPlayback ? "StartingPlayback" : YouTubeMode && RadioLoading ? "RadioLoadingTitle" : PreparingRadioAudio ? "RadioBuffering" : "PreparingSpeakers"];
+    public string PreparationSummary => StartingPreparedPlayback || YouTubeMode && (RadioLoading || PreparingRadioAudio) ? PreparationHeadline : PreparationDetail;
     public string PreparationDetail
     {
         get
         {
             var total = _player.IsPreparing ? _player.PreparingOutputs : 0;
-            if (_player.IsActivating) return Text["StartingPlaybackDetail"];
+            if (StartingPreparedPlayback) return Text["StartingPlaybackDetail"];
             if (YouTubeMode && RadioLoading) return Text["RadioLoadingDetail"];
             if (PreparingRadioAudio) return Text["RadioBufferingDetail"];
             return string.Format(Text["SpeakerPreparationProgress"], _player.IsPreparing ? _player.ReadyOutputs : 0,

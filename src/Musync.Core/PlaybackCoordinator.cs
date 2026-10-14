@@ -22,6 +22,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private volatile bool _sourceEnded;
     private volatile bool _preparing;
     private volatile bool _activating;
+    private volatile bool _initializingSource;
     private int _preparingOutputs;
     private int _stopVersion;
     private sealed record ControlFailure(IAudioOutput Output, string Detail)
@@ -44,6 +45,7 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
     private ControlUpdateSession? _controlUpdateSession;
     public bool IsPreparing => _preparing;
     public bool IsActivating => _activating;
+    public bool IsInitializingSource => _initializingSource;
     public int ReadyOutputs => _preparedOutputs.Count;
     public bool IsOutputPrepared(string id) => _preparedOutputs.ContainsKey(id);
     public int PreparingOutputs => Volatile.Read(ref _preparingOutputs);
@@ -178,23 +180,48 @@ public sealed class PlaybackCoordinator : IAsyncDisposable
             // Source initialization may expose duration and the seek position,
             // but must not consume music while playback confirmation is pending.
             backend.Pause(true); _hub.SetPaused(true);
+            var sourceEntered = new TaskCompletionSource<Exception?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Exception? startupSourceFailure = null;
+            _initializingSource = true;
             _sourceTask = Task.Run(async () =>
             {
                 try
                 {
                     token.ThrowIfCancellationRequested();
-                    if (capture) await backend.CaptureAsync(source, _hub, token);
-                    else
-                    {
-                        await backend.PlayFileAsync(source, _hub, token, position);
-                        if (backend.IsFinished && !token.IsCancellationRequested) await DrainTail(token);
-                    }
+                    // Current backends open their reader/device and establish
+                    // this source's position before returning their async task.
+                    // Do that work off the UI thread before activating receivers.
+                    var playback = capture ? backend.CaptureAsync(source, _hub, token)
+                        : backend.PlayFileAsync(source, _hub, token, position);
+                    if (playback.IsCompleted) await playback;
+                    sourceEntered.TrySetResult(null);
+                    await playback;
+                    if (!capture && backend.IsFinished && !token.IsCancellationRequested) await DrainTail(token);
                 }
-                catch (OperationCanceledException) { }
-                catch (Exception ex) { Error = ex.Message; _sourceFailed = true; IsPlaying = false; }
+                catch (OperationCanceledException ex) { sourceEntered.TrySetResult(ex); }
+                catch (Exception ex)
+                {
+                    Volatile.Write(ref startupSourceFailure, ex);
+                    Error = ex.Message; _sourceFailed = true; IsPlaying = false;
+                    sourceEntered.TrySetResult(ex);
+                }
             });
+            try
+            {
+                if (await sourceEntered.Task.WaitAsync(token) is { } initializationFailure)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(initializationFailure).Throw();
+                token.ThrowIfCancellationRequested();
+            }
+            finally { _initializingSource = false; }
+            void EnsureSourceCanStart()
+            {
+                token.ThrowIfCancellationRequested();
+                if (Volatile.Read(ref startupSourceFailure) is { } failure)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+            }
+            EnsureSourceCanStart();
             if (!paused) await ReleasePreparedOutputs(token);
-            token.ThrowIfCancellationRequested();
+            EnsureSourceCanStart();
             if (!paused)
             {
                 _hub.SetPaused(false); backend.Pause(false); _captureClock.Start();

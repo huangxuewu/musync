@@ -10,6 +10,7 @@ public sealed class RoutingTests
         public string? Source;
         public bool Paused;
         public bool FailSource;
+        public Task? SourceFailureSignal;
         public AudioHub? Hub;
         public readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public readonly TaskCompletionSource Stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -22,6 +23,11 @@ public sealed class RoutingTests
             try
             {
                 if (FailSource) throw new IOException("Source decode failed");
+                if (SourceFailureSignal is not null)
+                {
+                    await SourceFailureSignal.WaitAsync(token);
+                    throw new IOException("Source decode failed");
+                }
                 await Task.Delay(Timeout.Infinite, token);
             }
             finally { Stopped.TrySetResult(); }
@@ -216,8 +222,10 @@ public sealed class RoutingTests
     public async Task ReceiverControlResultsDoNotReplaceOrClearFatalSourceErrors()
     {
         var output = new Output(new("speaker", "Speaker", SpeakerTransport.Chromecast));
-        await using var player = new PlaybackCoordinator(new Backend { FailSource = true }, _ => output);
+        var fail = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var player = new PlaybackCoordinator(new Backend { SourceFailureSignal = fail.Task }, _ => output);
         await player.StartAsync("broken.wav", false, [(output.Device, new())], 100);
+        fail.SetResult();
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         while (player.Error is null) await Task.Delay(10, deadline.Token);
         Assert.Equal("Source decode failed", player.Error);
@@ -369,14 +377,13 @@ public sealed class RoutingTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task SourceFailureClosesOutputsEvenWhenStartedPaused(bool paused)
+    public async Task InitialSourceFailureClosesPreparedOutputsEvenWhenStartingPaused(bool paused)
     {
         var backend = new Backend { FailSource = true };
         var output = new Output(new("good", "Good", SpeakerTransport.Windows));
         await using var player = new PlaybackCoordinator(backend, _ => output);
-        await player.StartAsync("broken.wav", false, [(output.Device, new())], 100, paused: paused);
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        while (player.Error is null) await Task.Delay(10, deadline.Token);
+        var error = await Assert.ThrowsAsync<IOException>(() => player.StartAsync("broken.wav", false, [(output.Device, new())], 100, paused: paused));
+        Assert.Equal("Source decode failed", error.Message);
         await player.CheckOutputsAsync();
         Assert.Equal("Source decode failed", player.Error);
         Assert.False(player.IsPlaying); Assert.Empty(player.Outputs); Assert.True(output.Disposed);
