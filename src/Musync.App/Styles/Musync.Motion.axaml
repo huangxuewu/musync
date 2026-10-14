@@ -18,6 +18,12 @@
   <Style Selector="Window.motionEnabled Border.trackPlayOverlay">
     <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="SineEaseInOut"/></Transitions></Setter>
   </Style>
+  <Style Selector="Window.motionEnabled ScrollViewer.musicScroll /template/ ScrollBar#PART_VerticalScrollBar">
+    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="SineEaseInOut"/></Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motionEnabled ScrollViewer.musicScroll /template/ ScrollBar /template/ Thumb">
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.14"/></Transitions></Setter>
+  </Style>
   <Style Selector="Window.motionEnabled icons|LucideIcon.radioAction">
     <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.14"/></Transitions></Setter>
   </Style>

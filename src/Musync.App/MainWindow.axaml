@@ -160,7 +160,7 @@
             <TextBlock x:Name="SearchFeedback" Grid.Row="1" Text="{Binding SearchNote}" IsVisible="{Binding HasSearchFeedback}" Classes="searchFeedback" Classes.error="{Binding HasSearchError}" FontSize="11" TextWrapping="Wrap" Margin="4,8,0,0"
                        AutomationProperties.LiveSetting="Polite"/>
           </Grid>
-          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+          <ScrollViewer x:Name="MusicScroll" Grid.Row="1" Classes.musicScroll="{Binding IsMusicView}" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="24">
               <Grid x:Name="HeroScene" ColumnDefinitions="1.618*,*" MinHeight="330" ClipToBounds="False" IsVisible="{Binding ShowHero}">
                   <icons:PosterBackdrop x:Name="HeroSurface" Grid.ColumnSpan="2" ZIndex="10" Palette="{Binding PosterPalette}" Margin="0,24,0,0" IsHitTestVisible="False"/>

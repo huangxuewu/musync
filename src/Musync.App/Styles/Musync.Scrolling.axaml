@@ -1,5 +1,71 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Styles.Resources>
+    <ControlTheme x:Key="MusyncMusicScrollThumb" TargetType="Thumb">
+      <Setter Property="Background" Value="#887A90"/>
+      <Setter Property="Width" Value="16"/>
+      <Setter Property="MinHeight" Value="36"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Width="6" CornerRadius="3" HorizontalAlignment="Center" Background="{TemplateBinding Background}"/>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover"><Setter Property="Background" Value="#5F506C"/></Style>
+      <Style Selector="^:pressed"><Setter Property="Background" Value="#251A35"/></Style>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncMusicScrollPage" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Template"><ControlTemplate><Border Background="Transparent"/></ControlTemplate></Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncMusicScrollBar" TargetType="ScrollBar">
+      <Setter Property="Width" Value="16"/>
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Opacity" Value="0"/>
+      <Setter Property="ShowDelay" Value="0:0:0"/>
+      <Setter Property="HideDelay" Value="0:0:0"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Track Name="PART_Track" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                 Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                 Orientation="Vertical" IsDirectionReversed="True"
+                 DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}">
+            <Track.DecreaseButton><RepeatButton Name="PART_PageUpButton" Theme="{StaticResource MusyncMusicScrollPage}"/></Track.DecreaseButton>
+            <Track.IncreaseButton><RepeatButton Name="PART_PageDownButton" Theme="{StaticResource MusyncMusicScrollPage}"/></Track.IncreaseButton>
+            <Thumb Theme="{StaticResource MusyncMusicScrollThumb}"/>
+          </Track>
+        </ControlTemplate>
+      </Setter>
+      <!-- Avalonia retains expansion during a captured thumb drag, even outside the rail. -->
+      <Style Selector="^[IsExpanded=true]"><Setter Property="Opacity" Value="1"/></Style>
+    </ControlTheme>
+    <ControlTheme x:Key="MusyncMusicScrollViewer" TargetType="ScrollViewer">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Grid>
+            <!-- Extend into the existing right margin; keep the list's original width. -->
+            <ScrollContentPresenter Name="PART_ContentPresenter" Margin="0,0,20,0" Background="{TemplateBinding Background}"
+                                    HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                    VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
+                                    HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                                    VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                                    Padding="{TemplateBinding Padding}" ClipToBounds="True"
+                                    ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+              <ScrollContentPresenter.GestureRecognizers>
+                <ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                         CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                         IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}"
+                                         Offset="{Binding Offset, ElementName=PART_ContentPresenter}"
+                                         Viewport="{Binding Viewport, ElementName=PART_ContentPresenter}"
+                                         Extent="{Binding Extent, ElementName=PART_ContentPresenter}"/>
+              </ScrollContentPresenter.GestureRecognizers>
+            </ScrollContentPresenter>
+            <ScrollBar Name="PART_VerticalScrollBar" Orientation="Vertical" HorizontalAlignment="Right" Margin="0,6,2,6"
+                       Theme="{StaticResource MusyncMusicScrollBar}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ ScrollBar#PART_VerticalScrollBar"><Setter Property="Opacity" Value="1"/></Style>
+    </ControlTheme>
     <ControlTheme x:Key="MusyncScrollViewer" TargetType="ScrollViewer">
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="VerticalScrollBarVisibility" Value="Hidden"/>
@@ -28,4 +94,9 @@
     </ControlTheme>
   </Styles.Resources>
   <Style Selector="ScrollViewer"><Setter Property="Theme" Value="{StaticResource MusyncScrollViewer}"/></Style>
+  <Style Selector="ScrollViewer.musicScroll">
+    <Setter Property="Theme" Value="{StaticResource MusyncMusicScrollViewer}"/>
+    <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="Margin" Value="0,0,-20,0"/>
+  </Style>
 </Styles>

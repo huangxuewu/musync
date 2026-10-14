@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Music lists use a custom macOS-style rounded scroll thumb in the existing right margin. It appears on hover, fades out over 180 ms, stays visible during dragging and hides when the content fits. Wheel, gesture and page scrolling retain their existing behavior; reduced motion removes the fade, and other panels keep their hidden scrollbars.
 - Cover hover preserves the artwork's original backing color and avoids a pressed-opacity flash. The existing play/pause overlay fades over 200 ms with gentle easing; keyboard focus and reduced-motion feedback retain their direct behavior.
 - Keep the full-player seek axis at a stable position and width as time digits or song duration change. Fixed time columns prevent proportional numeral widths from resizing the track; the axis still adapts when the window is resized.
 - Calibration preparation shows the current receiver's name alongside the ready count. Preparation, activation and playback failures retain their device context through cleanup, then offer a localized connection/retry instruction in the existing dialog. Raw receiver errors are not displayed; cancellation, saved profiles and retry remain available.
