@@ -15,6 +15,10 @@
     <Style Selector="TextBlock.trackTitle.current"><Setter Property="Foreground" Value="#B52C47"/></Style>
     <Style Selector="Button.trackPlay Border.trackPlayOverlay"><Setter Property="Opacity" Value="0"/></Style>
     <Style Selector="Button.trackPlay:pointerover Border.trackPlayOverlay, Button.trackPlay:focus-visible Border.trackPlayOverlay"><Setter Property="Opacity" Value="1"/></Style>
+    <Style Selector="Button.trackPlay:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}"/>
+    </Style>
+    <Style Selector="Button.trackPlay:pressed"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="icons|PreparationIndicator.trackActivity"><Setter Property="MotionEnabled" Value="False"/></Style>
     <Style Selector="Window.motionEnabled.trackPlaybackVisible icons|PreparationIndicator.trackActivity"><Setter Property="MotionEnabled" Value="True"/></Style>
     <Style Selector="icons|PreparationIndicator.radioActivity"><Setter Property="MotionEnabled" Value="False"/></Style>
