@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Local music rows show a small localized lossless badge beside the artist for verified lossless source files, with the codec in its tooltip. Header inspection runs lazily off the UI thread and reuses a bounded cache keyed by file size and modification time; AAC, compressed WAV, unknown and damaged sources do not gain the badge. The badge describes the source file, independent of speaker transport encoding.
 - Settings use one fixed panel height across General, Audio and Spotify. Switching sections keeps the panel and Save button in place while longer content scrolls inside the existing viewport.
 - Music lists use a custom macOS-style rounded scroll thumb in the existing right margin. It appears on hover, fades out over 180 ms, stays visible during dragging and hides when the content fits. Wheel, gesture and page scrolling retain their existing behavior; reduced motion removes the fade, and other panels keep their hidden scrollbars.
 - Cover hover preserves the artwork's original backing color and avoids a pressed-opacity flash. The existing play/pause overlay fades over 200 ms with gentle easing; keyboard focus and reduced-motion feedback retain their direct behavior.

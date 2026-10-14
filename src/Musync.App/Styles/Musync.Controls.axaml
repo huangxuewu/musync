@@ -1,5 +1,16 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:icons="using:Musync.App.Controls">
   <!-- Musync visuals; Avalonia template-part contracts follow Avalonia 12.1.4 (MIT). -->
+  <Style Selector="Border.losslessBadge">
+    <Setter Property="Background" Value="#F0EAF4"/>
+    <Setter Property="CornerRadius" Value="5"/>
+    <Setter Property="Padding" Value="7,2"/>
+    <Setter Property="Height" Value="20"/>
+  </Style>
+  <Style Selector="TextBlock.losslessBadgeText">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="#674C75"/>
+  </Style>
   <Styles.Resources>
     <SolidColorBrush x:Key="MusyncComboPopupSurfaceBrush" Color="White"/>
     <SolidColorBrush x:Key="MusyncComboPopupBorderBrush" Color="#E5DFEA"/>

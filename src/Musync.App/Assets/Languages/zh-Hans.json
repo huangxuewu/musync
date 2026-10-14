@@ -13,6 +13,8 @@
   "NoSyncedLyrics": "暂无同步歌词",
   "Search": "搜索歌曲、艺人…",
   "Recent": "你的音乐",
+  "Lossless": "无损",
+  "LosslessSourceDetails": "{0} · 无损源文件",
   "Local": "本地音乐",
   "Capture": "Windows 音频",
   "Spotify": "Spotify",

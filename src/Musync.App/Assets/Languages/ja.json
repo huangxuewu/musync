@@ -13,6 +13,8 @@
   "NoSyncedLyrics": "同期歌詞がありません",
   "Search": "曲やアーティストを検索…",
   "Recent": "あなたの音楽",
+  "Lossless": "ロスレス",
+  "LosslessSourceDetails": "{0} · ロスレス音源ファイル",
   "Local": "ローカル音楽",
   "Capture": "Windows オーディオ",
   "Spotify": "Spotify",

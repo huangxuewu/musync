@@ -13,6 +13,8 @@
   "NoSyncedLyrics": "No synced lyrics available",
   "Search": "Search songs, artists…",
   "Recent": "Your music",
+  "Lossless": "Lossless",
+  "LosslessSourceDetails": "{0} · Lossless source file",
   "Local": "Local music",
   "Capture": "Windows audio",
   "Spotify": "Spotify",

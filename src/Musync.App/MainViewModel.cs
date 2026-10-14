@@ -14,6 +14,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly PlaybackCoordinator _player;
     private readonly SpotifyClient _spotify;
     private readonly SpotifyArtworkResolver _listArtwork;
+    private readonly LosslessSourceProbe _losslessSources = new();
     private readonly SettingsStore _store;
     private readonly AppSettings _settings;
     private readonly string _dataDirectory;
@@ -55,6 +56,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private SpeakerLink? _linkDraft;
     private bool _linkEditing, _linkPanelOpen, _applyingLink;
     private string _linkName = "", _linkEditError = "";
+
+    internal Task<string?> ReadLosslessSourceAsync(MusicTrack track, CancellationToken token) =>
+        Task.Run(() => _losslessSources.Read(track.FilePath), token);
 
     public MainViewModel(IAudioBackend backend, PlaybackCoordinator player, SpotifyClient spotify,
         SettingsStore store, AppSettings settings, string dataDirectory,

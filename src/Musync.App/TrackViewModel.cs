@@ -12,6 +12,7 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     private Task? _loading;
     private bool _disposed, _attempted, _visible;
     private string? _artworkSpotifyUri;
+    private string? _losslessCodec;
     private TrackPlaybackPhase _phase;
     public TrackViewModel(MusicTrack track, MainViewModel owner)
     {
@@ -30,6 +31,9 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public MusicTrack Track { get; private set; }
     public string Title => Track.Title;
     public string Artist => Track.Artist;
+    public bool HasLosslessSource => _losslessCodec is not null;
+    public string LosslessLabel => _owner.Text["Lossless"];
+    public string LosslessDetails => string.Format(_owner.Text["LosslessSourceDetails"], _losslessCodec);
     public string Duration => TimeSpan.FromSeconds(Track.DurationSeconds).ToString(@"m\:ss");
     public bool Liked => _owner.IsLiked(Track.Id);
     public string LikeLabel => _owner.Text[Liked ? "Unlike" : "Like"];
@@ -71,6 +75,10 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
         await Task.Yield();
         try
         {
+            var codec = await _owner.ReadLosslessSourceAsync(Track, request.Token);
+            if (_disposed || request.IsCancellationRequested) return;
+            _losslessCodec = codec;
+            Raise(nameof(HasLosslessSource)); Raise(nameof(LosslessDetails));
             var result = await _owner.ResolveListArtworkAsync(Track, request.Token);
             if (_disposed || request.IsCancellationRequested) return;
             _owner.ApplyLocalMetadata(result.Metadata);

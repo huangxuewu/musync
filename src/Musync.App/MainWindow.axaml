@@ -218,7 +218,13 @@
                         </Button>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="5">
                           <TextBlock Classes="trackTitle" Classes.current="{Binding IsCurrentTrack}" Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                          <TextBlock Text="{Binding Artist}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding Artist}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            <Border Grid.Column="1" Classes="losslessBadge" IsVisible="{Binding HasLosslessSource}"
+                                    ToolTip.Tip="{Binding LosslessDetails}" AutomationProperties.Name="{Binding LosslessDetails}">
+                              <TextBlock Text="{Binding LosslessLabel}" Classes="losslessBadgeText" VerticalAlignment="Center"/>
+                            </Border>
+                          </Grid>
                         </StackPanel>
                         <Button Grid.Column="2" Classes="ghost" Command="{Binding OpenArtworkSource}" IsVisible="{Binding HasArtwork}" Width="48" Height="48" Padding="12" AutomationProperties.Name="{Binding ArtworkSourceLabel}" ToolTip.Tip="{Binding ArtworkSourceLabel}">
                           <Image Source="avares://Musync/Assets/Spotify/icon-black.png" Width="24" Height="24" Stretch="Uniform"
