@@ -16,6 +16,8 @@ public sealed partial class SpotifyPlaybackTests
     private sealed class PresentationBackend : IAudioBackend
     {
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _playStarts;
+        public int PlayStarts => Volatile.Read(ref _playStarts);
         public TaskCompletionSource? SourcePreparation;
         public Task PrepareSourceAsync(string source, CancellationToken token) => SourcePreparation?.Task.WaitAsync(token) ?? Task.CompletedTask;
         public double Position { get; private set; }
@@ -25,7 +27,7 @@ public sealed partial class SpotifyPlaybackTests
         public IReadOnlyList<SpeakerDevice> GetDevices() => [new("test-output", "Test output", SpeakerTransport.Windows)];
         public IAudioOutput CreateOutput(SpeakerDevice device) => new PresentationOutput(device);
         public async Task PlayFileAsync(string path, AudioHub hub, CancellationToken token, double startPosition = 0)
-        { Position = startPosition; Started.TrySetResult(); await Task.Delay(Timeout.Infinite, token); }
+        { Position = startPosition; Interlocked.Increment(ref _playStarts); Started.TrySetResult(); await Task.Delay(Timeout.Infinite, token); }
         public Task CaptureAsync(string id, AudioHub hub, CancellationToken token) => throw new InvalidOperationException();
         public void Pause(bool paused) { }
         public void Seek(double seconds) => Position = seconds;

@@ -797,6 +797,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         if (_disposed || Busy) return;
         _calibrationResumeTrack = null;
+        KeepLocalRetryPosition(track, resumePosition);
         if (YouTubeMode && track?.FilePath is { } localPath && !YouTubeAddress.TryParse(localPath, out _))
         { Source = Sources.First(s => s.Id == "local"); await _sourceTransition; }
         var sourceVersion = _sourceVersion;
@@ -856,6 +857,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 Duration = _player.Duration;
             }
             ResetProgressTransition();
+            _interruptedLocalPlayback = null;
             _session = true; _activeSource = Source?.Id; IsPlaying = SpotifyMode || _player.IsPlaying; Position = resumePosition;
             if (SpotifyMode) AnchorSpotifyProgress(Position);
             _spotifyNextPoll = DateTime.UtcNow.AddSeconds(2);
@@ -867,6 +869,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         catch (Exception) when (!OwnsSource(sourceVersion)) { /* The new source owns the visible state. */ }
         catch (OperationCanceledException) when (_preparationCancelled)
         {
+            _interruptedLocalPlayback = null;
             _session = false; IsPlaying = false; Status = Text["Idle"]; RefreshCurrent();
         }
         catch (Exception ex)
@@ -891,7 +894,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (YouTubeMode && _current is null && _settings.RadioStations.FirstOrDefault() is { } station)
                 await PlayRadioAsync(station);
-            else await PlayTrackAsync(_current, _calibrationResumeTrack == _current?.Id ? _calibrationResumePosition : 0);
+            else await PlayTrackAsync(_current, _calibrationResumeTrack == _current?.Id ? _calibrationResumePosition : InterruptedLocalResumePosition);
             return;
         }
         await _playGate.WaitAsync(_lifetime.Token);
@@ -936,6 +939,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 IsPlaying = _player.IsPlaying;
                 _session = _player.Outputs.Count > 0;
+                if (!_session && _player.Error is not null) RememberInterruptedLocalPlayback(Position, Duration);
                 RefreshCurrent();
             }
             throw;
@@ -944,6 +948,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private async Task StopAsync(bool resetStatus = true)
     {
+        _interruptedLocalPlayback = null;
         _spotifyStateVersion++;
         if (_activeSource == "spotify" && _spotify.Connected) await _spotify.PauseAsync(_lifetime.Token);
         await _player.StopAsync(); _session = false; IsPlaying = false; Position = 0; Raise(nameof(Seekable));
@@ -1145,12 +1150,18 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         if (!SpotifyMode)
         {
             var sourceVersion = _sourceVersion;
+            var positionBeforeCleanup = _player.Position;
+            var durationBeforeCleanup = _player.Duration;
             await _player.CheckOutputsAsync();
             // Receiver cleanup may await network timeouts. Its old poll must
             // not restore progress or errors after a source/link transition,
             // or publish a toast after the view model has been disposed.
             if (!OwnsSource(sourceVersion) || SpotifyMode || Busy || !_session) return;
-            RefreshLocalProgress();
+            // Freeze the last local timeline before slow receiver cleanup.
+            // Only an explicit Play may recreate the failed routes.
+            if (IsLocal && _player.Outputs.Count == 0 && _player.Error is not null)
+                RememberInterruptedLocalPlayback(positionBeforeCleanup, durationBeforeCleanup);
+            else RefreshLocalProgress();
             RefreshSpeakerPlaybackStatus();
             if (!_player.IsPlaying && _player.Error is not null) IsPlaying = false;
             if (_player.Outputs.Count == 0)
