@@ -30,6 +30,8 @@ public sealed partial class SpotifyPlaybackTests
             Assert.False(model.PlayEnabled); Assert.False(model.Seekable); Assert.Equal(12, model.Position);
             Assert.Equal(99, fixture.Backend.Position); Assert.Equal(0, fixture.Backend.PlayStarts);
             Assert.Equal(model.Text["SpeakerWaitingForSync"], Assert.Single(model.LinkedSpeakers).Status);
+            var row = model.Tracks.Single(track => track.Track.Id == fixture.First.Id);
+            Assert.Equal(model.PreparationHeadline, row.PlaybackStatus); Assert.Equal(row.PlaybackStatus, row.PlaybackDetails);
             using (var initial = CaptureTrackReviewFrame(window)) SaveReviewFrame(initial, $"source-entry-{language}-incumbent.png");
             await CheckLocalSourceEntrySurface(window, model, $"source-entry-{language}-1120");
             ready.Set(); await start.WaitAsync(TimeSpan.FromSeconds(3)); await PollPlayback(model);

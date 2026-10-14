@@ -323,7 +323,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public string ListTitle { get => _listTitle; private set => Set(ref _listTitle, value); }
     public bool IsPlaying { get => _isPlaying; private set { if (Set(ref _isPlaying, value)) { Raise(nameof(PlayIcon)); Raise(nameof(PlayLabel)); RefreshTrackPlayback(); RefreshRadioPlayback(); } } }
     public string PlayIcon => IsPlaying ? "pause" : "play";
-    public string PlayLabel => IsSwitchingSource ? Text["SwitchingSource"] : IsPreparingPlayback ? PreparationHeadline : Text[IsPlaying ? "Pause" : "Play"];
+    public string PlayLabel => IsSwitchingSource ? Text["SwitchingSource"] : IsPreparingPlayback ? PreparationHeadline
+        : _current is { } track && TrackPlaybackError(track) is not null ? string.Format(Text["TrackRetryNamed"], track.Title)
+        : Text[IsPlaying ? "Pause" : "Play"];
     public bool IsPreparingPlayback
     {
         get => _preparingPlayback;
@@ -357,6 +359,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void RefreshPreparationFeedback()
     {
         Raise(nameof(PlayLabel)); Raise(nameof(PreparationHeadline)); Raise(nameof(PreparationDetail)); Raise(nameof(PreparationSummary));
+        RefreshTrackPlayback();
         RefreshRadioPlayback();
     }
     public ICommand CancelPreparation { get; }
@@ -811,6 +814,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         try
         {
             if (!OwnsSource(sourceVersion) || IsSwitchingSource) return;
+            ClearLocalTrackFailure();
             Busy = true; _startingPlayback = true; _preparationCancelled = false; Status = Text["Starting"];
             if (YouTubeMode) ClearRadioPlaybackError(track);
             if (SpotifyMode)
@@ -876,6 +880,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         catch (Exception ex)
         {
             _session = false; IsPlaying = false; RefreshCurrent();
+            RememberLocalTrackFailure(track, ex.Message);
             foreach (var speaker in Speakers) speaker.UpdateStatus(false, _player.OutputErrors.GetValueOrDefault(speaker.Id));
             if (YouTubeMode)
             {
@@ -940,7 +945,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             {
                 IsPlaying = _player.IsPlaying;
                 _session = _player.Outputs.Count > 0;
-                if (!_session && _player.Error is not null) RememberInterruptedLocalPlayback(Position, Duration);
+                if (!_session && _player.Error is { } error)
+                {
+                    RememberInterruptedLocalPlayback(Position, Duration);
+                    RememberLocalTrackFailure(_current, error);
+                }
                 RefreshCurrent();
             }
             throw;
@@ -949,6 +958,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     }
     private async Task StopAsync(bool resetStatus = true)
     {
+        ClearLocalTrackFailure();
         _interruptedLocalPlayback = null;
         _spotifyStateVersion++;
         if (_activeSource == "spotify" && _spotify.Connected) await _spotify.PauseAsync(_lifetime.Token);
@@ -1167,6 +1177,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
             if (!_player.IsPlaying && _player.Error is not null) IsPlaying = false;
             if (_player.Outputs.Count == 0)
             {
+                if (_player.Error is { } error) RememberLocalTrackFailure(_current, error);
                 // A volume/control error on a surviving receiver is recoverable
                 // in place. Only a terminated session offers a new radio stream.
                 if (YouTubeMode && _player.Error is not null)

@@ -14,10 +14,13 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     private string? _artworkSpotifyUri;
     private string? _losslessCodec;
     private TrackPlaybackPhase _phase;
+    private string? _playbackError, _preparationCaption;
     public TrackViewModel(MusicTrack track, MainViewModel owner)
     {
         Track = track; _owner = owner;
         _phase = owner.TrackPhase(track);
+        _playbackError = owner.TrackPlaybackError(track);
+        _preparationCaption = _phase == TrackPlaybackPhase.Preparing ? owner.PreparationHeadline : null;
         PlayCommand = new AsyncCommand(_ => owner.ActivateTrackAsync(Track), owner.ShowError, () => CanPlay);
         LikeCommand = new AsyncCommand(_ => { owner.ToggleLike(track.Id); return Task.CompletedTask; }, owner.ShowError);
         AddCommand = new AsyncCommand(_ => { owner.OpenPlaylist(track); return Task.CompletedTask; }, owner.ShowError);
@@ -37,14 +40,26 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     public string Duration => TimeSpan.FromSeconds(Track.DurationSeconds).ToString(@"m\:ss");
     public bool Liked => _owner.IsLiked(Track.Id);
     public string LikeLabel => _owner.Text[Liked ? "Unlike" : "Like"];
-    public string PlayLabel => string.Format(_owner.Text[_phase == TrackPlaybackPhase.Playing ? "PauseTrack" : "PlayTrack"], Title);
-    public string PlayIcon => IsRowPlaying ? "pause" : "play";
+    public string PlayLabel => string.Format(_owner.Text[HasPlaybackError ? "TrackRetryNamed" : _phase == TrackPlaybackPhase.Playing ? "PauseTrack" : "PlayTrack"], Title);
+    public string PlayIcon => HasPlaybackError ? "refresh-cw" : IsRowPlaying ? "pause" : "play";
     public bool CanPlay => !_owner.Busy;
     public bool IsCurrentTrack => _phase != TrackPlaybackPhase.None;
     public bool IsRowPlaying => _phase == TrackPlaybackPhase.Playing;
     public bool IsRowPaused => _phase == TrackPlaybackPhase.Paused;
+    public bool HasPlaybackError => _phase == TrackPlaybackPhase.Failed;
     public bool HasPlaybackActivity => _phase is TrackPlaybackPhase.Preparing or TrackPlaybackPhase.Playing;
-    public string PlaybackStatus => _phase == TrackPlaybackPhase.None ? "" : _owner.Text[_phase == TrackPlaybackPhase.Preparing ? "PreparingSpeakers" : IsRowPlaying ? "Playing" : "Paused"];
+    public string PlaybackStatus => HasPlaybackError ? _owner.Text["TrackRetryHint"] : _phase == TrackPlaybackPhase.None ? ""
+        : _phase == TrackPlaybackPhase.Preparing ? _owner.PreparationHeadline : _owner.Text[IsRowPlaying ? "Playing" : "Paused"];
+    public string PlaybackDetails
+    {
+        get
+        {
+            if (_playbackError is not { } detail) return PlaybackStatus;
+            var explanation = PlaybackErrorPresentation.Format(detail, _owner.Text);
+            return _owner.Text["TrackRetryHelp"] + (explanation != detail ? "\n\n" + explanation : "")
+                + "\n\n" + _owner.Text["TechnicalDetails"] + "\n" + detail;
+        }
+    }
     public string AddPlaylistLabel => _owner.Text["AddPlaylist"];
     public string ArtworkSourceLabel => _owner.Text["ArtworkSourceSpotify"];
     public string RemoveLabel => _owner.TrackRemoveLabel(Track);
@@ -125,9 +140,12 @@ public sealed class TrackViewModel : ObservableObject, IDisposable
     internal void RefreshPlayback()
     {
         var phase = _owner.TrackPhase(Track);
-        if (_phase == phase) return;
+        var error = _owner.TrackPlaybackError(Track);
+        var preparation = phase == TrackPlaybackPhase.Preparing ? _owner.PreparationHeadline : null;
+        if (_phase == phase && _playbackError == error && _preparationCaption == preparation) return;
         _phase = phase;
-        foreach (var property in new[] { nameof(PlayLabel), nameof(PlayIcon), nameof(IsCurrentTrack), nameof(IsRowPlaying), nameof(IsRowPaused), nameof(HasPlaybackActivity), nameof(PlaybackStatus) }) Raise(property);
+        _playbackError = error; _preparationCaption = preparation;
+        foreach (var property in new[] { nameof(PlayLabel), nameof(PlayIcon), nameof(IsCurrentTrack), nameof(IsRowPlaying), nameof(IsRowPaused), nameof(HasPlaybackError), nameof(HasPlaybackActivity), nameof(PlaybackStatus), nameof(PlaybackDetails) }) Raise(property);
     }
 }
 

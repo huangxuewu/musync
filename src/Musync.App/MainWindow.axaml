@@ -227,9 +227,11 @@
                                  RenderOptions.BitmapInterpolationMode="HighQuality"/>
                         </Button>
                         <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                          <Grid Width="24" Height="20" ToolTip.Tip="{Binding PlaybackStatus}">
+                          <Grid Width="24" Height="20" ToolTip.Tip="{Binding PlaybackDetails}">
                             <icons:PreparationIndicator Classes="trackActivity" Width="24" Height="16" Foreground="#B52C47" Active="{Binding HasPlaybackActivity}" IsVisible="{Binding HasPlaybackActivity}" IsHitTestVisible="False" AutomationProperties.Name="{Binding PlaybackStatus}"/>
                             <icons:LucideIcon Kind="pause" Width="18" Height="18" Foreground="#B52C47" IsVisible="{Binding IsRowPaused}" AutomationProperties.Name="{Binding PlaybackStatus}"/>
+                            <icons:LucideIcon Kind="triangle-alert" Width="18" Height="18" Foreground="#9C5500" IsVisible="{Binding HasPlaybackError}"
+                                              AutomationProperties.Name="{Binding PlaybackStatus}" AutomationProperties.HelpText="{Binding PlaybackDetails}"/>
                           </Grid>
                           <TextBlock Text="{Binding Duration}" Classes="muted" FontSize="11" VerticalAlignment="Center"/>
                         </StackPanel>
